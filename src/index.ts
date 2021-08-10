@@ -7,7 +7,7 @@ import toolChainPut from "./toolChainPut";
 import toolChainSignIn from "./toolChainSignIn";
 import toolChainSignUp from "./toolChainSignUp";
 import { GraphEntryValue } from "./types/graph";
-import { AnyMessage, MessageGet, MessagePut } from "./types/message";
+import { AnyMessage, MessageGet, MessageGetPeerSync, MessagePut, MessageSetPeerSync } from "./types/message";
 import { KeyPair } from "./utils/crypto/generateKeyPair";
 import localForageInit from "./utils/localForage/localForageInit";
 import localForageRead from "./utils/localForage/localForageRead";
@@ -21,9 +21,12 @@ class ToolChain {
   private connectionsList: Record<string, Peer.DataConnection | null> = {};
 
   private namespace = "";
+
   private currentPeerId = this.generateNewId();
 
   private debug = false;
+
+  private peersList: string[] = [];
 
   /**
    * Basic usage
@@ -158,6 +161,76 @@ class ToolChain {
     }
   }
 
+  private async msgPutHandler(msg: MessagePut) {
+    const oldValue = await this.dbRead<GraphEntryValue>(msg.val.key);
+    // console.log("PUT", msg, oldValue);
+    if (this.keyListeners[msg.val.key]) {
+      this.keyListeners[msg.val.key](msg.val.value);
+      delete this.keyListeners[msg.val.key];
+    }
+    if (
+      !oldValue ||
+      (oldValue.timestamp < msg.val.timestamp &&
+        (msg.val.key.slice(0, 1) == "~"
+          ? oldValue.pub === msg.val.pub
+          : true))
+    ) {
+      this.dbWrite(msg.val.key, msg.val);
+      if (this.keyUpdateListeners[msg.val.key]) {
+        this.keyUpdateListeners[msg.val.key](msg.val.value);
+      }
+      // window.chainData[msg.val.key] = msg.val;
+    } else {
+      // console.warn(`Skip message write!`, oldValue, msg);
+    }
+  }
+
+  private async msgGetHandler(msg: MessageGet) {
+    const oldValue = await this.dbRead<GraphEntryValue>(msg.key);
+    // window.chainData[msg.key] = oldValue;
+    // console.log("GET", msg, oldValue);
+    if (oldValue) {
+      const oldConnection = this.connectionsList[msg.source];
+      if (oldConnection) {
+        // Reply with message data
+        oldConnection.send({
+          type: "put",
+          hash: oldValue.hash,
+          val: oldValue,
+        } as MessagePut);
+      } else {
+        // Connect and reply with message data
+        this.connectTo(msg.source).then((connection) =>
+          connection.send({
+            type: "put",
+            hash: oldValue.hash,
+            val: oldValue,
+          } as MessagePut)
+        );
+      }
+    }
+  }
+
+  private msgGetPeerSync(msg: MessageGetPeerSync) {
+    const peerSyncMsg: MessageSetPeerSync = {
+      type: "set-peersync",
+      hash: sha256(this.peersList.join(",")),
+      peers: this.peersList,
+    };
+    const oldConnection = this.connectionsList[msg.source];
+    if (oldConnection) {
+      oldConnection.send(peerSyncMsg);
+    } else {
+      this.connectTo(msg.source).then((connection) =>
+        connection.send(peerSyncMsg)
+      );
+    }
+  }
+
+  private msgSetPeerSync(msg: MessageSetPeerSync) {
+    this.peersList = [...this.peersList, ...msg.peers];
+  }
+
   private _onMessageWrapper = async (msg: AnyMessage, peerId: string) => {
     // This wrapper functions filters out those messages we already handled from the listener
     // It also takes care of verification, data persistence and low level handling
@@ -185,54 +258,14 @@ class ToolChain {
       }
 
       if (verified) {
-        if (msg.type === "put") {
-          const oldValue = await this.dbRead<GraphEntryValue>(msg.val.key);
-          // console.log("PUT", msg, oldValue);
-          if (this.keyListeners[msg.val.key]) {
-            this.keyListeners[msg.val.key](msg.val.value);
-            delete this.keyListeners[msg.val.key];
-          }
-          if (
-            !oldValue ||
-            (oldValue.timestamp < msg.val.timestamp &&
-              (msg.val.key.slice(0, 1) == "~"
-                ? oldValue.pub === msg.val.pub
-                : true))
-          ) {
-            this.dbWrite(msg.val.key, msg.val);
-            if (this.keyUpdateListeners[msg.val.key]) {
-              this.keyUpdateListeners[msg.val.key](msg.val.value);
-            }
-            // window.chainData[msg.val.key] = msg.val;
-          } else {
-            // console.warn(`Skip message write!`, oldValue, msg);
-          }
+        switch (msg.type) {
+          case "put": this.msgPutHandler(msg); break;
+          case "get": this.msgGetHandler(msg); break;
+          case "get-peersync": this.msgGetPeerSync(msg); break;
+          case "set-peersync": this.msgSetPeerSync(msg); break;
+          default: break;
         }
-        if (msg.type === "get") {
-          const oldValue = await this.dbRead<GraphEntryValue>(msg.key);
-          // window.chainData[msg.key] = oldValue;
-          // console.log("GET", msg, oldValue);
-          if (oldValue) {
-            const oldConnection = this.connectionsList[msg.source];
-            if (oldConnection) {
-              // Reply with message data
-              oldConnection.send({
-                type: "put",
-                hash: oldValue.hash,
-                val: oldValue,
-              } as MessagePut);
-            } else {
-              // Connect and reply with message data
-              this.connectTo(msg.source).then((connection) =>
-                connection.send({
-                  type: "put",
-                  hash: oldValue.hash,
-                  val: oldValue,
-                } as MessagePut)
-              );
-            }
-          }
-        }
+
         this.onMessage(msg, peerId);
         // Relay, should be optional
         this.sendMessage(msg);
@@ -246,11 +279,10 @@ class ToolChain {
   };
 
   private generateNewId() {
-    return sha256(
-      `${this.namespace}-${new Date().getTime()}-${Math.round(
-        Math.random() * 99999999
-      )}`
-    );
+    return `${this.namespace}-${sha256(
+      new Date().getTime() + "-"
+      + Math.round(Math.random() * 99999999)
+    )}`;
   }
 
   constructor(namespace: string, debug = false) {

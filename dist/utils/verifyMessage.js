@@ -55,10 +55,6 @@ function verifyMessage(msg) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    // console.log("verify: ", msg);
-                    if (msg.type === "get") {
-                        return [2 /*return*/, true];
-                    }
                     if (!(msg.type === "put")) return [3 /*break*/, 3];
                     strData = JSON.stringify(msg.val.value);
                     if (msg.val.timestamp > new Date().getTime()) {
@@ -93,7 +89,9 @@ function verifyMessage(msg) {
                     verified = _a.sent();
                     // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
                     return [2 /*return*/, verified];
-                case 3: return [2 /*return*/, undefined];
+                case 3: 
+                // if (msg.type === "get" || msg.type === "get-peersync" || msg.type === "set-peersync") {
+                return [2 /*return*/, true];
             }
         });
     });

@@ -17,6 +17,7 @@ declare class ToolChain {
     private namespace;
     private currentPeerId;
     private debug;
+    private peersList;
     /**
      * Basic usage
      */
@@ -83,6 +84,10 @@ declare class ToolChain {
      */
     addGetVerification: (key: string, fn: (oldMessage: GraphEntryValue | undefined, msg: MessageGet) => boolean) => void;
     private checkMessageIndex;
+    private msgPutHandler;
+    private msgGetHandler;
+    private msgGetPeerSync;
+    private msgSetPeerSync;
     private _onMessageWrapper;
     private generateNewId;
     constructor(namespace: string, debug?: boolean);

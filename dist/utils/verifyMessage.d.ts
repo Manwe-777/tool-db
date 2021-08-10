@@ -4,4 +4,4 @@ import { AnyMessage } from "../types/message";
  * @param msg AnyMessage
  * @returns boolean or undefined if the message type does not match
  */
-export default function verifyMessage(msg: AnyMessage): Promise<boolean | undefined>;
+export default function verifyMessage(msg: AnyMessage): Promise<boolean>;

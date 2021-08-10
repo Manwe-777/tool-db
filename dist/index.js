@@ -60,6 +60,7 @@ var ToolChain = /** @class */ (function () {
         this.namespace = "";
         this.currentPeerId = this.generateNewId();
         this.debug = false;
+        this.peersList = [];
         /**
          * Basic usage
          */
@@ -123,7 +124,7 @@ var ToolChain = /** @class */ (function () {
             _this._customGetVerification[key] = fn;
         };
         this._onMessageWrapper = function (msg, peerId) { return __awaiter(_this, void 0, void 0, function () {
-            var verified, oldValue, oldValue, oldValue, oldValue_1, oldConnection;
+            var verified, oldValue, oldValue;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -131,7 +132,7 @@ var ToolChain = /** @class */ (function () {
                         // It also takes care of verification, data persistence and low level handling
                         if (!this.messagesIndex[msg.hash])
                             this.messagesIndex[msg.hash] = [];
-                        if (!!this.messagesIndex[msg.hash].includes(peerId)) return [3 /*break*/, 11];
+                        if (!!this.messagesIndex[msg.hash].includes(peerId)) return [3 /*break*/, 6];
                         this.messagesIndex[msg.hash].push(peerId);
                         return [4 /*yield*/, verifyMessage_1.default(msg)];
                     case 1:
@@ -152,72 +153,32 @@ var ToolChain = /** @class */ (function () {
                         verified = this._customGetVerification[msg.key](oldValue || undefined, msg);
                         _a.label = 5;
                     case 5:
-                        if (!verified) return [3 /*break*/, 10];
-                        if (!(msg.type === "put")) return [3 /*break*/, 7];
-                        return [4 /*yield*/, this.dbRead(msg.val.key)];
-                    case 6:
-                        oldValue = _a.sent();
-                        // console.log("PUT", msg, oldValue);
-                        if (this.keyListeners[msg.val.key]) {
-                            this.keyListeners[msg.val.key](msg.val.value);
-                            delete this.keyListeners[msg.val.key];
-                        }
-                        if (!oldValue ||
-                            (oldValue.timestamp < msg.val.timestamp &&
-                                (msg.val.key.slice(0, 1) == "~"
-                                    ? oldValue.pub === msg.val.pub
-                                    : true))) {
-                            this.dbWrite(msg.val.key, msg.val);
-                            if (this.keyUpdateListeners[msg.val.key]) {
-                                this.keyUpdateListeners[msg.val.key](msg.val.value);
+                        if (verified) {
+                            switch (msg.type) {
+                                case "put":
+                                    this.msgPutHandler(msg);
+                                    break;
+                                case "get":
+                                    this.msgGetHandler(msg);
+                                    break;
+                                case "get-peersync":
+                                    this.msgGetPeerSync(msg);
+                                    break;
+                                case "set-peersync":
+                                    this.msgSetPeerSync(msg);
+                                    break;
+                                default: break;
                             }
-                            // window.chainData[msg.val.key] = msg.val;
+                            this.onMessage(msg, peerId);
+                            // Relay, should be optional
+                            this.sendMessage(msg);
                         }
-                        else {
-                            // console.warn(`Skip message write!`, oldValue, msg);
-                        }
-                        _a.label = 7;
-                    case 7:
-                        if (!(msg.type === "get")) return [3 /*break*/, 9];
-                        return [4 /*yield*/, this.dbRead(msg.key)];
-                    case 8:
-                        oldValue_1 = _a.sent();
-                        // window.chainData[msg.key] = oldValue;
-                        // console.log("GET", msg, oldValue);
-                        if (oldValue_1) {
-                            oldConnection = this.connectionsList[msg.source];
-                            if (oldConnection) {
-                                // Reply with message data
-                                oldConnection.send({
-                                    type: "put",
-                                    hash: oldValue_1.hash,
-                                    val: oldValue_1,
-                                });
-                            }
-                            else {
-                                // Connect and reply with message data
-                                this.connectTo(msg.source).then(function (connection) {
-                                    return connection.send({
-                                        type: "put",
-                                        hash: oldValue_1.hash,
-                                        val: oldValue_1,
-                                    });
-                                });
-                            }
-                        }
-                        _a.label = 9;
-                    case 9:
-                        this.onMessage(msg, peerId);
-                        // Relay, should be optional
-                        this.sendMessage(msg);
-                        return [3 /*break*/, 11];
-                    case 10:
-                        if (verified === false) {
+                        else if (verified === false) {
                             console.warn("Could not verify message integrity;", msg);
                             console.warn("This action by should block the peer from reaching us again");
                         }
-                        _a.label = 11;
-                    case 11: return [2 /*return*/];
+                        _a.label = 6;
+                    case 6: return [2 /*return*/];
                 }
             });
         }); };
@@ -260,8 +221,81 @@ var ToolChain = /** @class */ (function () {
             this.messagesIndex[hash] = [peerId];
         }
     };
+    ToolChain.prototype.msgPutHandler = function (msg) {
+        return __awaiter(this, void 0, void 0, function () {
+            var oldValue;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.dbRead(msg.val.key)];
+                    case 1:
+                        oldValue = _a.sent();
+                        // console.log("PUT", msg, oldValue);
+                        if (this.keyListeners[msg.val.key]) {
+                            this.keyListeners[msg.val.key](msg.val.value);
+                            delete this.keyListeners[msg.val.key];
+                        }
+                        if (!oldValue ||
+                            (oldValue.timestamp < msg.val.timestamp &&
+                                (msg.val.key.slice(0, 1) == "~"
+                                    ? oldValue.pub === msg.val.pub
+                                    : true))) {
+                            this.dbWrite(msg.val.key, msg.val);
+                            if (this.keyUpdateListeners[msg.val.key]) {
+                                this.keyUpdateListeners[msg.val.key](msg.val.value);
+                            }
+                            // window.chainData[msg.val.key] = msg.val;
+                        }
+                        else {
+                            // console.warn(`Skip message write!`, oldValue, msg);
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ToolChain.prototype.msgGetHandler = function (msg) {
+        return __awaiter(this, void 0, void 0, function () {
+            var oldValue, oldConnection;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.dbRead(msg.key)];
+                    case 1:
+                        oldValue = _a.sent();
+                        // window.chainData[msg.key] = oldValue;
+                        // console.log("GET", msg, oldValue);
+                        if (oldValue) {
+                            oldConnection = this.connectionsList[msg.source];
+                            if (oldConnection) {
+                                // Reply with message data
+                                oldConnection.send({
+                                    type: "put",
+                                    hash: oldValue.hash,
+                                    val: oldValue,
+                                });
+                            }
+                            else {
+                                // Connect and reply with message data
+                                this.connectTo(msg.source).then(function (connection) {
+                                    return connection.send({
+                                        type: "put",
+                                        hash: oldValue.hash,
+                                        val: oldValue,
+                                    });
+                                });
+                            }
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ToolChain.prototype.msgGetPeerSync = function (msg) {
+    };
+    ToolChain.prototype.msgSetPeerSync = function (msg) {
+    };
     ToolChain.prototype.generateNewId = function () {
-        return sha256_1.default(this.namespace + "-" + new Date().getTime() + "-" + Math.round(Math.random() * 99999999));
+        return this.namespace + "-" + sha256_1.default(new Date().getTime() + "-"
+            + Math.round(Math.random() * 99999999));
     };
     Object.defineProperty(ToolChain.prototype, "id", {
         get: function () {

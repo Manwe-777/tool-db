@@ -12,9 +12,7 @@ import sha256 from "./sha256";
  */
 export default async function verifyMessage(msg: AnyMessage) {
   // console.log("verify: ", msg);
-  if (msg.type === "get") {
-    return true;
-  }
+  // No verification required
   if (msg.type === "put") {
     const strData = JSON.stringify(msg.val.value);
 
@@ -71,5 +69,8 @@ export default async function verifyMessage(msg: AnyMessage) {
 
     return verified;
   }
-  return undefined;
+  // if (msg.type === "get" || msg.type === "get-peersync" || msg.type === "set-peersync") {
+  return true;
+  // }
+  // return undefined;
 }

@@ -1,10 +1,21 @@
 import { GraphEntryValue } from "./graph";
 
-export type MessageType = "get" | "put";
+export type MessageType = "get-peersync" | "set-peersync" | "get" | "put";
 
 export interface MessageBase {
   hash: string;
   type: MessageType;
+}
+
+export interface MessageGetPeerSync extends MessageBase {
+  type: "get-peersync";
+  source: string;
+  namespace: string;
+}
+
+export interface MessageSetPeerSync extends MessageBase {
+  type: "set-peersync";
+  peers: string[];
 }
 
 export interface MessageGet extends MessageBase {
@@ -18,4 +29,4 @@ export interface MessagePut extends MessageBase {
   val: GraphEntryValue;
 }
 
-export type AnyMessage = MessageGet | MessagePut;
+export type AnyMessage = MessageGetPeerSync | MessageSetPeerSync | MessageGet | MessagePut;
