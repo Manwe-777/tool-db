@@ -39,6 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var message_1 = require("../types/message");
 var decodeKeyString_1 = __importDefault(require("./crypto/decodeKeyString"));
 var importKey_1 = __importDefault(require("./crypto/importKey"));
 var verifyData_1 = __importDefault(require("./crypto/verifyData"));
@@ -58,8 +59,8 @@ function verifyMessage(msg) {
                     if (!(msg.type === "put")) return [3 /*break*/, 3];
                     strData = JSON.stringify(msg.val.value);
                     if (msg.val.timestamp > new Date().getTime()) {
-                        console.warn("Invalid message timestamp.");
-                        return [2 /*return*/, false];
+                        // console.warn("Invalid message timestamp.");
+                        return [2 /*return*/, message_1.VerifyResult.InvalidTimestamp];
                     }
                     publicKeyNamespace = false;
                     if (msg.val.key.slice(0, 1) == "~") {
@@ -67,19 +68,19 @@ function verifyMessage(msg) {
                     }
                     pubKeyString = msg.val.pub;
                     if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
-                        console.warn("Provided pub keys do not match");
-                        return [2 /*return*/, false];
+                        // console.warn("Provided pub keys do not match");
+                        return [2 /*return*/, message_1.VerifyResult.PubKeyMismatch];
                     }
                     // Verify hash and nonce (adjust zeroes for difficulty of the network)
                     // While this POW does not enforce security per-se, it does make it harder
                     // for attackers to spam the network, and could be adjusted by peers.
                     if (msg.hash.slice(0, 3) !== "000") {
-                        console.warn("No valid hash (no pow)");
-                        return [2 /*return*/, false];
+                        // console.warn("No valid hash (no pow)");
+                        return [2 /*return*/, message_1.VerifyResult.NoProofOfWork];
                     }
                     if (sha256_1.default("" + strData + pubKeyString + msg.val.timestamp + msg.val.nonce) !== msg.hash) {
-                        console.warn("Specified hash does not generate a valid pow");
-                        return [2 /*return*/, false];
+                        // console.warn("Specified hash does not generate a valid pow");
+                        return [2 /*return*/, message_1.VerifyResult.InvalidHashNonce];
                     }
                     return [4 /*yield*/, importKey_1.default(decodeKeyString_1.default(pubKeyString), "spki", "ECDSA", ["verify"])];
                 case 1:
@@ -88,10 +89,10 @@ function verifyMessage(msg) {
                 case 2:
                     verified = _a.sent();
                     // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
-                    return [2 /*return*/, verified];
+                    return [2 /*return*/, verified ? message_1.VerifyResult.Verified : message_1.VerifyResult.InvalidSignature];
                 case 3: 
                 // if (msg.type === "get" || msg.type === "get-peersync" || msg.type === "set-peersync") {
-                return [2 /*return*/, true];
+                return [2 /*return*/, message_1.VerifyResult.Verified];
             }
         });
     });

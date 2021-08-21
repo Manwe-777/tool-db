@@ -47,6 +47,7 @@ var toolChainGetPubKey_1 = __importDefault(require("./toolChainGetPubKey"));
 var toolChainPut_1 = __importDefault(require("./toolChainPut"));
 var toolChainSignIn_1 = __importDefault(require("./toolChainSignIn"));
 var toolChainSignUp_1 = __importDefault(require("./toolChainSignUp"));
+var message_1 = require("./types/message");
 var localForageInit_1 = __importDefault(require("./utils/localForage/localForageInit"));
 var localForageRead_1 = __importDefault(require("./utils/localForage/localForageRead"));
 var localForageWrite_1 = __importDefault(require("./utils/localForage/localForageWrite"));
@@ -58,6 +59,7 @@ var ToolChain = /** @class */ (function () {
         if (debug === void 0) { debug = false; }
         this.connectionsList = {};
         this.namespace = "";
+        this.currentPeerNumber = 0;
         this.currentPeerId = this.generateNewId();
         this.debug = false;
         this.peersList = [];
@@ -123,6 +125,24 @@ var ToolChain = /** @class */ (function () {
         this.addGetVerification = function (key, fn) {
             _this._customGetVerification[key] = fn;
         };
+        // private msgGetPeerSync(msg: MessageGetPeerSync) {
+        //   const peerSyncMsg: MessageSetPeerSync = {
+        //     type: "set-peersync",
+        //     hash: sha256(this.peersList.join(",")),
+        //     peers: this.peersList,
+        //   };
+        //   const oldConnection = this.connectionsList[msg.source];
+        //   if (oldConnection) {
+        //     oldConnection.send(peerSyncMsg);
+        //   } else {
+        //     this.connectTo(msg.source).then((connection) =>
+        //       connection.send(peerSyncMsg)
+        //     );
+        //   }
+        // }
+        // private msgSetPeerSync(msg: MessageSetPeerSync) {
+        //   this.peersList = [...this.peersList, ...msg.peers];
+        // }
         this._onMessageWrapper = function (msg, peerId) { return __awaiter(_this, void 0, void 0, function () {
             var verified, oldValue, oldValue;
             return __generator(this, function (_a) {
@@ -142,7 +162,9 @@ var ToolChain = /** @class */ (function () {
                         return [4 /*yield*/, this.dbRead(msg.val.key)];
                     case 2:
                         oldValue = _a.sent();
-                        verified = this._customPutVerification[msg.val.key](oldValue || undefined, msg);
+                        verified = !this._customPutVerification[msg.val.key](oldValue || undefined, msg)
+                            ? message_1.VerifyResult.InvalidVerification
+                            : verified;
                         _a.label = 3;
                     case 3:
                         if (!(msg.type === "get" && this._customPutVerification[msg.key])) return [3 /*break*/, 5];
@@ -150,10 +172,12 @@ var ToolChain = /** @class */ (function () {
                         return [4 /*yield*/, this.dbRead(msg.key)];
                     case 4:
                         oldValue = _a.sent();
-                        verified = this._customGetVerification[msg.key](oldValue || undefined, msg);
+                        verified = !this._customGetVerification[msg.key](oldValue || undefined, msg)
+                            ? message_1.VerifyResult.InvalidVerification
+                            : verified;
                         _a.label = 5;
                     case 5:
-                        if (verified) {
+                        if (verified === message_1.VerifyResult.Verified) {
                             switch (msg.type) {
                                 case "put":
                                     this.msgPutHandler(msg);
@@ -161,20 +185,21 @@ var ToolChain = /** @class */ (function () {
                                 case "get":
                                     this.msgGetHandler(msg);
                                     break;
-                                case "get-peersync":
-                                    this.msgGetPeerSync(msg);
+                                // case "get-peersync":
+                                //   this.msgGetPeerSync(msg);
+                                //   break;
+                                // case "set-peersync":
+                                //   this.msgSetPeerSync(msg);
+                                //   break;
+                                default:
                                     break;
-                                case "set-peersync":
-                                    this.msgSetPeerSync(msg);
-                                    break;
-                                default: break;
                             }
                             this.onMessage(msg, peerId);
                             // Relay, should be optional
                             this.sendMessage(msg);
                         }
-                        else if (verified === false) {
-                            console.warn("Could not verify message integrity;", msg);
+                        else {
+                            console.warn("Could not verify message integrity: " + verified, msg);
                             console.warn("This action by should block the peer from reaching us again");
                         }
                         _a.label = 6;
@@ -183,10 +208,10 @@ var ToolChain = /** @class */ (function () {
             });
         }); };
         this.namespace = namespace;
-        this.currentPeerId = this.generateNewId();
         this.debug = debug;
         window.chainData = {};
         window.toolchain = this;
+        this.dbInit();
     }
     Object.defineProperty(ToolChain.prototype, "listenForKey", {
         get: function () {
@@ -214,7 +239,8 @@ var ToolChain = /** @class */ (function () {
         delete this.keyUpdateListeners[key];
     };
     ToolChain.prototype.checkMessageIndex = function (hash, peerId) {
-        if (this.messagesIndex[hash] && !this.messagesIndex[hash].includes(peerId)) {
+        if (this.messagesIndex[hash] &&
+            !this.messagesIndex[hash].includes(peerId)) {
             this.messagesIndex[hash].push(peerId);
         }
         else {
@@ -223,7 +249,7 @@ var ToolChain = /** @class */ (function () {
     };
     ToolChain.prototype.msgPutHandler = function (msg) {
         return __awaiter(this, void 0, void 0, function () {
-            var oldValue;
+            var oldValue, maxDist, ourPlace, dataPlace;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.dbRead(msg.val.key)];
@@ -236,12 +262,15 @@ var ToolChain = /** @class */ (function () {
                         }
                         if (!oldValue ||
                             (oldValue.timestamp < msg.val.timestamp &&
-                                (msg.val.key.slice(0, 1) == "~"
-                                    ? oldValue.pub === msg.val.pub
-                                    : true))) {
-                            this.dbWrite(msg.val.key, msg.val);
-                            if (this.keyUpdateListeners[msg.val.key]) {
-                                this.keyUpdateListeners[msg.val.key](msg.val.value);
+                                (msg.val.key.slice(0, 1) == "~" ? oldValue.pub === msg.val.pub : true))) {
+                            maxDist = Math.ceil(parseInt("ffffffff", 16) * 0.1);
+                            ourPlace = parseInt(this.currentPeerId.slice(-8), 16);
+                            dataPlace = parseInt(msg.hash.slice(-8), 16);
+                            if (Math.abs(ourPlace - dataPlace) < maxDist) {
+                                this.dbWrite(msg.val.key, msg.val);
+                                if (this.keyUpdateListeners[msg.val.key]) {
+                                    this.keyUpdateListeners[msg.val.key](msg.val.value);
+                                }
                             }
                             // window.chainData[msg.val.key] = msg.val;
                         }
@@ -289,13 +318,10 @@ var ToolChain = /** @class */ (function () {
             });
         });
     };
-    ToolChain.prototype.msgGetPeerSync = function (msg) {
-    };
-    ToolChain.prototype.msgSetPeerSync = function (msg) {
-    };
-    ToolChain.prototype.generateNewId = function () {
-        return this.namespace + "-" + sha256_1.default(new Date().getTime() + "-"
-            + Math.round(Math.random() * 99999999));
+    ToolChain.prototype.generateNewId = function (root) {
+        return this.namespace + "-" + sha256_1.default(root === undefined
+            ? new Date().getTime() + "-" + Math.round(Math.random() * 99999999)
+            : root + "");
     };
     Object.defineProperty(ToolChain.prototype, "id", {
         get: function () {
@@ -354,27 +380,30 @@ var ToolChain = /** @class */ (function () {
         if (!this.currentPeer)
             return;
         this.currentPeer.listAllPeers(function (peers) {
+            _this.peersList = peers;
             // List all peers from server and chose some of them randomly to connect to
             // Make sure we dont select ourselves!
-            var myIndex = peers.indexOf(_this.currentPeerId || "");
-            peers.splice(myIndex, 1);
-            // console.log("All peers: ", peers);
+            var myIndex = _this.peersList.indexOf(_this.currentPeerId || "");
+            _this.peersList.splice(myIndex, 1);
+            // console.log("All peers: ", this.peersList);
             var selected = [];
             // Get the max ammount of connections we need
             // We use a cubic root since we expect to have a lot of peers.
-            var maxConnections = peers.length > 2 ? Math.floor(Math.log(peers.length) / Math.log(3)) : 1;
-            if (peers.length === 0)
+            var maxConnections = _this.peersList.length > 2
+                ? Math.floor(Math.log(_this.peersList.length) / Math.log(3))
+                : 1;
+            if (_this.peersList.length === 0)
                 maxConnections = 0;
             // position to start the picking loop
             // Pick the one at half the list, deterministic values help
-            var pos = Math.floor(peers.length / 2); // Math.floor(Math.random() * peers.length);
+            var pos = Math.floor(_this.peersList.length / 2); // Math.floor(Math.random() * this.peersList.length);
             // Start picks
             var n = 0;
             while (n < maxConnections) {
                 // advance as cubic then start from zero (mod) if we exceed the array size
-                var index = (pos + Math.pow(3, n)) % peers.length;
-                if (!selected.includes(peers[index])) {
-                    selected.push(peers[index]);
+                var index = (pos + Math.pow(3, n)) % _this.peersList.length;
+                if (!selected.includes(_this.peersList[index])) {
+                    selected.push(_this.peersList[index]);
                 }
                 n += 1;
             }
@@ -384,14 +413,21 @@ var ToolChain = /** @class */ (function () {
             selected.forEach(function (id) { return _this.connectTo(id); });
         });
     };
+    ToolChain.prototype.reconnectSignalling = function () {
+        if (this.currentPeer) {
+            this.currentPeer.reconnect();
+        }
+    };
     ToolChain.prototype.finishInitPeer = function () {
         var _this = this;
         if (this.currentPeer) {
             this.findNewPeers();
             // On Peer disconnection
             this.currentPeer.on("disconnected", function () {
-                if (_this.debug)
-                    console.info("Disconnected");
+                if (_this.debug) {
+                    console.info("Disconnected from peerserver");
+                }
+                setTimeout(_this.reconnectSignalling, 3000);
             });
             this.currentPeer.on("close", function () {
                 if (_this.debug)
@@ -423,28 +459,31 @@ var ToolChain = /** @class */ (function () {
     };
     ToolChain.prototype.initialize = function () {
         var _this = this;
-        this.dbInit();
-        var id = this.currentPeerId;
-        if (this.debug)
-            console.log("|| initialize with id: " + id);
-        this.currentPeer = new peerjs_1.default(id, {
+        var newId = this.generateNewId(this.currentPeerNumber);
+        var tempPeer = new peerjs_1.default(newId, {
             host: "api.mtgatool.com",
             port: 9000,
             path: "peer",
         });
-        // On Peer open to peerserver
-        this.currentPeer.on("open", function (_id) {
+        tempPeer.on("open", function (_id) {
             console.log("✔ Connected to peerserver as", _id);
+            _this.currentPeerId = _id;
+            _this.currentPeer = tempPeer;
             _this.finishInitPeer();
             _this.onConnected();
         });
-        this.currentPeer.on("error", function (err) {
-            if (_this.debug)
-                console.error(err, err.type);
+        tempPeer.on("error", function (err) {
             if (err.type === "network" || err.type === "server-error") {
                 _this.disconnect();
-                _this.currentPeerId = _this.generateNewId();
                 setTimeout(function () { return _this.initialize(); }, 3000);
+            }
+            else if (err.type === "unavailable-id") {
+                _this.currentPeerNumber += 1;
+                _this.disconnect();
+                _this.initialize();
+            }
+            else if (_this.debug) {
+                console.error(err, err.type);
             }
         });
     };

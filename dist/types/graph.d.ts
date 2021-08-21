@@ -5,6 +5,15 @@ export interface ParsedKeys {
     ekpub: string;
     ekpriv: string;
 }
+export interface ToolChainOptions {
+    serveMessages?: boolean;
+    relayMessages?: boolean;
+    maxPeers?: number;
+    reconnectTimeout?: number;
+    host?: string;
+    port?: number;
+    path?: string;
+}
 export declare type GenericObject = {
     [key: string]: any;
 };

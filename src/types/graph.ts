@@ -7,6 +7,16 @@ export interface ParsedKeys {
   ekpriv: string;
 }
 
+export interface ToolChainOptions {
+  serveMessages?: boolean;
+  relayMessages?: boolean;
+  maxPeers?: number;
+  reconnectTimeout?: number;
+  host?: string;
+  port?: number;
+  path?: string;
+}
+
 export type GenericObject = { [key: string]: any };
 
 export interface GraphEntryValue<T = any> {
@@ -19,13 +29,7 @@ export interface GraphEntryValue<T = any> {
   value: T;
 }
 
-export type GraphBase = Record<string, GraphEntryValue>; // key: value
-
-// Eventually pass this graph to the Gun constructor
-// interface TypedGraph extends GraphBase {
-//   userData: GraphEntryPointers<{ name: string; age: number }>;
-//   rawData: GraphEntryValue<{ foo: string; var: number; arr: string[] }>;
-// }
+export type GraphBase = Record<string, GraphEntryValue>;
 
 export interface UserRootData {
   keys: {

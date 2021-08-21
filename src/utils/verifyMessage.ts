@@ -1,4 +1,4 @@
-import { AnyMessage } from "../types/message";
+import { AnyMessage, VerifyResult } from "../types/message";
 import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
 import verifyData from "./crypto/verifyData";
@@ -10,15 +10,17 @@ import sha256 from "./sha256";
  * @param msg AnyMessage
  * @returns boolean or undefined if the message type does not match
  */
-export default async function verifyMessage(msg: AnyMessage) {
+export default async function verifyMessage(
+  msg: AnyMessage
+): Promise<VerifyResult> {
   // console.log("verify: ", msg);
   // No verification required
   if (msg.type === "put") {
     const strData = JSON.stringify(msg.val.value);
 
     if (msg.val.timestamp > new Date().getTime()) {
-      console.warn("Invalid message timestamp.");
-      return false;
+      // console.warn("Invalid message timestamp.");
+      return VerifyResult.InvalidTimestamp;
     }
 
     // This is a user namespace
@@ -30,16 +32,16 @@ export default async function verifyMessage(msg: AnyMessage) {
     const pubKeyString = msg.val.pub;
 
     if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
-      console.warn("Provided pub keys do not match");
-      return false;
+      // console.warn("Provided pub keys do not match");
+      return VerifyResult.PubKeyMismatch;
     }
 
     // Verify hash and nonce (adjust zeroes for difficulty of the network)
     // While this POW does not enforce security per-se, it does make it harder
     // for attackers to spam the network, and could be adjusted by peers.
     if (msg.hash.slice(0, 3) !== "000") {
-      console.warn("No valid hash (no pow)");
-      return false;
+      // console.warn("No valid hash (no pow)");
+      return VerifyResult.NoProofOfWork;
     }
 
     if (
@@ -47,8 +49,8 @@ export default async function verifyMessage(msg: AnyMessage) {
         `${strData}${pubKeyString}${msg.val.timestamp}${msg.val.nonce}`
       ) !== msg.hash
     ) {
-      console.warn("Specified hash does not generate a valid pow");
-      return false;
+      // console.warn("Specified hash does not generate a valid pow");
+      return VerifyResult.InvalidHashNonce;
     }
 
     const pubKey = await importKey(
@@ -67,10 +69,10 @@ export default async function verifyMessage(msg: AnyMessage) {
     );
     // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
-    return verified;
+    return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;
   }
   // if (msg.type === "get" || msg.type === "get-peersync" || msg.type === "set-peersync") {
-  return true;
+  return VerifyResult.Verified;
   // }
   // return undefined;
 }

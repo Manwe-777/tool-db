@@ -6,12 +6,18 @@ import toolChainGetPubKey from "./toolChainGetPubKey";
 import toolChainPut from "./toolChainPut";
 import toolChainSignIn from "./toolChainSignIn";
 import toolChainSignUp from "./toolChainSignUp";
-import { GraphEntryValue } from "./types/graph";
-import { AnyMessage, MessageGet, MessageGetPeerSync, MessagePut, MessageSetPeerSync } from "./types/message";
+import { GraphEntryValue, ToolChainOptions } from "./types/graph";
+import {
+  AnyMessage,
+  MessageGet,
+  MessagePut,
+  VerifyResult,
+} from "./types/message";
 import { KeyPair } from "./utils/crypto/generateKeyPair";
 import localForageInit from "./utils/localForage/localForageInit";
 import localForageRead from "./utils/localForage/localForageRead";
 import localForageWrite from "./utils/localForage/localForageWrite";
+
 import sha256 from "./utils/sha256";
 import verifyMessage from "./utils/verifyMessage";
 
@@ -21,6 +27,8 @@ class ToolChain {
   private connectionsList: Record<string, Peer.DataConnection | null> = {};
 
   private namespace = "";
+
+  private currentPeerNumber = 0;
 
   private currentPeerId = this.generateNewId();
 
@@ -79,12 +87,12 @@ class ToolChain {
   public user = undefined as
     | undefined
     | {
-      keys: {
-        signKeys: KeyPair;
-        encryptionKeys: KeyPair;
+        keys: {
+          signKeys: KeyPair;
+          encryptionKeys: KeyPair;
+        };
+        name: string;
       };
-      name: string;
-    };
 
   private _listenForKey = (key: string, fn: (val: any) => void): void => {
     this.keyListeners[key] = fn;
@@ -153,10 +161,12 @@ class ToolChain {
   };
 
   private checkMessageIndex(hash: string, peerId: string) {
-    if (this.messagesIndex[hash] && !this.messagesIndex[hash].includes(peerId)) {
+    if (
+      this.messagesIndex[hash] &&
+      !this.messagesIndex[hash].includes(peerId)
+    ) {
       this.messagesIndex[hash].push(peerId);
-    }
-    else {
+    } else {
       this.messagesIndex[hash] = [peerId];
     }
   }
@@ -171,13 +181,19 @@ class ToolChain {
     if (
       !oldValue ||
       (oldValue.timestamp < msg.val.timestamp &&
-        (msg.val.key.slice(0, 1) == "~"
-          ? oldValue.pub === msg.val.pub
-          : true))
+        (msg.val.key.slice(0, 1) == "~" ? oldValue.pub === msg.val.pub : true))
     ) {
-      this.dbWrite(msg.val.key, msg.val);
-      if (this.keyUpdateListeners[msg.val.key]) {
-        this.keyUpdateListeners[msg.val.key](msg.val.value);
+      // 1 if 1 peer
+      // 0.1 if 100 or more peers
+      const maxDist = Math.ceil(parseInt("ffffffff", 16) * 0.1);
+      const ourPlace = parseInt(this.currentPeerId.slice(-8), 16);
+      const dataPlace = parseInt(msg.hash.slice(-8), 16);
+
+      if (Math.abs(ourPlace - dataPlace) < maxDist) {
+        this.dbWrite(msg.val.key, msg.val);
+        if (this.keyUpdateListeners[msg.val.key]) {
+          this.keyUpdateListeners[msg.val.key](msg.val.value);
+        }
       }
       // window.chainData[msg.val.key] = msg.val;
     } else {
@@ -211,25 +227,25 @@ class ToolChain {
     }
   }
 
-  private msgGetPeerSync(msg: MessageGetPeerSync) {
-    const peerSyncMsg: MessageSetPeerSync = {
-      type: "set-peersync",
-      hash: sha256(this.peersList.join(",")),
-      peers: this.peersList,
-    };
-    const oldConnection = this.connectionsList[msg.source];
-    if (oldConnection) {
-      oldConnection.send(peerSyncMsg);
-    } else {
-      this.connectTo(msg.source).then((connection) =>
-        connection.send(peerSyncMsg)
-      );
-    }
-  }
+  // private msgGetPeerSync(msg: MessageGetPeerSync) {
+  //   const peerSyncMsg: MessageSetPeerSync = {
+  //     type: "set-peersync",
+  //     hash: sha256(this.peersList.join(",")),
+  //     peers: this.peersList,
+  //   };
+  //   const oldConnection = this.connectionsList[msg.source];
+  //   if (oldConnection) {
+  //     oldConnection.send(peerSyncMsg);
+  //   } else {
+  //     this.connectTo(msg.source).then((connection) =>
+  //       connection.send(peerSyncMsg)
+  //     );
+  //   }
+  // }
 
-  private msgSetPeerSync(msg: MessageSetPeerSync) {
-    this.peersList = [...this.peersList, ...msg.peers];
-  }
+  // private msgSetPeerSync(msg: MessageSetPeerSync) {
+  //   this.peersList = [...this.peersList, ...msg.peers];
+  // }
 
   private _onMessageWrapper = async (msg: AnyMessage, peerId: string) => {
     // This wrapper functions filters out those messages we already handled from the listener
@@ -242,35 +258,48 @@ class ToolChain {
       if (verified) {
         if (msg.type === "put" && this._customPutVerification[msg.val.key]) {
           const oldValue = await this.dbRead<GraphEntryValue>(msg.val.key);
-          verified = this._customPutVerification[msg.val.key](
+          verified = !this._customPutVerification[msg.val.key](
             oldValue || undefined,
             msg
-          );
+          )
+            ? VerifyResult.InvalidVerification
+            : verified;
         }
         if (msg.type === "get" && this._customPutVerification[msg.key]) {
           console.log(this._customPutVerification[msg.key]);
           const oldValue = await this.dbRead<GraphEntryValue>(msg.key);
-          verified = this._customGetVerification[msg.key](
+          verified = !this._customGetVerification[msg.key](
             oldValue || undefined,
             msg
-          );
+          )
+            ? VerifyResult.InvalidVerification
+            : verified;
         }
       }
 
-      if (verified) {
+      if (verified === VerifyResult.Verified) {
         switch (msg.type) {
-          case "put": this.msgPutHandler(msg); break;
-          case "get": this.msgGetHandler(msg); break;
-          case "get-peersync": this.msgGetPeerSync(msg); break;
-          case "set-peersync": this.msgSetPeerSync(msg); break;
-          default: break;
+          case "put":
+            this.msgPutHandler(msg);
+            break;
+          case "get":
+            this.msgGetHandler(msg);
+            break;
+          // case "get-peersync":
+          //   this.msgGetPeerSync(msg);
+          //   break;
+          // case "set-peersync":
+          //   this.msgSetPeerSync(msg);
+          //   break;
+          default:
+            break;
         }
 
         this.onMessage(msg, peerId);
         // Relay, should be optional
         this.sendMessage(msg);
-      } else if (verified === false) {
-        console.warn("Could not verify message integrity;", msg);
+      } else {
+        console.warn(`Could not verify message integrity: ${verified}`, msg);
         console.warn(
           "This action by should block the peer from reaching us again"
         );
@@ -278,19 +307,20 @@ class ToolChain {
     }
   };
 
-  private generateNewId() {
+  private generateNewId(root?: number) {
     return `${this.namespace}-${sha256(
-      new Date().getTime() + "-"
-      + Math.round(Math.random() * 99999999)
+      root === undefined
+        ? new Date().getTime() + "-" + Math.round(Math.random() * 99999999)
+        : root + ""
     )}`;
   }
 
   constructor(namespace: string, debug = false) {
     this.namespace = namespace;
-    this.currentPeerId = this.generateNewId();
     this.debug = debug;
     window.chainData = {};
     window.toolchain = this;
+    this.dbInit();
   }
 
   get id() {
@@ -341,31 +371,34 @@ class ToolChain {
   private findNewPeers() {
     if (!this.currentPeer) return;
     this.currentPeer.listAllPeers((peers) => {
+      this.peersList = peers;
       // List all peers from server and chose some of them randomly to connect to
       // Make sure we dont select ourselves!
-      const myIndex = peers.indexOf(this.currentPeerId || "");
-      peers.splice(myIndex, 1);
-      // console.log("All peers: ", peers);
+      const myIndex = this.peersList.indexOf(this.currentPeerId || "");
+      this.peersList.splice(myIndex, 1);
+      // console.log("All peers: ", this.peersList);
 
       const selected: string[] = [];
 
       // Get the max ammount of connections we need
       // We use a cubic root since we expect to have a lot of peers.
       let maxConnections =
-        peers.length > 2 ? Math.floor(Math.log(peers.length) / Math.log(3)) : 1;
-      if (peers.length === 0) maxConnections = 0;
+        this.peersList.length > 2
+          ? Math.floor(Math.log(this.peersList.length) / Math.log(3))
+          : 1;
+      if (this.peersList.length === 0) maxConnections = 0;
 
       // position to start the picking loop
       // Pick the one at half the list, deterministic values help
-      const pos = Math.floor(peers.length / 2); // Math.floor(Math.random() * peers.length);
+      const pos = Math.floor(this.peersList.length / 2); // Math.floor(Math.random() * this.peersList.length);
 
       // Start picks
       let n = 0;
       while (n < maxConnections) {
         // advance as cubic then start from zero (mod) if we exceed the array size
-        const index = (pos + 3 ** n) % peers.length;
-        if (!selected.includes(peers[index])) {
-          selected.push(peers[index]);
+        const index = (pos + 3 ** n) % this.peersList.length;
+        if (!selected.includes(this.peersList[index])) {
+          selected.push(this.peersList[index]);
         }
         n += 1;
       }
@@ -377,13 +410,22 @@ class ToolChain {
     });
   }
 
+  private reconnectSignalling() {
+    if (this.currentPeer) {
+      this.currentPeer.reconnect();
+    }
+  }
+
   private finishInitPeer() {
     if (this.currentPeer) {
       this.findNewPeers();
 
       // On Peer disconnection
       this.currentPeer.on("disconnected", () => {
-        if (this.debug) console.info("Disconnected");
+        if (this.debug) {
+          console.info("Disconnected from peerserver");
+        }
+        setTimeout(this.reconnectSignalling, 3000);
       });
 
       this.currentPeer.on("close", () => {
@@ -419,29 +461,31 @@ class ToolChain {
   }
 
   public initialize() {
-    this.dbInit();
-    const id = this.currentPeerId;
-    if (this.debug) console.log(`|| initialize with id: ${id}`);
-
-    this.currentPeer = new Peer(id, {
+    const newId = this.generateNewId(this.currentPeerNumber);
+    const tempPeer = new Peer(newId, {
       host: "api.mtgatool.com",
       port: 9000,
       path: "peer",
     });
 
-    // On Peer open to peerserver
-    this.currentPeer.on("open", (_id: string) => {
+    tempPeer.on("open", (_id: string) => {
       console.log("✔ Connected to peerserver as", _id);
+      this.currentPeerId = _id;
+      this.currentPeer = tempPeer;
       this.finishInitPeer();
       this.onConnected();
     });
 
-    this.currentPeer.on("error", (err: any) => {
-      if (this.debug) console.error(err, err.type);
+    tempPeer.on("error", (err: any) => {
       if (err.type === "network" || err.type === "server-error") {
         this.disconnect();
-        this.currentPeerId = this.generateNewId();
         setTimeout(() => this.initialize(), 3000);
+      } else if (err.type === "unavailable-id") {
+        this.currentPeerNumber += 1;
+        this.disconnect();
+        this.initialize();
+      } else if (this.debug) {
+        console.error(err, err.type);
       }
     });
   }
@@ -455,7 +499,6 @@ class ToolChain {
 
   public sendMessage(msg: AnyMessage) {
     this.checkMessageIndex(msg.hash, this.currentPeerId);
-
 
     if (msg.type === "put") {
       this.dbWrite(msg.val.key, msg.val);

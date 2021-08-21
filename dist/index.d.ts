@@ -15,6 +15,7 @@ declare class ToolChain {
     private currentPeer;
     private connectionsList;
     private namespace;
+    private currentPeerNumber;
     private currentPeerId;
     private debug;
     private peersList;
@@ -86,8 +87,6 @@ declare class ToolChain {
     private checkMessageIndex;
     private msgPutHandler;
     private msgGetHandler;
-    private msgGetPeerSync;
-    private msgSetPeerSync;
     private _onMessageWrapper;
     private generateNewId;
     constructor(namespace: string, debug?: boolean);
@@ -96,6 +95,7 @@ declare class ToolChain {
     get getConnections(): Record<string, Peer.DataConnection | null>;
     private connectTo;
     private findNewPeers;
+    private reconnectSignalling;
     private finishInitPeer;
     initialize(): void;
     disconnect(): void;
