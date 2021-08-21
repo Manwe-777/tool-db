@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import Peer from "peerjs";
+import _, { indexOf } from "lodash";
 import toolChainAnonSignIn from "./toolChainAnonSignIn";
 import toolChainGet from "./toolChainGet";
 import toolChainGetPubKey from "./toolChainGetPubKey";
@@ -18,8 +19,8 @@ import localForageInit from "./utils/localForage/localForageInit";
 import localForageRead from "./utils/localForage/localForageRead";
 import localForageWrite from "./utils/localForage/localForageWrite";
 
-import sha256 from "./utils/sha256";
 import verifyMessage from "./utils/verifyMessage";
+import sha1 from "./utils/sha1";
 
 class ToolChain {
   private currentPeer: Peer | undefined;
@@ -308,10 +309,16 @@ class ToolChain {
   };
 
   private generateNewId(root?: number) {
-    return `${this.namespace}-${sha256(
-      root === undefined
-        ? new Date().getTime() + "-" + Math.round(Math.random() * 99999999)
-        : root + ""
+    // return `${this.namespace}-${
+    //   root === undefined
+    //     ? sha1(
+    //         new Date().getTime() + "-" + Math.round(Math.random() * 99999999)
+    //       )
+    //     : root
+    // }`;
+    const rand = Math.round(Math.random() * 9999);
+    return `${this.namespace}-${sha1(
+      root === undefined ? new Date().getTime() + "-" + rand : root + ""
     )}`;
   }
 
@@ -336,6 +343,9 @@ class ToolChain {
   }
 
   private connectTo(id: string): Promise<Peer.DataConnection> {
+    if (this.debug) {
+      console.log("Connect to: ", id);
+    }
     return new Promise((resolve, reject) => {
       if (!this.currentPeer) {
         reject();
@@ -355,9 +365,7 @@ class ToolChain {
       newConn.on("close", () => {
         delete this.connectionsList[id];
         if (this.debug) console.error(`Connection to ${id} closed`);
-        if (Object.keys(this.connectionsList).length < 1) {
-          this.findNewPeers();
-        }
+        this.rewirePeers();
       });
 
       newConn.on("open", () => {
@@ -368,46 +376,54 @@ class ToolChain {
     });
   }
 
-  private findNewPeers() {
+  private _rewirePeers() {
     if (!this.currentPeer) return;
+
     this.currentPeer.listAllPeers((peers) => {
       this.peersList = peers;
-      // List all peers from server and chose some of them randomly to connect to
-      // Make sure we dont select ourselves!
-      const myIndex = this.peersList.indexOf(this.currentPeerId || "");
-      this.peersList.splice(myIndex, 1);
-      // console.log("All peers: ", this.peersList);
 
-      const selected: string[] = [];
-
-      // Get the max ammount of connections we need
-      // We use a cubic root since we expect to have a lot of peers.
-      let maxConnections =
-        this.peersList.length > 2
-          ? Math.floor(Math.log(this.peersList.length) / Math.log(3))
-          : 1;
-      if (this.peersList.length === 0) maxConnections = 0;
-
-      // position to start the picking loop
-      // Pick the one at half the list, deterministic values help
-      const pos = Math.floor(this.peersList.length / 2); // Math.floor(Math.random() * this.peersList.length);
-
-      // Start picks
-      let n = 0;
-      while (n < maxConnections) {
-        // advance as cubic then start from zero (mod) if we exceed the array size
-        const index = (pos + 3 ** n) % this.peersList.length;
-        if (!selected.includes(this.peersList[index])) {
-          selected.push(this.peersList[index]);
-        }
-        n += 1;
-      }
+      this.peersList.sort();
+      const position = this.peersList.indexOf(this.currentPeerId);
+      const next = (position + 1) % this.peersList.length;
+      const previous = position < 1 ? this.peersList.length - 1 : position - 1;
 
       if (this.debug) {
-        console.log("Peers to connect to", selected);
+        console.log("All peers (" + this.currentPeerId + "): ", this.peersList);
+        console.log("position: ", position);
+        console.log("Prev: ", previous, this.peersList[previous]);
+        console.log("Next: ", next, this.peersList[next]);
       }
-      selected.forEach((id) => this.connectTo(id));
+
+      if (next !== position && !this.connectionsList[this.peersList[next]]) {
+        this.connectTo(this.peersList[next]);
+      }
+      if (
+        previous !== position &&
+        previous !== next &&
+        !this.connectionsList[this.peersList[previous]]
+      ) {
+        this.connectTo(this.peersList[previous]);
+      }
+
+      Object.keys(this.connectionsList).forEach((id) => {
+        if (id !== this.peersList[next] && id !== this.peersList[previous]) {
+          if (this.connectionsList[id]) {
+            this.connectionsList[id]?.close();
+            delete this.connectionsList[id];
+          }
+        }
+      });
     });
+  }
+
+  // Prevents the re-wiring to run too oftenly
+  private rewirePeersIimeout: NodeJS.Timeout | null = null;
+
+  private rewirePeers() {
+    if (this.rewirePeersIimeout) {
+      clearTimeout(this.rewirePeersIimeout);
+    }
+    this.rewirePeersIimeout = setTimeout(() => this._rewirePeers(), 1000);
   }
 
   private reconnectSignalling() {
@@ -418,7 +434,7 @@ class ToolChain {
 
   private finishInitPeer() {
     if (this.currentPeer) {
-      this.findNewPeers();
+      this.rewirePeers();
 
       // On Peer disconnection
       this.currentPeer.on("disconnected", () => {
@@ -443,18 +459,16 @@ class ToolChain {
           }
           this.onPeerConnected(c.peer);
           this.connectionsList[c.peer] = c;
+          this.rewirePeers();
         });
 
         c.on("data", (d) => this._onMessageWrapper(d, c.peer));
 
         c.on("close", () => {
-          delete this.connectionsList[c.peer];
           if (this.debug) {
             console.info(` > ${c.peer} disconnected.`);
           }
-          if (Object.keys(this.connectionsList).length < 1) {
-            this.findNewPeers();
-          }
+          this.rewirePeers();
         });
       });
     }
@@ -508,13 +522,31 @@ class ToolChain {
       // window.chainData[msg.val.key] = msg.val;
     }
 
-    Object.values(this.connectionsList).forEach((conn) => {
-      // console.log(conn);
+    // Send to the next in the ring
+    const allPeers = [...Object.keys(this.connectionsList), this.currentPeerId];
+    allPeers.sort();
+
+    const position = allPeers.indexOf(this.currentPeerId) + 1;
+    let last = allPeers[position];
+    if (position >= allPeers.length) {
+      last = allPeers[0];
+    }
+
+    if (this.connectionsList[last]) {
+      const conn = this.connectionsList[last];
       if (conn) {
         this.checkMessageIndex(msg.hash, conn.peer);
+        console.log("Message sent to " + last);
         conn.send(msg);
       }
-    });
+    }
+    // Send to all;
+    // Object.values(this.connectionsList).forEach((conn) => {
+    //   if (conn && this.connectionsList) {
+    //     this.checkMessageIndex(msg.hash, conn.peer);
+    //     conn.send(msg);
+    //   }
+    // });
   }
 }
 

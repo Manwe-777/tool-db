@@ -35,6 +35,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArray = (this && this.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -51,8 +56,8 @@ var message_1 = require("./types/message");
 var localForageInit_1 = __importDefault(require("./utils/localForage/localForageInit"));
 var localForageRead_1 = __importDefault(require("./utils/localForage/localForageRead"));
 var localForageWrite_1 = __importDefault(require("./utils/localForage/localForageWrite"));
-var sha256_1 = __importDefault(require("./utils/sha256"));
 var verifyMessage_1 = __importDefault(require("./utils/verifyMessage"));
+var sha1_1 = __importDefault(require("./utils/sha1"));
 var ToolChain = /** @class */ (function () {
     function ToolChain(namespace, debug) {
         var _this = this;
@@ -207,6 +212,8 @@ var ToolChain = /** @class */ (function () {
                 }
             });
         }); };
+        // Prevents the re-wiring to run too oftenly
+        this.rewirePeersIimeout = null;
         this.namespace = namespace;
         this.debug = debug;
         window.chainData = {};
@@ -319,9 +326,15 @@ var ToolChain = /** @class */ (function () {
         });
     };
     ToolChain.prototype.generateNewId = function (root) {
-        return this.namespace + "-" + sha256_1.default(root === undefined
-            ? new Date().getTime() + "-" + Math.round(Math.random() * 99999999)
-            : root + "");
+        // return `${this.namespace}-${
+        //   root === undefined
+        //     ? sha1(
+        //         new Date().getTime() + "-" + Math.round(Math.random() * 99999999)
+        //       )
+        //     : root
+        // }`;
+        var rand = Math.round(Math.random() * 9999);
+        return this.namespace + "-" + sha1_1.default(root === undefined ? new Date().getTime() + "-" + rand : root + "");
     };
     Object.defineProperty(ToolChain.prototype, "id", {
         get: function () {
@@ -346,6 +359,9 @@ var ToolChain = /** @class */ (function () {
     });
     ToolChain.prototype.connectTo = function (id) {
         var _this = this;
+        if (this.debug) {
+            console.log("Connect to: ", id);
+        }
         return new Promise(function (resolve, reject) {
             if (!_this.currentPeer) {
                 reject();
@@ -363,9 +379,7 @@ var ToolChain = /** @class */ (function () {
                 delete _this.connectionsList[id];
                 if (_this.debug)
                     console.error("Connection to " + id + " closed");
-                if (Object.keys(_this.connectionsList).length < 1) {
-                    _this.findNewPeers();
-                }
+                _this.rewirePeers();
             });
             newConn.on("open", function () {
                 _this.connectionsList[id] = newConn;
@@ -375,43 +389,47 @@ var ToolChain = /** @class */ (function () {
             });
         });
     };
-    ToolChain.prototype.findNewPeers = function () {
+    ToolChain.prototype._rewirePeers = function () {
         var _this = this;
         if (!this.currentPeer)
             return;
         this.currentPeer.listAllPeers(function (peers) {
             _this.peersList = peers;
-            // List all peers from server and chose some of them randomly to connect to
-            // Make sure we dont select ourselves!
-            var myIndex = _this.peersList.indexOf(_this.currentPeerId || "");
-            _this.peersList.splice(myIndex, 1);
-            // console.log("All peers: ", this.peersList);
-            var selected = [];
-            // Get the max ammount of connections we need
-            // We use a cubic root since we expect to have a lot of peers.
-            var maxConnections = _this.peersList.length > 2
-                ? Math.floor(Math.log(_this.peersList.length) / Math.log(3))
-                : 1;
-            if (_this.peersList.length === 0)
-                maxConnections = 0;
-            // position to start the picking loop
-            // Pick the one at half the list, deterministic values help
-            var pos = Math.floor(_this.peersList.length / 2); // Math.floor(Math.random() * this.peersList.length);
-            // Start picks
-            var n = 0;
-            while (n < maxConnections) {
-                // advance as cubic then start from zero (mod) if we exceed the array size
-                var index = (pos + Math.pow(3, n)) % _this.peersList.length;
-                if (!selected.includes(_this.peersList[index])) {
-                    selected.push(_this.peersList[index]);
-                }
-                n += 1;
-            }
+            _this.peersList.sort();
+            var position = _this.peersList.indexOf(_this.currentPeerId);
+            var next = (position + 1) % _this.peersList.length;
+            var previous = position < 1 ? _this.peersList.length - 1 : position - 1;
             if (_this.debug) {
-                console.log("Peers to connect to", selected);
+                console.log("All peers (" + _this.currentPeerId + "): ", _this.peersList);
+                console.log("position: ", position);
+                console.log("Prev: ", previous, _this.peersList[previous]);
+                console.log("Next: ", next, _this.peersList[next]);
             }
-            selected.forEach(function (id) { return _this.connectTo(id); });
+            if (next !== position && !_this.connectionsList[_this.peersList[next]]) {
+                _this.connectTo(_this.peersList[next]);
+            }
+            if (previous !== position &&
+                previous !== next &&
+                !_this.connectionsList[_this.peersList[previous]]) {
+                _this.connectTo(_this.peersList[previous]);
+            }
+            Object.keys(_this.connectionsList).forEach(function (id) {
+                var _a;
+                if (id !== _this.peersList[next] && id !== _this.peersList[previous]) {
+                    if (_this.connectionsList[id]) {
+                        (_a = _this.connectionsList[id]) === null || _a === void 0 ? void 0 : _a.close();
+                        delete _this.connectionsList[id];
+                    }
+                }
+            });
         });
+    };
+    ToolChain.prototype.rewirePeers = function () {
+        var _this = this;
+        if (this.rewirePeersIimeout) {
+            clearTimeout(this.rewirePeersIimeout);
+        }
+        this.rewirePeersIimeout = setTimeout(function () { return _this._rewirePeers(); }, 1000);
     };
     ToolChain.prototype.reconnectSignalling = function () {
         if (this.currentPeer) {
@@ -421,7 +439,7 @@ var ToolChain = /** @class */ (function () {
     ToolChain.prototype.finishInitPeer = function () {
         var _this = this;
         if (this.currentPeer) {
-            this.findNewPeers();
+            this.rewirePeers();
             // On Peer disconnection
             this.currentPeer.on("disconnected", function () {
                 if (_this.debug) {
@@ -443,16 +461,14 @@ var ToolChain = /** @class */ (function () {
                     }
                     _this.onPeerConnected(c.peer);
                     _this.connectionsList[c.peer] = c;
+                    _this.rewirePeers();
                 });
                 c.on("data", function (d) { return _this._onMessageWrapper(d, c.peer); });
                 c.on("close", function () {
-                    delete _this.connectionsList[c.peer];
                     if (_this.debug) {
                         console.info(" > " + c.peer + " disconnected.");
                     }
-                    if (Object.keys(_this.connectionsList).length < 1) {
-                        _this.findNewPeers();
-                    }
+                    _this.rewirePeers();
                 });
             });
         }
@@ -494,7 +510,6 @@ var ToolChain = /** @class */ (function () {
         }
     };
     ToolChain.prototype.sendMessage = function (msg) {
-        var _this = this;
         this.checkMessageIndex(msg.hash, this.currentPeerId);
         if (msg.type === "put") {
             this.dbWrite(msg.val.key, msg.val);
@@ -503,13 +518,29 @@ var ToolChain = /** @class */ (function () {
             }
             // window.chainData[msg.val.key] = msg.val;
         }
-        Object.values(this.connectionsList).forEach(function (conn) {
-            // console.log(conn);
+        // Send to the next in the ring
+        var allPeers = __spreadArray(__spreadArray([], Object.keys(this.connectionsList)), [this.currentPeerId]);
+        allPeers.sort();
+        var position = allPeers.indexOf(this.currentPeerId) + 1;
+        var last = allPeers[position];
+        if (position >= allPeers.length) {
+            last = allPeers[0];
+        }
+        if (this.connectionsList[last]) {
+            var conn = this.connectionsList[last];
             if (conn) {
-                _this.checkMessageIndex(msg.hash, conn.peer);
+                this.checkMessageIndex(msg.hash, conn.peer);
+                console.log("Message sent to " + last);
                 conn.send(msg);
             }
-        });
+        }
+        // Send to all;
+        // Object.values(this.connectionsList).forEach((conn) => {
+        //   if (conn && this.connectionsList) {
+        //     this.checkMessageIndex(msg.hash, conn.peer);
+        //     conn.send(msg);
+        //   }
+        // });
     };
     return ToolChain;
 }());

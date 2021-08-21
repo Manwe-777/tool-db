@@ -94,7 +94,9 @@ declare class ToolChain {
     get getPeer(): Peer | undefined;
     get getConnections(): Record<string, Peer.DataConnection | null>;
     private connectTo;
-    private findNewPeers;
+    private _rewirePeers;
+    private rewirePeersIimeout;
+    private rewirePeers;
     private reconnectSignalling;
     private finishInitPeer;
     initialize(): void;
