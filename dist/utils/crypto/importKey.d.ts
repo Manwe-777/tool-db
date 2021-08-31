@@ -1,1 +1,1 @@
-export default function importKey(key: ArrayBuffer, type: "pkcs8" | "spki" | "jwk", algorithm: "ECDSA" | "ECDH", ops: KeyUsage[]): PromiseLike<CryptoKey>;
+export default function importKey(key: ArrayBuffer, type: any, algorithm: "ECDSA" | "ECDH", ops: KeyUsage[]): Promise<CryptoKey>;

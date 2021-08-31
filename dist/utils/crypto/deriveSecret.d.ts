@@ -1,2 +1,1 @@
-import { KeyPair } from "./generateKeyPair";
-export default function deriveSecret(keys: KeyPair): PromiseLike<CryptoKey>;
+export default function deriveSecret(keys: CryptoKeyPair): Promise<CryptoKey>;

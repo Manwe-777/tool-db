@@ -7,8 +7,8 @@ declare class ToolDbService {
     dbInit: () => void;
     dbRead: <T>(key: string) => Promise<T>;
     dbWrite: <T>(key: string, msg: T) => void;
-    triggerPut: (msg: GraphEntryValue<any>) => void;
-    onMessage: (msg: GraphEntryValue<any>, peerId: string) => void;
+    triggerPut: (msg: GraphEntryValue) => void;
+    onMessage: (msg: GraphEntryValue, peerId: string) => void;
     private _customVerification;
     /**
      * Adds an extra verification step for messages at the given key.
@@ -17,9 +17,9 @@ declare class ToolDbService {
      * @param key data key
      * @param fn (stored, incoming) => boolean
      */
-    addVerification: (key: string, fn: (oldData: GraphEntryValue<any> | undefined, data: GraphEntryValue<any>) => boolean) => void;
+    addVerification: (key: string, fn: (oldData: GraphEntryValue | undefined, data: GraphEntryValue) => boolean) => void;
     private dataPutHandler;
-    messageWrapper: (data: GraphEntryValue<any>) => Promise<unknown>;
+    messageWrapper: (data: GraphEntryValue) => Promise<unknown>;
     constructor(debug?: boolean);
 }
 export default ToolDbService;
