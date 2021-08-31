@@ -28,6 +28,7 @@ export default function toolChainSignIn(
           reject(Error("Unvalid user data"));
           return;
         }
+
         if (sha256(password) !== _user.pass) {
           reject(Error("Invalid password"));
           return;

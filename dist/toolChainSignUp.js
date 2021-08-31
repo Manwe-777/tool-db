@@ -39,6 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var axios_1 = __importDefault(require("axios"));
 var encryptWithPass_1 = __importDefault(require("./utils/crypto/encryptWithPass"));
 var generateKeysComb_1 = __importDefault(require("./utils/crypto/generateKeysComb"));
 var saveKeysComb_1 = __importDefault(require("./utils/crypto/saveKeysComb"));
@@ -56,68 +57,78 @@ function toolChainSignUp(user, password) {
             userRoot = "@" + user;
             return [2 /*return*/, new Promise(function (resolve, reject) {
                     _this.getData(userRoot, false, 5000)
-                        .then(function () {
-                        reject(new Error("User already exists!"));
-                    })
-                        .catch(function () {
-                        generateKeysComb_1.default()
-                            .then(function (keys) {
-                            if (keys) {
-                                saveKeysComb_1.default(keys.signKeys, keys.encryptionKeys)
-                                    .then(function (savedKeys) {
-                                    var iv = generateIv_1.default();
-                                    var encskpriv = "";
-                                    var encekpriv = "";
-                                    // Encrypt sign key
-                                    encryptWithPass_1.default(savedKeys.skpriv, password, iv)
-                                        .then(function (skenc) {
-                                        encryptWithPass_1.default(savedKeys.ekpriv, password, iv)
-                                            .then(function (ekenc) {
-                                            if (skenc)
-                                                encskpriv = skenc;
-                                            if (ekenc)
-                                                encekpriv = ekenc;
-                                            var userData = {
-                                                keys: {
-                                                    skpub: savedKeys.skpub,
-                                                    skpriv: toBase64_1.default(encskpriv),
-                                                    ekpub: savedKeys.ekpub,
-                                                    ekpriv: toBase64_1.default(encekpriv),
-                                                },
-                                                iv: uint8ToBase64_1.default(iv),
-                                                pass: sha256_1.default(password),
-                                            };
-                                            var timestamp = new Date().getTime();
-                                            var userDataString = "" + JSON.stringify(userData) + savedKeys.skpub + timestamp;
-                                            proofOfWork_1.default(userDataString, 3)
-                                                .then(function (_a) {
-                                                var hash = _a.hash, nonce = _a.nonce;
-                                                signData_1.default(hash, keys.signKeys.privateKey).then(function (signature) {
-                                                    var signupMessage = {
-                                                        key: userRoot,
-                                                        pub: savedKeys.skpub,
-                                                        nonce: nonce,
-                                                        timestamp: timestamp,
-                                                        hash: hash,
-                                                        sig: toBase64_1.default(signature),
-                                                        value: userData,
-                                                    };
-                                                    resolve(signupMessage);
-                                                });
+                        .then(function (data) {
+                        if (data === null) {
+                            generateKeysComb_1.default()
+                                .then(function (keys) {
+                                if (keys) {
+                                    saveKeysComb_1.default(keys.signKeys, keys.encryptionKeys)
+                                        .then(function (savedKeys) {
+                                        var iv = generateIv_1.default();
+                                        var encskpriv = "";
+                                        var encekpriv = "";
+                                        // Encrypt sign key
+                                        encryptWithPass_1.default(savedKeys.skpriv, password, iv)
+                                            .then(function (skenc) {
+                                            encryptWithPass_1.default(savedKeys.ekpriv, password, iv)
+                                                .then(function (ekenc) {
+                                                if (skenc)
+                                                    encskpriv = skenc;
+                                                if (ekenc)
+                                                    encekpriv = ekenc;
+                                                var userData = {
+                                                    keys: {
+                                                        skpub: savedKeys.skpub,
+                                                        skpriv: toBase64_1.default(encskpriv),
+                                                        ekpub: savedKeys.ekpub,
+                                                        ekpriv: toBase64_1.default(encekpriv),
+                                                    },
+                                                    iv: uint8ToBase64_1.default(iv),
+                                                    pass: sha256_1.default(password),
+                                                };
+                                                var timestamp = new Date().getTime();
+                                                var userDataString = "" + JSON.stringify(userData) + savedKeys.skpub + timestamp;
+                                                proofOfWork_1.default(userDataString, 3)
+                                                    .then(function (_a) {
+                                                    var hash = _a.hash, nonce = _a.nonce;
+                                                    signData_1.default(hash, keys.signKeys.privateKey).then(function (signature) {
+                                                        var signupMessage = {
+                                                            key: userRoot,
+                                                            pub: savedKeys.skpub,
+                                                            nonce: nonce,
+                                                            timestamp: timestamp,
+                                                            hash: hash,
+                                                            sig: toBase64_1.default(signature),
+                                                            value: userData,
+                                                        };
+                                                        axios_1.default
+                                                            .post(_this.host + "/api/put", signupMessage)
+                                                            .then(function (value) {
+                                                            resolve(value.data);
+                                                        })
+                                                            .catch(reject);
+                                                    });
+                                                })
+                                                    .catch(reject);
                                             })
                                                 .catch(reject);
                                         })
                                             .catch(reject);
                                     })
-                                        .catch(reject);
-                                })
-                                    .catch(function () { return reject(new Error("")); });
-                            }
-                            else {
-                                reject(new Error("Could not generate keys"));
-                            }
-                        })
-                            .catch(function () { return reject(new Error("Could not generate keys")); });
+                                        .catch(function () { return reject(new Error("")); });
+                                }
+                                else {
+                                    reject(new Error("Could not generate keys"));
+                                }
+                            })
+                                .catch(function () { return reject(new Error("Could not generate keys")); });
+                        }
+                        else {
+                            reject(new Error("User already exists!"));
+                        }
+                    })
+                        .catch(function () {
+                        reject(new Error("Could not fetch user"));
                     });
                 })];
         });
