@@ -1,3 +1,4 @@
+import getCrypto from "../../getCrypto";
 import arrayBufferToString from "../arrayBufferToString";
 import stringToArrayBuffer from "../stringToArrayBuffer";
 
@@ -6,7 +7,8 @@ export default function encryptData(
   publicKey: CryptoKey,
   iv: Uint8Array
 ): Promise<string | void> {
-  return window.crypto.subtle
+  const crypto = getCrypto();
+  return crypto.subtle
     .encrypt(
       {
         name: "AES-GCM",

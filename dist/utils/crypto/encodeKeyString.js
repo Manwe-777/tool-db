@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var arrayBufferToString_1 = __importDefault(require("../arrayBufferToString"));
 function encodeKeyString(keydata) {
     var keydataS = arrayBufferToString_1.default(keydata);
-    var keydataB64 = window.btoa(keydataS);
+    var keydataB64 = global.btoa(keydataS);
     return keydataB64;
 }
 exports.default = encodeKeyString;

@@ -1,3 +1,4 @@
+import getCrypto from "../../getCrypto";
 import arrayBufferToString from "../arrayBufferToString";
 import base64ToUint8 from "../base64ToUint8";
 import catchReturn from "../catchReturn";
@@ -8,7 +9,8 @@ export default function decryptData(
   privateKey: CryptoKey,
   iv: string
 ): Promise<string | undefined> {
-  return window.crypto.subtle
+  const crypto = getCrypto();
+  return crypto.subtle
     .decrypt(
       {
         name: "AES-GCM",

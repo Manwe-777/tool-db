@@ -1,20 +1,8 @@
-import ToolChain from "..";
-
 export interface ParsedKeys {
   skpub: string;
   skpriv: string;
   ekpub: string;
   ekpriv: string;
-}
-
-export interface ToolChainOptions {
-  serveMessages?: boolean;
-  relayMessages?: boolean;
-  maxPeers?: number;
-  reconnectTimeout?: number;
-  host?: string;
-  port?: number;
-  path?: string;
 }
 
 export type GenericObject = { [key: string]: any };
@@ -29,8 +17,6 @@ export interface GraphEntryValue<T = any> {
   value: T;
 }
 
-export type GraphBase = Record<string, GraphEntryValue>;
-
 export interface UserRootData {
   keys: {
     skpub: string;
@@ -40,11 +26,4 @@ export interface UserRootData {
   };
   iv: string;
   pass: string;
-}
-
-declare global {
-  interface Window {
-    toolchain: ToolChain | undefined;
-    chainData: any;
-  }
 }

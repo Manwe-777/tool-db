@@ -1,7 +1,5 @@
-import ToolChain from ".";
-import { GraphEntryValue } from "./types/graph";
-import { MessageGet } from "./types/message";
-import sha256 from "./utils/sha256";
+import ToolChainClient from "./toolChainClient";
+import axios from "axios";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -10,56 +8,25 @@ import sha256 from "./utils/sha256";
  * @returns Promise<Data>
  */
 export default function toolChainGet<T = any>(
-  this: ToolChain,
+  this: ToolChainClient,
   key: string,
   userNamespaced = false,
-  timeoutMs = 10000,
-  onRemote = false
+  timeoutMs = 3000
 ): Promise<T> {
-  let pubKey = "";
   return new Promise((resolve, reject) => {
-    this.getPubKey()
-      .then((p) => {
-        pubKey = p;
-      })
-      .catch((e) => {
-        if (userNamespaced) {
-          reject(e);
-        }
-      })
-      .finally(() => {
-        const finalKey = userNamespaced ? `~${pubKey}.${key}` : key;
+    if (userNamespaced && this.user?.pubKey === undefined) {
+      reject(new Error("You are not authorized yet!"));
+      return;
+    }
+    const finalKey = userNamespaced ? `~${this.user?.pubKey}.${key}` : key;
 
-        const message: MessageGet = {
-          hash: sha256(`${this.id}-${finalKey}`),
-          source: this.id,
-          type: "get",
-          key: finalKey,
-        };
-        const triggerRemote = () => {
-          const timeout = setTimeout(
-            () => reject(new Error("Key not found (GET timed out)")),
-            timeoutMs
-          );
-          this.listenForKey(key, (d: GraphEntryValue<T>["value"]) => {
-            clearTimeout(timeout);
-            resolve(d);
-          });
-          this.sendMessage(message);
-        };
-
-        this.dbRead<GraphEntryValue<T>>(finalKey)
-          .then((localData) => {
-            if (localData) {
-              resolve(localData.value);
-              if (onRemote) {
-                triggerRemote();
-              }
-            } else {
-              triggerRemote();
-            }
-          })
-          .catch(triggerRemote);
-      });
+    axios
+      .get<T>(this.host + "/api/get?key=" + finalKey, {
+        timeout: timeoutMs,
+      })
+      .then((value) => {
+        resolve(value.data);
+      })
+      .catch(reject);
   });
 }

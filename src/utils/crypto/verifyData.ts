@@ -1,3 +1,4 @@
+import getCrypto from "../../getCrypto";
 import stringToArrayBuffer from "../stringToArrayBuffer";
 
 export default function verifyData(
@@ -5,7 +6,8 @@ export default function verifyData(
   signature: string,
   publicKey: CryptoKey
 ) {
-  return window.crypto.subtle.verify(
+  const crypto = getCrypto();
+  return crypto.subtle.verify(
     {
       name: "ECDSA",
       hash: { name: "SHA-256" }, // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"

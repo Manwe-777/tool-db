@@ -1,3 +1,3 @@
-import ToolChain from ".";
-import { MessagePut } from "./types/message";
-export default function toolChainPut<T = any>(this: ToolChain, key: string, value: T, userNamespaced?: boolean): Promise<MessagePut | null>;
+import toolChainClient from "./toolChainClient";
+import { GraphEntryValue } from "./types/graph";
+export default function toolChainPut<T = any>(this: toolChainClient, key: string, value: T, userNamespaced?: boolean): Promise<GraphEntryValue | null>;

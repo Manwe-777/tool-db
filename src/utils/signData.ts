@@ -1,8 +1,10 @@
+import getCrypto from "../getCrypto";
 import arrayBufferToString from "./arrayBufferToString";
 import stringToArrayBuffer from "./stringToArrayBuffer";
 
 export default function signData(data: string, privateKey: CryptoKey) {
-  return window.crypto.subtle
+  const crypto = getCrypto();
+  return crypto.subtle
     .sign(
       {
         name: "ECDSA",

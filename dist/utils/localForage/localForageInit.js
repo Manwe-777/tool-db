@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var localforage_1 = __importDefault(require("localforage"));
+var localforage_startswith_1 = require("localforage-startswith");
 function localForageInit() {
     localforage_1.default.config({
         driver: localforage_1.default.WEBSQL,
@@ -13,5 +14,6 @@ function localForageInit() {
         storeName: "keyvaluepairs",
         description: "toolChain data storage.",
     });
+    localforage_startswith_1.extendPrototype(localforage_1.default);
 }
 exports.default = localForageInit;

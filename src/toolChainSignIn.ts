@@ -6,11 +6,12 @@ import base64ToUint8 from "./utils/base64ToUint8";
 import catchReturn from "./utils/catchReturn";
 import fromBase64 from "./utils/fromBase64";
 import sha256 from "./utils/sha256";
-import ToolChain from ".";
+
 import { UserRootData } from "./types/graph";
+import ToolChainClient from "./toolChainClient";
 
 export default function toolChainSignIn(
-  this: ToolChain,
+  this: ToolChainClient,
   user: string,
   password: string
 ): Promise<
@@ -105,7 +106,11 @@ export default function toolChainSignIn(
                       },
                     };
 
-                    this.user = { keys: newKeys, name: user };
+                    this.user = {
+                      keys: newKeys,
+                      name: user,
+                      pubKey: _user.keys.skpub,
+                    };
                     resolve(newKeys);
                   }
                 })

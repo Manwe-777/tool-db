@@ -3,12 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var getCrypto_1 = __importDefault(require("../../getCrypto"));
 var stringToArrayBuffer_1 = __importDefault(require("../stringToArrayBuffer"));
 function generateKeyFromPassword(password) {
-    return window.crypto.subtle
+    var crypto = getCrypto_1.default();
+    return crypto.subtle
         .importKey("raw", stringToArrayBuffer_1.default(password), { name: "PBKDF2" }, false, ["deriveKey"])
         .then(function (importedPassword) {
-        return window.crypto.subtle.deriveKey({
+        return crypto.subtle.deriveKey({
             name: "PBKDF2",
             salt: stringToArrayBuffer_1.default("t6sa@8d7!2ñs?=adjq2ng"),
             iterations: 100000,

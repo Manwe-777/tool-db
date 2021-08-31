@@ -1,4 +1,4 @@
-import ToolChain from ".";
+import toolChainClient from "./toolChainClient";
 import { GraphEntryValue, UserRootData } from "./types/graph";
 
 import encryptWithPass from "./utils/crypto/encryptWithPass";
@@ -12,13 +12,13 @@ import toBase64 from "./utils/toBase64";
 import uint8ToBase64 from "./utils/uint8ToBase64";
 
 export default async function toolChainSignUp(
-  this: ToolChain,
+  this: toolChainClient,
   user: string,
   password: string
 ): Promise<GraphEntryValue<UserRootData>> {
   const userRoot = `@${user}`;
   return new Promise((resolve, reject) => {
-    this.getData(userRoot, false, 5000, true)
+    this.getData(userRoot, false, 5000)
       .then(() => {
         reject(new Error("User already exists!"));
       })

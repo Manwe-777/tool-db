@@ -3,12 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var getCrypto_1 = __importDefault(require("../../getCrypto"));
 var arrayBufferToString_1 = __importDefault(require("../arrayBufferToString"));
 var base64ToUint8_1 = __importDefault(require("../base64ToUint8"));
 var catchReturn_1 = __importDefault(require("../catchReturn"));
 var stringToArrayBuffer_1 = __importDefault(require("../stringToArrayBuffer"));
 function decryptData(data, privateKey, iv) {
-    return window.crypto.subtle
+    var crypto = getCrypto_1.default();
+    return crypto.subtle
         .decrypt({
         name: "AES-GCM",
         iv: base64ToUint8_1.default(iv),

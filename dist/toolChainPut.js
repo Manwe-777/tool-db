@@ -39,6 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var axios_1 = __importDefault(require("axios"));
 var proofOfWork_1 = __importDefault(require("./utils/proofOfWork"));
 var signData_1 = __importDefault(require("./utils/signData"));
 var toBase64_1 = __importDefault(require("./utils/toBase64"));
@@ -48,52 +49,47 @@ function toolChainPut(key, value, userNamespaced) {
     return new Promise(function (resolve, reject) {
         if (key.includes(".")) {
             // Dots are used as a delimitator character between bublic keys and the key of the user's data
-            reject(new Error("Key cannot include dots!"));
+            reject(new Error("Key cannot include dots!; " + key));
             return;
         }
         if (!_this.user) {
             reject(new Error("You need to log in before you can PUT."));
             return;
         }
-        // Get current public key
-        _this.getPubKey()
-            .then(function (pubKey) {
-            var timestamp = new Date().getTime();
-            var dataString = "" + JSON.stringify(value) + pubKey + timestamp;
-            // WORK
-            proofOfWork_1.default(dataString, 3)
-                .then(function (_a) {
-                var _b;
-                var hash = _a.hash, nonce = _a.nonce;
-                if ((_b = _this.user) === null || _b === void 0 ? void 0 : _b.keys) {
-                    // Sign our value
-                    signData_1.default(hash, _this.user.keys.signKeys.privateKey)
-                        .then(function (signature) { return __awaiter(_this, void 0, void 0, function () {
-                        var message;
-                        return __generator(this, function (_a) {
-                            message = {
-                                type: "put",
-                                hash: hash,
-                                val: {
-                                    key: userNamespaced ? "~" + pubKey + "." + key : key,
-                                    pub: pubKey,
-                                    nonce: nonce,
-                                    timestamp: timestamp,
-                                    hash: hash,
-                                    sig: toBase64_1.default(signature),
-                                    value: value,
-                                },
-                            };
-                            // Ship it
-                            this.sendMessage(message);
-                            resolve(message);
-                            return [2 /*return*/];
-                        });
-                    }); })
-                        .catch(reject);
-                }
-            })
-                .catch(reject);
+        var timestamp = new Date().getTime();
+        var dataString = "" + JSON.stringify(value) + _this.user.pubKey + timestamp;
+        // WORK
+        proofOfWork_1.default(dataString, 3)
+            .then(function (_a) {
+            var _b;
+            var hash = _a.hash, nonce = _a.nonce;
+            if ((_b = _this.user) === null || _b === void 0 ? void 0 : _b.keys) {
+                // Sign our value
+                signData_1.default(hash, _this.user.keys.signKeys.privateKey)
+                    .then(function (signature) { return __awaiter(_this, void 0, void 0, function () {
+                    var data;
+                    var _a, _b;
+                    return __generator(this, function (_c) {
+                        data = {
+                            key: userNamespaced ? "~" + ((_a = this.user) === null || _a === void 0 ? void 0 : _a.pubKey) + "." + key : key,
+                            pub: ((_b = this.user) === null || _b === void 0 ? void 0 : _b.pubKey) || "",
+                            nonce: nonce,
+                            timestamp: timestamp,
+                            hash: hash,
+                            sig: toBase64_1.default(signature),
+                            value: value,
+                        };
+                        axios_1.default
+                            .post(this.host + "/api/put", data)
+                            .then(function (value) {
+                            resolve(value.data);
+                        })
+                            .catch(reject);
+                        return [2 /*return*/];
+                    });
+                }); })
+                    .catch(reject);
+            }
         })
             .catch(reject);
     });

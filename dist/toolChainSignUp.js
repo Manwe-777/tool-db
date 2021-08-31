@@ -55,7 +55,7 @@ function toolChainSignUp(user, password) {
         return __generator(this, function (_a) {
             userRoot = "@" + user;
             return [2 /*return*/, new Promise(function (resolve, reject) {
-                    _this.getData(userRoot, false, 5000, true)
+                    _this.getData(userRoot, false, 5000)
                         .then(function () {
                         reject(new Error("User already exists!"));
                     })

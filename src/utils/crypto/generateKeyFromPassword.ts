@@ -1,7 +1,9 @@
+import getCrypto from "../../getCrypto";
 import stringToArrayBuffer from "../stringToArrayBuffer";
 
 export default function generateKeyFromPassword(password: string) {
-  return window.crypto.subtle
+  const crypto = getCrypto();
+  return crypto.subtle
     .importKey(
       "raw",
       stringToArrayBuffer(password),
@@ -10,7 +12,7 @@ export default function generateKeyFromPassword(password: string) {
       ["deriveKey"]
     )
     .then((importedPassword) => {
-      return window.crypto.subtle.deriveKey(
+      return crypto.subtle.deriveKey(
         {
           name: "PBKDF2",
           salt: stringToArrayBuffer("t6sa@8d7!2ñs?=adjq2ng"),

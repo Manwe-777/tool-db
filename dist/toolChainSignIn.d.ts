@@ -1,6 +1,6 @@
 import { KeyPair } from "./utils/crypto/generateKeyPair";
-import ToolChain from ".";
-export default function toolChainSignIn(this: ToolChain, user: string, password: string): Promise<{
+import ToolChainClient from "./toolChainClient";
+export default function toolChainSignIn(this: ToolChainClient, user: string, password: string): Promise<{
     signKeys: KeyPair;
     encryptionKeys: KeyPair;
 } | undefined>;

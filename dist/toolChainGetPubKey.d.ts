@@ -1,2 +1,2 @@
-import ToolChain from ".";
-export default function toolChainGetPubKey(this: ToolChain): Promise<string>;
+import ToolChainClient from "./toolChainClient";
+export default function toolChainGetPubKey(this: ToolChainClient): Promise<string>;

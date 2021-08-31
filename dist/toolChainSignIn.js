@@ -120,7 +120,11 @@ function toolChainSignIn(user, password) {
                                     privateKey: ekpriv,
                                 },
                             };
-                            _this.user = { keys: newKeys, name: user };
+                            _this.user = {
+                                keys: newKeys,
+                                name: user,
+                                pubKey: _user.keys.skpub,
+                            };
                             resolve(newKeys);
                         }
                     })

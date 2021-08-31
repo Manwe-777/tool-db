@@ -1,7 +1,9 @@
+import getCrypto from "../../getCrypto";
 import { KeyPair } from "./generateKeyPair";
 
 export default function deriveSecret(keys: KeyPair) {
-  return window.crypto.subtle.deriveKey(
+  const crypto = getCrypto();
+  return crypto.subtle.deriveKey(
     {
       name: "ECDH",
       public: keys.publicKey,

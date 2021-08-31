@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var getCrypto_1 = __importDefault(require("../../getCrypto"));
 var arrayBufferToString_1 = __importDefault(require("../arrayBufferToString"));
 var stringToArrayBuffer_1 = __importDefault(require("../stringToArrayBuffer"));
 function encryptData(data, publicKey, iv) {
-    return window.crypto.subtle
+    var crypto = getCrypto_1.default();
+    return crypto.subtle
         .encrypt({
         name: "AES-GCM",
         // Don't re-use initialization vectors!

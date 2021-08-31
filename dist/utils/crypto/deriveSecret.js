@@ -1,7 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+var getCrypto_1 = __importDefault(require("../../getCrypto"));
 function deriveSecret(keys) {
-    return window.crypto.subtle.deriveKey({
+    var crypto = getCrypto_1.default();
+    return crypto.subtle.deriveKey({
         name: "ECDH",
         public: keys.publicKey,
     }, keys.privateKey, {

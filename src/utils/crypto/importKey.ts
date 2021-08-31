@@ -1,3 +1,5 @@
+import getCrypto from "../../getCrypto";
+
 // JsonWebKey
 export default function importKey(
   // eslint-disable-next-line no-undef
@@ -7,7 +9,8 @@ export default function importKey(
   // eslint-disable-next-line no-undef
   ops: KeyUsage[]
 ) {
-  return window.crypto.subtle.importKey(
+  const crypto = getCrypto();
+  return crypto.subtle.importKey(
     type, // can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
     key,
     {

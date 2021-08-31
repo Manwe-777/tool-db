@@ -1,3 +1,6 @@
+import getCrypto from "../getCrypto";
+
 export default function generateIv() {
-  return window.crypto.getRandomValues(new Uint8Array(12));
+  const crypto = getCrypto();
+  return crypto.getRandomValues(new Uint8Array(12));
 }

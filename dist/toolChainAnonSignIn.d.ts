@@ -1,6 +1,6 @@
-import ToolChain from ".";
+import ToolChainClient from "./toolChainClient";
 import { KeyPair } from "./utils/crypto/generateKeyPair";
-export default function toolChainAnonSignIn(this: ToolChain): Promise<{
+export default function toolChainAnonSignIn(this: ToolChainClient): Promise<{
     signKeys: KeyPair;
     encryptionKeys: KeyPair;
 }>;

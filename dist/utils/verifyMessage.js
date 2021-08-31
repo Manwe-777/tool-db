@@ -56,17 +56,16 @@ function verifyMessage(msg) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!(msg.type === "put")) return [3 /*break*/, 3];
-                    strData = JSON.stringify(msg.val.value);
-                    if (msg.val.timestamp > new Date().getTime()) {
+                    strData = JSON.stringify(msg.value);
+                    if (msg.timestamp > new Date().getTime()) {
                         // console.warn("Invalid message timestamp.");
                         return [2 /*return*/, message_1.VerifyResult.InvalidTimestamp];
                     }
                     publicKeyNamespace = false;
-                    if (msg.val.key.slice(0, 1) == "~") {
-                        publicKeyNamespace = msg.val.key.split(".")[0].slice(1);
+                    if (msg.key.slice(0, 1) == "~") {
+                        publicKeyNamespace = msg.key.split(".")[0].slice(1);
                     }
-                    pubKeyString = msg.val.pub;
+                    pubKeyString = msg.pub;
                     if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
                         // console.warn("Provided pub keys do not match");
                         return [2 /*return*/, message_1.VerifyResult.PubKeyMismatch];
@@ -78,21 +77,18 @@ function verifyMessage(msg) {
                         // console.warn("No valid hash (no pow)");
                         return [2 /*return*/, message_1.VerifyResult.NoProofOfWork];
                     }
-                    if (sha256_1.default("" + strData + pubKeyString + msg.val.timestamp + msg.val.nonce) !== msg.hash) {
+                    if (sha256_1.default("" + strData + pubKeyString + msg.timestamp + msg.nonce) !== msg.hash) {
                         // console.warn("Specified hash does not generate a valid pow");
                         return [2 /*return*/, message_1.VerifyResult.InvalidHashNonce];
                     }
                     return [4 /*yield*/, importKey_1.default(decodeKeyString_1.default(pubKeyString), "spki", "ECDSA", ["verify"])];
                 case 1:
                     pubKey = _a.sent();
-                    return [4 /*yield*/, verifyData_1.default(msg.hash, fromBase64_1.default(msg.val.sig), pubKey)];
+                    return [4 /*yield*/, verifyData_1.default(msg.hash, fromBase64_1.default(msg.sig), pubKey)];
                 case 2:
                     verified = _a.sent();
                     // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
                     return [2 /*return*/, verified ? message_1.VerifyResult.Verified : message_1.VerifyResult.InvalidSignature];
-                case 3: 
-                // if (msg.type === "get" || msg.type === "get-peersync" || msg.type === "set-peersync") {
-                return [2 /*return*/, message_1.VerifyResult.Verified];
             }
         });
     });

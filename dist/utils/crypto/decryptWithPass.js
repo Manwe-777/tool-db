@@ -7,10 +7,12 @@ var arrayBufferToString_1 = __importDefault(require("../arrayBufferToString"));
 var catchReturn_1 = __importDefault(require("../catchReturn"));
 var generateKeyFromPassword_1 = __importDefault(require("./generateKeyFromPassword"));
 var stringToArrayBuffer_1 = __importDefault(require("../stringToArrayBuffer"));
+var getCrypto_1 = __importDefault(require("../../getCrypto"));
 function decryptWithPass(data, password, vector) {
+    var crypto = getCrypto_1.default();
     return generateKeyFromPassword_1.default(password)
         .then(function (keyObject) {
-        return window.crypto.subtle
+        return crypto.subtle
             .decrypt({ name: "AES-GCM", iv: vector }, keyObject, stringToArrayBuffer_1.default(data))
             .then(function (result) { return arrayBufferToString_1.default(result); })
             .catch(catchReturn_1.default);

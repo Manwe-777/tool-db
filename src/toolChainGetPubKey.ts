@@ -1,8 +1,8 @@
-import ToolChain from ".";
+import ToolChainClient from "./toolChainClient";
 import encodeKeyString from "./utils/crypto/encodeKeyString";
 import exportKey from "./utils/crypto/exportKey";
 
-export default function toolChainGetPubKey(this: ToolChain) {
+export default function toolChainGetPubKey(this: ToolChainClient) {
   if (!this.user?.keys.signKeys.publicKey) {
     return Promise.reject(new Error("You are not authorized yet."));
   }
