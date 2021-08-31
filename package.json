@@ -1,5 +1,5 @@
 {
-  "name": "tool-chain",
+  "name": "tool-db",
   "version": "1.0.0",
   "private": false,
   "description": "A decentralized database model for p2p networks.",
