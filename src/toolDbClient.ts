@@ -6,7 +6,7 @@ import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 
 class ToolDbClient {
-  private debug = false;
+  public debug = false;
 
   private _host = "";
 
@@ -33,9 +33,8 @@ class ToolDbClient {
         pubKey: string;
       };
 
-  constructor(host: string, showDebug = false) {
+  constructor(host: string) {
     this._host = host;
-    this.debug = showDebug;
   }
 
   get host(): string {

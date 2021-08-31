@@ -10,8 +10,7 @@ var toolDbPut_1 = __importDefault(require("./toolDbPut"));
 var toolDbSignIn_1 = __importDefault(require("./toolDbSignIn"));
 var toolDbSignUp_1 = __importDefault(require("./toolDbSignUp"));
 var ToolDbClient = /** @class */ (function () {
-    function ToolDbClient(host, showDebug) {
-        if (showDebug === void 0) { showDebug = false; }
+    function ToolDbClient(host) {
         this.debug = false;
         this._host = "";
         this.getData = toolDbGet_1.default;
@@ -22,7 +21,6 @@ var ToolDbClient = /** @class */ (function () {
         this.signUp = toolDbSignUp_1.default;
         this.user = undefined;
         this._host = host;
-        this.debug = showDebug;
     }
     Object.defineProperty(ToolDbClient.prototype, "host", {
         get: function () {
