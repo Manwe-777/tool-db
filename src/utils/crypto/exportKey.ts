@@ -1,7 +1,7 @@
 import getCrypto from "../../getCrypto";
 
 export default function exportKey(
-  format: "jwk" | "spki" | "pkcs8",
+  format: Parameters<typeof crypto.subtle.exportKey>[0],
   key: CryptoKey
 ) {
   const crypto = getCrypto();

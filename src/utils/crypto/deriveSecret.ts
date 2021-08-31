@@ -5,9 +5,9 @@ export default function deriveSecret(keys: CryptoKeyPair) {
   return crypto.subtle.deriveKey(
     {
       name: "ECDH",
-      public: keys.publicKey,
+      public: keys.publicKey as CryptoKey,
     },
-    keys.privateKey,
+    keys.privateKey as CryptoKey,
     {
       name: "AES-GCM",
       length: 256,

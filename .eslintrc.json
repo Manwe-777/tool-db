@@ -8,7 +8,8 @@
   "globals": {
     "page": true,
     "browser": true,
-    "crypto": true
+    "crypto": true,
+    "node": true
   },
   "parserOptions": {
     "ecmaVersion": 2020,
@@ -20,7 +21,7 @@
     "no-console": "off",
     "no-redeclare": "warn",
     "no-duplicate-imports": "warn",
-    "no-undef": "error",
+    "no-undef": "off",
     "no-global-assign": "warn",
     "no-empty": "warn",
     "no-underscore-dangle": "off",
@@ -65,8 +66,9 @@
   "extends": [
     "prettier",
     "plugin:prettier/recommended",
-    "plugin:@typescript-eslint/recommended",
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "plugins": ["jest", "import", "prettier", "@typescript-eslint"]
 }

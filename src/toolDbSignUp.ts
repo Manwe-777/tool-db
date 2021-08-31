@@ -57,30 +57,28 @@ export default async function toolDbSignUp(
 
                             proofOfWork(userDataString, 3)
                               .then(({ hash, nonce }) => {
-                                signData(hash, keys.signKeys.privateKey).then(
-                                  (signature) => {
-                                    const signupMessage: GraphEntryValue<UserRootData> =
-                                      {
-                                        key: userRoot,
-                                        pub: savedKeys.skpub,
-                                        nonce,
-                                        timestamp,
-                                        hash: hash,
-                                        sig: toBase64(signature),
-                                        value: userData,
-                                      };
+                                signData(
+                                  hash,
+                                  keys.signKeys.privateKey as CryptoKey
+                                ).then((signature) => {
+                                  const signupMessage: GraphEntryValue<UserRootData> =
+                                    {
+                                      key: userRoot,
+                                      pub: savedKeys.skpub,
+                                      nonce,
+                                      timestamp,
+                                      hash: hash,
+                                      sig: toBase64(signature),
+                                      value: userData,
+                                    };
 
-                                    axios
-                                      .post(
-                                        `${this.host}/api/put`,
-                                        signupMessage
-                                      )
-                                      .then((value) => {
-                                        resolve(value.data);
-                                      })
-                                      .catch(reject);
-                                  }
-                                );
+                                  axios
+                                    .post(`${this.host}/api/put`, signupMessage)
+                                    .then((value) => {
+                                      resolve(value.data);
+                                    })
+                                    .catch(reject);
+                                });
                               })
                               .catch(reject);
                           })

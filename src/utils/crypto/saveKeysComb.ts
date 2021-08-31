@@ -6,10 +6,13 @@ export default async function saveKeysComb(
   signKeys: CryptoKeyPair,
   encryptionKeys: CryptoKeyPair
 ): Promise<ParsedKeys> {
-  const skpub = await exportKey("spki", signKeys.publicKey);
-  const skpriv = await exportKey("pkcs8", signKeys.privateKey);
-  const ekpub = await exportKey("spki", encryptionKeys.publicKey);
-  const ekpriv = await exportKey("pkcs8", encryptionKeys.privateKey);
+  const skpub = await exportKey("spki", signKeys.publicKey as CryptoKey);
+  const skpriv = await exportKey("pkcs8", signKeys.privateKey as CryptoKey);
+  const ekpub = await exportKey("spki", encryptionKeys.publicKey as CryptoKey);
+  const ekpriv = await exportKey(
+    "pkcs8",
+    encryptionKeys.privateKey as CryptoKey
+  );
 
   const jsonKeys = {
     skpub: encodeKeyString(skpub as ArrayBuffer),

@@ -9,7 +9,7 @@ export default function toolDbAnonSignIn(this: ToolDbClient): Promise<{
   encryptionKeys: CryptoKeyPair;
 }> {
   return generateKeysComb().then((newKeys) =>
-    exportKey("spki", newKeys.signKeys.publicKey)
+    exportKey("spki", newKeys.signKeys.publicKey as CryptoKey)
       .then((skpub) => encodeKeyString(skpub as ArrayBuffer))
       .then((pubKey) => {
         this.user = {

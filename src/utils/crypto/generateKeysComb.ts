@@ -10,6 +10,9 @@ export default async function generateKeysComb(): Promise<{
         resolve({
           signKeys,
           encryptionKeys,
+        } as {
+          signKeys: CryptoKeyPair;
+          encryptionKeys: CryptoKeyPair;
         });
       });
     });

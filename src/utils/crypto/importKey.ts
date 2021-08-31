@@ -4,7 +4,7 @@ import getCrypto from "../../getCrypto";
 export default function importKey(
   // eslint-disable-next-line no-undef
   key: ArrayBuffer,
-  type: "pkcs8" | "spki" | "jwk",
+  type: Parameters<typeof crypto.subtle.importKey>[0],
   algorithm: "ECDSA" | "ECDH",
   // eslint-disable-next-line no-undef
   ops: KeyUsage[]

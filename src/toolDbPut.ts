@@ -34,7 +34,7 @@ export default function toolDbPut<T = any>(
       .then(({ hash, nonce }) => {
         if (this.user?.keys) {
           // Sign our value
-          signData(hash, this.user.keys.signKeys.privateKey)
+          signData(hash, this.user.keys.signKeys.privateKey as CryptoKey)
             .then(async (signature) => {
               // Compose the message
               const data: GraphEntryValue = {

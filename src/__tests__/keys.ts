@@ -13,8 +13,8 @@ it("Can generate Signing/secure keys", async () => {
 
   let privKey, pubKey;
   try {
-    privKey = await exportKey("pkcs8", keyPair.privateKey);
-    pubKey = await exportKey("spki", keyPair.publicKey);
+    privKey = await exportKey("pkcs8", keyPair.privateKey as CryptoKey);
+    pubKey = await exportKey("spki", keyPair.publicKey as CryptoKey);
   } catch (e) {
     // console.error(e);
   }
@@ -28,8 +28,8 @@ it("Can generate Encryption/secure keys", async () => {
 
   let privKey, pubKey;
   try {
-    privKey = await exportKey("pkcs8", keyPair.privateKey);
-    pubKey = await exportKey("spki", keyPair.publicKey);
+    privKey = await exportKey("pkcs8", keyPair.privateKey as CryptoKey);
+    pubKey = await exportKey("spki", keyPair.publicKey as CryptoKey);
   } catch (e) {
     // console.error(e);
   }
@@ -43,8 +43,8 @@ it("Can generate Signing/extractable keys", async () => {
 
   let privKey, pubKey;
   try {
-    privKey = await exportKey("pkcs8", keyPair.privateKey);
-    pubKey = await exportKey("spki", keyPair.publicKey);
+    privKey = await exportKey("pkcs8", keyPair.privateKey as CryptoKey);
+    pubKey = await exportKey("spki", keyPair.publicKey as CryptoKey);
   } catch (e) {
     // console.error(e);
   }
@@ -58,8 +58,8 @@ it("Can generate Encryption/extractable keys", async () => {
 
   let privKey, pubKey;
   try {
-    privKey = await exportKey("pkcs8", keyPair.privateKey);
-    pubKey = await exportKey("spki", keyPair.publicKey);
+    privKey = await exportKey("pkcs8", keyPair.privateKey as CryptoKey);
+    pubKey = await exportKey("spki", keyPair.publicKey as CryptoKey);
   } catch (e) {
     // console.error(e);
   }
