@@ -1,10 +1,8 @@
 import { VerifyResult } from "../types/message";
 import verifyMessage from "../utils/verifyMessage";
 
-import { Crypto } from "@peculiar/webcrypto";
 import { GraphEntryValue } from "../types/graph";
 import catchReturn from "../utils/catchReturn";
-(window as any).crypto = new Crypto();
 
 const putOk: GraphEntryValue = {
   key: "value",

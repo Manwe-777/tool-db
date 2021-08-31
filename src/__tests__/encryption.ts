@@ -1,12 +1,7 @@
-import { Crypto } from "@peculiar/webcrypto";
 import decryptWithPass from "../utils/crypto/decryptWithPass";
 
 import encryptWithPass from "../utils/crypto/encryptWithPass";
-import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateIv from "../utils/generateIv";
-import signData from "../utils/signData";
-
-(window as any).crypto = new Crypto();
 
 const message = "A super secret encoded message";
 

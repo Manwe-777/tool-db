@@ -2,9 +2,6 @@ import exportKey from "../utils/crypto/exportKey";
 import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateKeysComb from "../utils/crypto/generateKeysComb";
 
-import { Crypto } from "@peculiar/webcrypto";
-(window as any).crypto = new Crypto();
-
 it("Can generate key pair combination", () => {
   return expect(generateKeysComb()).resolves.toBeDefined();
 });
