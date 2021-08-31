@@ -33,9 +33,9 @@ class ToolDbClient {
         pubKey: string;
       };
 
-  constructor(host: string, debug = false) {
+  constructor(host: string, _debug = false) {
     this._host = host;
-    this.debug = debug;
+    this.debug = _debug;
   }
 
   get host(): string {
