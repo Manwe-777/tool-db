@@ -3,6 +3,7 @@ import verifyMessage from "../utils/verifyMessage";
 
 import { Crypto } from "@peculiar/webcrypto";
 import { GraphEntryValue } from "../types/graph";
+import catchReturn from "../utils/catchReturn";
 (window as any).crypto = new Crypto();
 
 const putOk: GraphEntryValue = {
@@ -35,6 +36,14 @@ it("Can catch tampered messages (signature)", () => {
   return verifyMessage(putSig).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidSignature);
   });
+});
+
+it("Can print errors", async () => {
+  const rejectPromise = new Promise((resolve, reject) => {
+    reject();
+  }).catch(catchReturn);
+
+  expect(await rejectPromise).toBe(undefined);
 });
 
 const putTime: GraphEntryValue = {
