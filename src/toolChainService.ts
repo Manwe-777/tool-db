@@ -25,36 +25,27 @@ class ToolChainService {
     //
   };
 
-  public triggerGet = (msg: GraphEntryValue) => {
-    //
-  };
-
   public onMessage = (msg: GraphEntryValue, peerId: string) => {
     //
   };
 
-  private _customPutVerification: Record<
-    string,
-    (oldData: GraphEntryValue | undefined, data: GraphEntryValue) => boolean
-  > = {};
-
-  private _customGetVerification: Record<
+  private _customVerification: Record<
     string,
     (oldData: GraphEntryValue | undefined, data: GraphEntryValue) => boolean
   > = {};
 
   /**
-   * Adds an extra verification step for messages of type PUT at the given key.
+   * Adds an extra verification step for messages at the given key.
    * You can compare against a previously stored value using the value given at the callback.
    * The callback should return a boolean for if the message passed the verification step.
    * @param key data key
    * @param fn (stored, incoming) => boolean
    */
-  public addPutVerification = (
+  public addVerification = (
     key: string,
     fn: (oldData: GraphEntryValue | undefined, data: GraphEntryValue) => boolean
   ) => {
-    this._customPutVerification[key] = fn;
+    this._customVerification[key] = fn;
   };
 
   private async dataPutHandler(msg: GraphEntryValue) {
@@ -79,9 +70,9 @@ class ToolChainService {
     return new Promise((resolve, reject) => {
       verifyMessage(data).then(async (verified) => {
         if (verified) {
-          if (this._customPutVerification[data.key]) {
+          if (this._customVerification[data.key]) {
             const oldValue = await this.dbRead<GraphEntryValue>(data.key);
-            verified = !this._customPutVerification[data.key](
+            verified = !this._customVerification[data.key](
               oldValue || undefined,
               data
             )
