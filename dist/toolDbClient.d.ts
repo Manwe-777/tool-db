@@ -21,7 +21,7 @@ declare class ToolDbClient {
         name: string;
         pubKey: string;
     } | undefined;
-    constructor(host: string, debug?: boolean);
+    constructor(host: string, showDebug?: boolean);
     get host(): string;
 }
 export default ToolDbClient;
