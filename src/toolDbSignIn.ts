@@ -8,10 +8,10 @@ import fromBase64 from "./utils/fromBase64";
 import sha256 from "./utils/sha256";
 
 import { UserRootData } from "./types/graph";
-import ToolChainClient from "./toolChainClient";
+import ToolDbClient from "./toolDbClient";
 
-export default function toolChainSignIn(
-  this: ToolChainClient,
+export default function toolDbSignIn(
+  this: ToolDbClient,
   user: string,
   password: string
 ): Promise<

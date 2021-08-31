@@ -31,5 +31,5 @@ export { default as importKey } from "./utils/crypto/importKey";
 export { default as loadKeysComb } from "./utils/crypto/loadKeysComb";
 export { default as saveKeysComb } from "./utils/crypto/saveKeysComb";
 export { default as verifyData } from "./utils/crypto/verifyData";
-export { default as ToolChainService } from "./toolChainService";
-export { default as ToolChainClient } from "./toolChainClient";
+export { default as ToolDbService } from "./toolDbService";
+export { default as ToolDbClient } from "./toolDbClient";

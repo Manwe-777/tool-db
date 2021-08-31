@@ -1,5 +1,5 @@
-import ToolChainClient from "./toolChainClient";
 import axios from "axios";
+import ToolDbClient from "./toolDbClient";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -8,7 +8,7 @@ import axios from "axios";
  * @returns Promise<Data>
  */
 export default function toolChainGet<T = any>(
-  this: ToolChainClient,
+  this: ToolDbClient,
   key: string,
   userNamespaced = false,
   timeoutMs = 3000
@@ -21,7 +21,7 @@ export default function toolChainGet<T = any>(
     const finalKey = userNamespaced ? `~${this.user?.pubKey}.${key}` : key;
 
     axios
-      .get<T>(this.host + "/api/get?key=" + finalKey, {
+      .get<T>(`${this.host}/api/get?key=${finalKey}`, {
         timeout: timeoutMs,
       })
       .then((value) => {

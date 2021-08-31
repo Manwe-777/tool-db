@@ -1,5 +1,5 @@
 import axios from "axios";
-import toolChainClient from "./toolChainClient";
+import toolDbClient from "./toolDbClient";
 import { GraphEntryValue } from "./types/graph";
 
 import proofOfWork from "./utils/proofOfWork";
@@ -7,8 +7,8 @@ import proofOfWork from "./utils/proofOfWork";
 import signData from "./utils/signData";
 import toBase64 from "./utils/toBase64";
 
-export default function toolChainPut<T = any>(
-  this: toolChainClient,
+export default function toolDbPut<T = any>(
+  this: toolDbClient,
   key: string,
   value: T,
   userNamespaced = false
@@ -16,7 +16,7 @@ export default function toolChainPut<T = any>(
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
       // Dots are used as a delimitator character between bublic keys and the key of the user's data
-      reject(new Error("Key cannot include dots!; " + key));
+      reject(new Error(`Key cannot include dots!; ${key}`));
       return;
     }
 
@@ -48,7 +48,7 @@ export default function toolChainPut<T = any>(
               };
 
               axios
-                .post(this.host + "/api/put", data)
+                .post(`${this.host}/api/put`, data)
                 .then((value) => {
                   resolve(value.data);
                 })

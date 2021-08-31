@@ -1,21 +1,21 @@
-module.exports = {
-  env: {
-    browser: true,
-    commonjs: true,
-    es6: true,
-    jest: true,
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true,
+    "jest": true
   },
-  globals: {
-    page: true,
-    browser: true,
-    crypto: true,
+  "globals": {
+    "page": true,
+    "browser": true,
+    "crypto": true
   },
-  parserOptions: {
-    ecmaVersion: 2020,
-    sourceType: "module",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
   },
-  rules: {
-    allowEmptyCatch: 0,
+  "rules": {
+    "allowEmptyCatch": 0,
     "no-cond-assign": 0,
     "no-console": "off",
     "no-redeclare": "warn",
@@ -25,28 +25,25 @@ module.exports = {
     "no-empty": "warn",
     "no-underscore-dangle": "off",
     "object-shorthand": 0,
-    complexity: ["warn", 40],
+    "complexity": ["warn", 40],
     "max-statements": ["warn", 100],
-    eqeqeq: "off",
+    "eqeqeq": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
       {
-        js: "never",
-        ts: "never",
-      },
+        "js": "never",
+        "ts": "never"
+      }
     ],
     "prettier/prettier": [
       "warn",
       {
-        endOfLine: "auto",
-      },
+        "endOfLine": "auto"
+      }
     ],
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": [
-      "error",
-      { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
-    ],
+    "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-var-requires": "off",
@@ -54,21 +51,22 @@ module.exports = {
     "@typescript-eslint/camelcase": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
-    "@typescript-eslint/interface-name-prefix": "off",
+    "@typescript-eslint/interface-name-prefix": "off"
   },
-  settings: {
+  "settings": {
     "import/resolver": {
-      node: {
-        extensions: [".js", ".ts"],
-      },
+      "node": {
+        "extensions": [".js", ".ts"]
+      }
     },
-    "import/ignore:": [".scss$"],
+    "import/ignore:": [".scss$"]
   },
-  parser: "@typescript-eslint/parser",
-  extends: [
-    "airbnb-base",
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "prettier",
     "plugin:prettier/recommended",
     "plugin:@typescript-eslint/recommended",
+    "eslint:recommended"
   ],
-  plugins: ["jest", "import", "prettier"],
-};
+  "plugins": ["jest", "import", "prettier", "@typescript-eslint"]
+}

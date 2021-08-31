@@ -3,8 +3,9 @@ import { VerifyResult } from "./types/message";
 
 import verifyMessage from "./utils/verifyMessage";
 
-class ToolChainService {
+class ToolDbService {
   private debug = false;
+
   /**
    * These can be customized depending on your db of choice.
    */
@@ -98,4 +99,4 @@ class ToolChainService {
   }
 }
 
-export default ToolChainService;
+export default ToolDbService;

@@ -1,5 +1,5 @@
 import axios from "axios";
-import toolChainClient from "./toolChainClient";
+import toolDbClient from "./toolDbClient";
 import { GraphEntryValue, UserRootData } from "./types/graph";
 
 import encryptWithPass from "./utils/crypto/encryptWithPass";
@@ -12,8 +12,8 @@ import signData from "./utils/signData";
 import toBase64 from "./utils/toBase64";
 import uint8ToBase64 from "./utils/uint8ToBase64";
 
-export default async function toolChainSignUp(
-  this: toolChainClient,
+export default async function toolDbSignUp(
+  this: toolDbClient,
   user: string,
   password: string
 ): Promise<any> {
@@ -72,7 +72,7 @@ export default async function toolChainSignUp(
 
                                     axios
                                       .post(
-                                        this.host + "/api/put",
+                                        `${this.host}/api/put`,
                                         signupMessage
                                       )
                                       .then((value) => {

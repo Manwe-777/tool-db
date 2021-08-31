@@ -1,16 +1,18 @@
+/* eslint-disable no-undef */
+/* eslint-disable global-require */
 export * from "./types/graph";
 export * from "./types/message";
 
 global.Buffer = global.Buffer || require("buffer").Buffer;
 
 if (typeof btoa === "undefined") {
-  global.btoa = function (str) {
+  global.btoa = (str) => {
     return Buffer.from(str, "binary").toString("base64");
   };
 }
 
 if (typeof atob === "undefined") {
-  global.atob = function (b64Encoded) {
+  global.atob = (b64Encoded) => {
     return Buffer.from(b64Encoded, "base64").toString("binary");
   };
 }
@@ -52,5 +54,5 @@ export { default as loadKeysComb } from "./utils/crypto/loadKeysComb";
 export { default as saveKeysComb } from "./utils/crypto/saveKeysComb";
 export { default as verifyData } from "./utils/crypto/verifyData";
 
-export { default as ToolChainService } from "./toolChainService";
-export { default as ToolChainClient } from "./toolChainClient";
+export { default as ToolDbService } from "./toolDbService";
+export { default as ToolDbClient } from "./toolDbClient";
