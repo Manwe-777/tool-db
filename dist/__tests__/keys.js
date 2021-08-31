@@ -42,6 +42,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var exportKey_1 = __importDefault(require("../utils/crypto/exportKey"));
 var generateKeyPair_1 = __importDefault(require("../utils/crypto/generateKeyPair"));
 var generateKeysComb_1 = __importDefault(require("../utils/crypto/generateKeysComb"));
+jest.mock("../getCrypto.ts");
 it("Can generate key pair combination", function () {
     return expect((0, generateKeysComb_1.default)()).resolves.toBeDefined();
 });

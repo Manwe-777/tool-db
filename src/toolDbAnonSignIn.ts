@@ -1,13 +1,12 @@
 import ToolDbClient from "./toolDbClient";
 import encodeKeyString from "./utils/crypto/encodeKeyString";
 import exportKey from "./utils/crypto/exportKey";
-import { KeyPair } from "./utils/crypto/generateKeyPair";
 import generateKeysComb from "./utils/crypto/generateKeysComb";
 import randomAnimal from "./utils/randomAnimal";
 
 export default function toolDbAnonSignIn(this: ToolDbClient): Promise<{
-  signKeys: KeyPair;
-  encryptionKeys: KeyPair;
+  signKeys: CryptoKeyPair;
+  encryptionKeys: CryptoKeyPair;
 }> {
   return generateKeysComb().then((newKeys) =>
     exportKey("spki", newKeys.signKeys.publicKey)

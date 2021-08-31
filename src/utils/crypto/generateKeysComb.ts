@@ -1,8 +1,8 @@
-import generateKeyPair, { KeyPair } from "./generateKeyPair";
+import generateKeyPair from "./generateKeyPair";
 
 export default async function generateKeysComb(): Promise<{
-  signKeys: KeyPair;
-  encryptionKeys: KeyPair;
+  signKeys: CryptoKeyPair;
+  encryptionKeys: CryptoKeyPair;
 }> {
   return new Promise((resolve) => {
     return generateKeyPair("ECDSA", true).then((signKeys) => {

@@ -42,6 +42,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var decryptWithPass_1 = __importDefault(require("../utils/crypto/decryptWithPass"));
 var encryptWithPass_1 = __importDefault(require("../utils/crypto/encryptWithPass"));
 var generateIv_1 = __importDefault(require("../utils/generateIv"));
+jest.mock("../getCrypto.ts");
 var message = "A super secret encoded message";
 it("can encrypt with password", function () { return __awaiter(void 0, void 0, void 0, function () {
     var testDec, iv, testEnc;

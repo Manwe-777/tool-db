@@ -1,14 +1,9 @@
 import getCrypto from "../../getCrypto";
 
-export interface KeyPair {
-  publicKey: CryptoKey;
-  privateKey: CryptoKey;
-}
-
 export default function generateKeyPair(
   mode: "ECDSA" | "ECDH",
   extractable = false
-): Promise<KeyPair> {
+): Promise<CryptoKeyPair> {
   const crypto = getCrypto();
   return crypto.subtle.generateKey(
     {

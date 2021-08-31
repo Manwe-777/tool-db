@@ -1,11 +1,10 @@
 import { ParsedKeys } from "../../types/graph";
 import encodeKeyString from "./encodeKeyString";
 import exportKey from "./exportKey";
-import { KeyPair } from "./generateKeyPair";
 
 export default async function saveKeysComb(
-  signKeys: KeyPair,
-  encryptionKeys: KeyPair
+  signKeys: CryptoKeyPair,
+  encryptionKeys: CryptoKeyPair
 ): Promise<ParsedKeys> {
   const skpub = await exportKey("spki", signKeys.publicKey);
   const skpriv = await exportKey("pkcs8", signKeys.privateKey);

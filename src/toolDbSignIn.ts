@@ -1,6 +1,5 @@
 import decodeKeyString from "./utils/crypto/decodeKeyString";
 import decryptWithPass from "./utils/crypto/decryptWithPass";
-import { KeyPair } from "./utils/crypto/generateKeyPair";
 import importKey from "./utils/crypto/importKey";
 import base64ToUint8 from "./utils/base64ToUint8";
 import catchReturn from "./utils/catchReturn";
@@ -16,8 +15,8 @@ export default function toolDbSignIn(
   password: string
 ): Promise<
   | {
-      signKeys: KeyPair;
-      encryptionKeys: KeyPair;
+      signKeys: CryptoKeyPair;
+      encryptionKeys: CryptoKeyPair;
     }
   | undefined
 > {

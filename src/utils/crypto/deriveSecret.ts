@@ -1,7 +1,6 @@
 import getCrypto from "../../getCrypto";
-import { KeyPair } from "./generateKeyPair";
 
-export default function deriveSecret(keys: KeyPair) {
+export default function deriveSecret(keys: CryptoKeyPair) {
   const crypto = getCrypto();
   return crypto.subtle.deriveKey(
     {

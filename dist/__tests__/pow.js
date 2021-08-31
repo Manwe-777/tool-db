@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var proofOfWork_1 = __importDefault(require("../utils/proofOfWork"));
 var sha256_1 = __importDefault(require("../utils/sha256"));
+jest.mock("../getCrypto.ts");
 it("Proof of work values are correct", function () {
     var TestValue = "SomeVeryTest-yValue";
     return (0, proofOfWork_1.default)(TestValue, 3).then(function (hash) {

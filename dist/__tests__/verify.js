@@ -42,6 +42,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var message_1 = require("../types/message");
 var verifyMessage_1 = __importDefault(require("../utils/verifyMessage"));
 var catchReturn_1 = __importDefault(require("../utils/catchReturn"));
+jest.mock("../getCrypto.ts");
 var putOk = {
     key: "value",
     pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",

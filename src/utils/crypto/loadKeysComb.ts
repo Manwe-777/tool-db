@@ -1,7 +1,6 @@
 import { ParsedKeys } from "../../types/graph";
 import catchReturn from "../catchReturn";
 import decodeKeyString from "./decodeKeyString";
-import { KeyPair } from "./generateKeyPair";
 import importKey from "./importKey";
 
 async function importKeys(parsedKeys: ParsedKeys) {
@@ -38,8 +37,8 @@ async function importKeys(parsedKeys: ParsedKeys) {
 
 export default function loadKeysComb(): Promise<
   | {
-      signKeys: KeyPair;
-      encryptionKeys: KeyPair;
+      signKeys: CryptoKeyPair;
+      encryptionKeys: CryptoKeyPair;
     }
   | undefined
 > {

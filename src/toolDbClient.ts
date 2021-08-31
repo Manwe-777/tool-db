@@ -4,7 +4,6 @@ import toolDbGetPubKey from "./toolDbGetPubKey";
 import toolDbPut from "./toolDbPut";
 import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
-import { KeyPair } from "./utils/crypto/generateKeyPair";
 
 class ToolDbClient {
   private debug = false;
@@ -27,8 +26,8 @@ class ToolDbClient {
     | undefined
     | {
         keys: {
-          signKeys: KeyPair;
-          encryptionKeys: KeyPair;
+          signKeys: CryptoKeyPair;
+          encryptionKeys: CryptoKeyPair;
         };
         name: string;
         pubKey: string;
