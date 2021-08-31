@@ -2,6 +2,8 @@ import exportKey from "../utils/crypto/exportKey";
 import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateKeysComb from "../utils/crypto/generateKeysComb";
 
+jest.mock("../getCrypto.ts");
+
 it("Can generate key pair combination", () => {
   return expect(generateKeysComb()).resolves.toBeDefined();
 });

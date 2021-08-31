@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var getCrypto_1 = __importDefault(require("../../getCrypto"));
 function deriveSecret(keys) {
-    var crypto = getCrypto_1.default();
+    var crypto = (0, getCrypto_1.default)();
     return crypto.subtle.deriveKey({
         name: "ECDH",
         public: keys.publicKey,
@@ -15,3 +15,4 @@ function deriveSecret(keys) {
     }, true, ["encrypt", "decrypt"]);
 }
 exports.default = deriveSecret;
+//# sourceMappingURL=deriveSecret.js.map

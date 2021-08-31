@@ -9,6 +9,7 @@ function uint8ToBase64(byteArray) {
     for (var i = 0; i < byteArray.byteLength; i += 1) {
         byteString += String.fromCodePoint(byteArray[i]);
     }
-    return toBase64_1.default(byteString);
+    return (0, toBase64_1.default)(byteString);
 }
 exports.default = uint8ToBase64;
+//# sourceMappingURL=uint8ToBase64.js.map

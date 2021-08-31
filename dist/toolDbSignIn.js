@@ -66,12 +66,12 @@ function toolDbSignIn(user, password) {
                 reject(Error("Unvalid user data"));
                 return;
             }
-            if (sha256_1.default(password) !== _user.pass) {
+            if ((0, sha256_1.default)(password) !== _user.pass) {
                 reject(Error("Invalid password"));
                 return;
             }
-            decryptWithPass_1.default(fromBase64_1.default(_user.keys.skpriv), password, base64ToUint8_1.default(_user.iv)).then(function (decryptedskpriv) {
-                decryptWithPass_1.default(fromBase64_1.default(_user.keys.ekpriv), password, base64ToUint8_1.default(_user.iv))
+            (0, decryptWithPass_1.default)((0, fromBase64_1.default)(_user.keys.skpriv), password, (0, base64ToUint8_1.default)(_user.iv)).then(function (decryptedskpriv) {
+                (0, decryptWithPass_1.default)((0, fromBase64_1.default)(_user.keys.ekpriv), password, (0, base64ToUint8_1.default)(_user.iv))
                     .then(function (decryptedekpriv) {
                     var parsedKeys = __assign(__assign({}, _user.keys), { skpriv: decryptedskpriv || "", ekpriv: decryptedekpriv || "" });
                     // const jsonKeys = {
@@ -86,16 +86,16 @@ function toolDbSignIn(user, password) {
                             var skpub, skpriv, ekpub, ekpriv;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, importKey_1.default(decodeKeyString_1.default(parsedKeys.skpub), "spki", "ECDSA", ["verify"]).catch(catchReturn_1.default)];
+                                    case 0: return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(parsedKeys.skpub), "spki", "ECDSA", ["verify"]).catch(catchReturn_1.default)];
                                     case 1:
                                         skpub = _a.sent();
-                                        return [4 /*yield*/, importKey_1.default(decodeKeyString_1.default(parsedKeys.skpriv), "pkcs8", "ECDSA", ["sign"]).catch(catchReturn_1.default)];
+                                        return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(parsedKeys.skpriv), "pkcs8", "ECDSA", ["sign"]).catch(catchReturn_1.default)];
                                     case 2:
                                         skpriv = _a.sent();
-                                        return [4 /*yield*/, importKey_1.default(decodeKeyString_1.default(parsedKeys.ekpub), "spki", "ECDH", []).catch(catchReturn_1.default)];
+                                        return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(parsedKeys.ekpub), "spki", "ECDH", []).catch(catchReturn_1.default)];
                                     case 3:
                                         ekpub = _a.sent();
-                                        return [4 /*yield*/, importKey_1.default(decodeKeyString_1.default(parsedKeys.ekpriv), "pkcs8", "ECDH", ["deriveKey", "deriveBits"]).catch(catchReturn_1.default)];
+                                        return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(parsedKeys.ekpriv), "pkcs8", "ECDH", ["deriveKey", "deriveBits"]).catch(catchReturn_1.default)];
                                     case 4:
                                         ekpriv = _a.sent();
                                         return [2 /*return*/, { skpub: skpub, skpriv: skpriv, ekpub: ekpub, ekpriv: ekpriv }];
@@ -137,3 +137,4 @@ function toolDbSignIn(user, password) {
     });
 }
 exports.default = toolDbSignIn;
+//# sourceMappingURL=toolDbSignIn.js.map

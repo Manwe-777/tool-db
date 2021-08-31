@@ -17,8 +17,6 @@ function compare(a: any, b: any) {
 
 const testUint8 = new Uint8Array([1, 2, 3, 4, 5, 6]);
 
-const testUint16 = new Uint16Array([168, 28, 78, 445, 105, 65]);
-
 const testArayBuffer = new ArrayBuffer(8);
 const bufView = new Uint8Array(testArayBuffer);
 bufView[0] = 71;

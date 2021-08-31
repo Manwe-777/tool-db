@@ -10,7 +10,7 @@ function importKey(
 key, type, algorithm, 
 // eslint-disable-next-line no-undef
 ops) {
-    var crypto = getCrypto_1.default();
+    var crypto = (0, getCrypto_1.default)();
     return crypto.subtle.importKey(type, // can be "jwk" (public or private), "spki" (public only), or "pkcs8" (private only)
     key, {
         name: algorithm,
@@ -20,3 +20,4 @@ ops) {
     );
 }
 exports.default = importKey;
+//# sourceMappingURL=importKey.js.map

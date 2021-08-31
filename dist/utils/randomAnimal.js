@@ -39,3 +39,4 @@ function randomAnimal() {
     return animals[Math.round(Math.random() * animals.length)];
 }
 exports.default = randomAnimal;
+//# sourceMappingURL=randomAnimal.js.map

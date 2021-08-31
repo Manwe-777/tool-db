@@ -9,13 +9,13 @@ var generateKeysComb_1 = __importDefault(require("./utils/crypto/generateKeysCom
 var randomAnimal_1 = __importDefault(require("./utils/randomAnimal"));
 function toolDbAnonSignIn() {
     var _this = this;
-    return generateKeysComb_1.default().then(function (newKeys) {
-        return exportKey_1.default("spki", newKeys.signKeys.publicKey)
-            .then(function (skpub) { return encodeKeyString_1.default(skpub); })
+    return (0, generateKeysComb_1.default)().then(function (newKeys) {
+        return (0, exportKey_1.default)("spki", newKeys.signKeys.publicKey)
+            .then(function (skpub) { return (0, encodeKeyString_1.default)(skpub); })
             .then(function (pubKey) {
             _this.user = {
                 keys: newKeys,
-                name: "Anonymous " + randomAnimal_1.default(),
+                name: "Anonymous " + (0, randomAnimal_1.default)(),
                 pubKey: pubKey,
             };
             return newKeys;
@@ -23,3 +23,4 @@ function toolDbAnonSignIn() {
     });
 }
 exports.default = toolDbAnonSignIn;
+//# sourceMappingURL=toolDbAnonSignIn.js.map

@@ -12,3 +12,4 @@ function textRandom(_l, _c) {
     return s;
 }
 exports.default = textRandom;
+//# sourceMappingURL=textRandom.js.map

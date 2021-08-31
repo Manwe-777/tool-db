@@ -9,17 +9,18 @@ var generateKeyFromPassword_1 = __importDefault(require("./generateKeyFromPasswo
 var stringToArrayBuffer_1 = __importDefault(require("../stringToArrayBuffer"));
 var getCrypto_1 = __importDefault(require("../../getCrypto"));
 function encryptWithPass(secretmessage, password, vector) {
-    var crypto = getCrypto_1.default();
-    return generateKeyFromPassword_1.default(password)
+    var crypto = (0, getCrypto_1.default)();
+    return (0, generateKeyFromPassword_1.default)(password)
         .then(function (keyObject) {
         // encrypt promise
         return crypto.subtle
-            .encrypt({ name: "AES-GCM", iv: vector }, keyObject, stringToArrayBuffer_1.default(secretmessage))
+            .encrypt({ name: "AES-GCM", iv: vector }, keyObject, (0, stringToArrayBuffer_1.default)(secretmessage))
             .then(function (result) {
-            return arrayBufferToString_1.default(result);
+            return (0, arrayBufferToString_1.default)(result);
         })
             .catch(catchReturn_1.default);
     })
         .catch(catchReturn_1.default);
 }
 exports.default = encryptWithPass;
+//# sourceMappingURL=encryptWithPass.js.map

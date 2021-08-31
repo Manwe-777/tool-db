@@ -19,7 +19,6 @@ function compare(a, b) {
     return true;
 }
 var testUint8 = new Uint8Array([1, 2, 3, 4, 5, 6]);
-var testUint16 = new Uint16Array([168, 28, 78, 445, 105, 65]);
 var testArayBuffer = new ArrayBuffer(8);
 var bufView = new Uint8Array(testArayBuffer);
 bufView[0] = 71;
@@ -31,27 +30,28 @@ bufView[5] = 44;
 bufView[6] = 38;
 bufView[7] = 47;
 it("Converts a string to base64", function () {
-    expect(toBase64_1.default(TestValue)).toEqual("U29tZVZlcnlUZXN0LXlWYWx1ZTI=");
-    expect(toBase64_1.default("Note, that is an important requirement which did not appear to be included at original Question?")).toEqual("Tm90ZSwgdGhhdCBpcyBhbiBpbXBvcnRhbnQgcmVxdWlyZW1lbnQgd2hpY2ggZGlkIG5vdCBhcHBlYXIgdG8gYmUgaW5jbHVkZWQgYXQgb3JpZ2luYWwgUXVlc3Rpb24/");
+    expect((0, toBase64_1.default)(TestValue)).toEqual("U29tZVZlcnlUZXN0LXlWYWx1ZTI=");
+    expect((0, toBase64_1.default)("Note, that is an important requirement which did not appear to be included at original Question?")).toEqual("Tm90ZSwgdGhhdCBpcyBhbiBpbXBvcnRhbnQgcmVxdWlyZW1lbnQgd2hpY2ggZGlkIG5vdCBhcHBlYXIgdG8gYmUgaW5jbHVkZWQgYXQgb3JpZ2luYWwgUXVlc3Rpb24/");
 });
 it("Converts base64 to string", function () {
-    expect(fromBase64_1.default("SGVsbG8gV29ybGQh")).toEqual("Hello World!");
-    expect(fromBase64_1.default("Tm90ZSwgdGhhdCBpcyBhbiBpbXBvcnRhbnQgcmVxdWlyZW1lbnQgd2hpY2ggZGlkIG5vdCBhcHBlYXIgdG8gYmUgaW5jbHVkZWQgYXQgb3JpZ2luYWwgUXVlc3Rpb24/")).toEqual("Note, that is an important requirement which did not appear to be included at original Question?");
+    expect((0, fromBase64_1.default)("SGVsbG8gV29ybGQh")).toEqual("Hello World!");
+    expect((0, fromBase64_1.default)("Tm90ZSwgdGhhdCBpcyBhbiBpbXBvcnRhbnQgcmVxdWlyZW1lbnQgd2hpY2ggZGlkIG5vdCBhcHBlYXIgdG8gYmUgaW5jbHVkZWQgYXQgb3JpZ2luYWwgUXVlc3Rpb24/")).toEqual("Note, that is an important requirement which did not appear to be included at original Question?");
 });
 it("Converts base64 to uint8", function () {
-    var testVal = base64ToUint8_1.default("AQIDBAUG");
+    var testVal = (0, base64ToUint8_1.default)("AQIDBAUG");
     expect(compare(testVal, testUint8)).toBeTruthy();
 });
 it("Converts uint8 to base64", function () {
-    expect(uint8ToBase64_1.default(new Uint8Array(20))).toEqual("AAAAAAAAAAAAAAAAAAAAAAAAAAA=");
-    expect(uint8ToBase64_1.default(testUint8)).toEqual("AQIDBAUG");
+    expect((0, uint8ToBase64_1.default)(new Uint8Array(20))).toEqual("AAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+    expect((0, uint8ToBase64_1.default)(testUint8)).toEqual("AQIDBAUG");
 });
 it("Converts string to arraybuffer", function () {
-    expect(compare(stringToArrayBuffer_1.default("G#4:>,&/"), testArayBuffer)).toBeTruthy();
+    expect(compare((0, stringToArrayBuffer_1.default)("G#4:>,&/"), testArayBuffer)).toBeTruthy();
 });
 it("Converts arraybuffer to string", function () {
-    expect(arrayBufferToString_1.default(testArayBuffer)).toStrictEqual("G#4:>,&/");
+    expect((0, arrayBufferToString_1.default)(testArayBuffer)).toStrictEqual("G#4:>,&/");
 });
 it("Converts arraybuffer to base64", function () {
-    expect(arrayBufferToBase64_1.default(testArayBuffer)).toEqual("RyM0Oj4sJi8=");
+    expect((0, arrayBufferToBase64_1.default)(testArayBuffer)).toEqual("RyM0Oj4sJi8=");
 });
+//# sourceMappingURL=base64.js.map

@@ -43,9 +43,9 @@ var generateKeyPair_1 = __importDefault(require("./generateKeyPair"));
 function generateKeysComb() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
-            return [2 /*return*/, new Promise(function (resolve, reject) {
-                    return generateKeyPair_1.default("ECDSA", true).then(function (signKeys) {
-                        return generateKeyPair_1.default("ECDH", true).then(function (encryptionKeys) {
+            return [2 /*return*/, new Promise(function (resolve) {
+                    return (0, generateKeyPair_1.default)("ECDSA", true).then(function (signKeys) {
+                        return (0, generateKeyPair_1.default)("ECDH", true).then(function (encryptionKeys) {
                             resolve({
                                 signKeys: signKeys,
                                 encryptionKeys: encryptionKeys,
@@ -57,3 +57,4 @@ function generateKeysComb() {
     });
 }
 exports.default = generateKeysComb;
+//# sourceMappingURL=generateKeysComb.js.map

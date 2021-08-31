@@ -59,13 +59,13 @@ function toolDbPut(key, value, userNamespaced) {
         var timestamp = new Date().getTime();
         var dataString = "" + JSON.stringify(value) + _this.user.pubKey + timestamp;
         // WORK
-        proofOfWork_1.default(dataString, 3)
+        (0, proofOfWork_1.default)(dataString, 3)
             .then(function (_a) {
             var _b;
             var hash = _a.hash, nonce = _a.nonce;
             if ((_b = _this.user) === null || _b === void 0 ? void 0 : _b.keys) {
                 // Sign our value
-                signData_1.default(hash, _this.user.keys.signKeys.privateKey)
+                (0, signData_1.default)(hash, _this.user.keys.signKeys.privateKey)
                     .then(function (signature) { return __awaiter(_this, void 0, void 0, function () {
                     var data;
                     var _a, _b;
@@ -76,7 +76,7 @@ function toolDbPut(key, value, userNamespaced) {
                             nonce: nonce,
                             timestamp: timestamp,
                             hash: hash,
-                            sig: toBase64_1.default(signature),
+                            sig: (0, toBase64_1.default)(signature),
                             value: value,
                         };
                         axios_1.default
@@ -95,3 +95,4 @@ function toolDbPut(key, value, userNamespaced) {
     });
 }
 exports.default = toolDbPut;
+//# sourceMappingURL=toolDbPut.js.map

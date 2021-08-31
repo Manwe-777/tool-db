@@ -77,14 +77,14 @@ function verifyMessage(msg) {
                         // console.warn("No valid hash (no pow)");
                         return [2 /*return*/, message_1.VerifyResult.NoProofOfWork];
                     }
-                    if (sha256_1.default("" + strData + pubKeyString + msg.timestamp + msg.nonce) !== msg.hash) {
+                    if ((0, sha256_1.default)("" + strData + pubKeyString + msg.timestamp + msg.nonce) !== msg.hash) {
                         // console.warn("Specified hash does not generate a valid pow");
                         return [2 /*return*/, message_1.VerifyResult.InvalidHashNonce];
                     }
-                    return [4 /*yield*/, importKey_1.default(decodeKeyString_1.default(pubKeyString), "spki", "ECDSA", ["verify"])];
+                    return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(pubKeyString), "spki", "ECDSA", ["verify"])];
                 case 1:
                     pubKey = _a.sent();
-                    return [4 /*yield*/, verifyData_1.default(msg.hash, fromBase64_1.default(msg.sig), pubKey)];
+                    return [4 /*yield*/, (0, verifyData_1.default)(msg.hash, (0, fromBase64_1.default)(msg.sig), pubKey)];
                 case 2:
                     verified = _a.sent();
                     // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
@@ -94,3 +94,4 @@ function verifyMessage(msg) {
     });
 }
 exports.default = verifyMessage;
+//# sourceMappingURL=verifyMessage.js.map

@@ -10,8 +10,9 @@ function toolChainGetPubKey() {
     if (!((_a = this.user) === null || _a === void 0 ? void 0 : _a.keys.signKeys.publicKey)) {
         return Promise.reject(new Error("You are not authorized yet."));
     }
-    return exportKey_1.default("spki", this.user.keys.signKeys.publicKey).then(function (skpub) {
-        return encodeKeyString_1.default(skpub);
+    return (0, exportKey_1.default)("spki", this.user.keys.signKeys.publicKey).then(function (skpub) {
+        return (0, encodeKeyString_1.default)(skpub);
     });
 }
 exports.default = toolChainGetPubKey;
+//# sourceMappingURL=toolDbGetPubKey.js.map

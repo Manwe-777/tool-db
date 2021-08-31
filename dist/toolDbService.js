@@ -82,7 +82,7 @@ var ToolDbService = /** @class */ (function () {
                 // This wrapper functions filters out those messages we already handled from the listener
                 // It also takes care of verification, data persistence and low level handling
                 return [2 /*return*/, new Promise(function (resolve, reject) {
-                        verifyMessage_1.default(data).then(function (verified) { return __awaiter(_this, void 0, void 0, function () {
+                        (0, verifyMessage_1.default)(data).then(function (verified) { return __awaiter(_this, void 0, void 0, function () {
                             var oldValue;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
@@ -141,3 +141,4 @@ var ToolDbService = /** @class */ (function () {
     return ToolDbService;
 }());
 exports.default = ToolDbService;
+//# sourceMappingURL=toolDbService.js.map

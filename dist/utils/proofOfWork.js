@@ -10,9 +10,10 @@ function proofOfWork(value, difficulty) {
         var hash = "";
         while (hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
             nonce += 1;
-            hash = sha256_1.default("" + value + nonce);
+            hash = (0, sha256_1.default)("" + value + nonce);
         }
         resolve({ nonce: nonce, hash: hash });
     });
 }
 exports.default = proofOfWork;
+//# sourceMappingURL=proofOfWork.js.map

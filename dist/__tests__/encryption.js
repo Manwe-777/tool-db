@@ -39,24 +39,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var webcrypto_1 = require("@peculiar/webcrypto");
 var decryptWithPass_1 = __importDefault(require("../utils/crypto/decryptWithPass"));
 var encryptWithPass_1 = __importDefault(require("../utils/crypto/encryptWithPass"));
 var generateIv_1 = __importDefault(require("../utils/generateIv"));
-window.crypto = new webcrypto_1.Crypto();
 var message = "A super secret encoded message";
 it("can encrypt with password", function () { return __awaiter(void 0, void 0, void 0, function () {
-    var testEnc, testDec, iv;
+    var testDec, iv, testEnc;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                iv = generateIv_1.default();
-                return [4 /*yield*/, encryptWithPass_1.default(message, "password", iv)];
+                iv = (0, generateIv_1.default)();
+                return [4 /*yield*/, (0, encryptWithPass_1.default)(message, "password", iv)];
             case 1:
                 testEnc = _a.sent();
                 expect(testEnc).toBeDefined();
                 if (!testEnc) return [3 /*break*/, 3];
-                return [4 /*yield*/, decryptWithPass_1.default(testEnc, "password", iv)];
+                return [4 /*yield*/, (0, decryptWithPass_1.default)(testEnc, "password", iv)];
             case 2:
                 testDec = _a.sent();
                 _a.label = 3;
@@ -66,3 +64,4 @@ it("can encrypt with password", function () { return __awaiter(void 0, void 0, v
         }
     });
 }); });
+//# sourceMappingURL=encryption.js.map

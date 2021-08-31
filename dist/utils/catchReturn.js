@@ -5,3 +5,4 @@ function catchReturn(arg) {
     return undefined;
 }
 exports.default = catchReturn;
+//# sourceMappingURL=catchReturn.js.map

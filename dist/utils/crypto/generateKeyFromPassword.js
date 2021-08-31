@@ -6,13 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var getCrypto_1 = __importDefault(require("../../getCrypto"));
 var stringToArrayBuffer_1 = __importDefault(require("../stringToArrayBuffer"));
 function generateKeyFromPassword(password) {
-    var crypto = getCrypto_1.default();
+    var crypto = (0, getCrypto_1.default)();
     return crypto.subtle
-        .importKey("raw", stringToArrayBuffer_1.default(password), { name: "PBKDF2" }, false, ["deriveKey"])
+        .importKey("raw", (0, stringToArrayBuffer_1.default)(password), { name: "PBKDF2" }, false, ["deriveKey"])
         .then(function (importedPassword) {
         return crypto.subtle.deriveKey({
             name: "PBKDF2",
-            salt: stringToArrayBuffer_1.default("t6sa@8d7!2ñs?=adjq2ng"),
+            salt: (0, stringToArrayBuffer_1.default)("t6sa@8d7!2ñs?=adjq2ng"),
             iterations: 100000,
             hash: "SHA-256",
         }, importedPassword, {
@@ -22,3 +22,4 @@ function generateKeyFromPassword(password) {
     });
 }
 exports.default = generateKeyFromPassword;
+//# sourceMappingURL=generateKeyFromPassword.js.map

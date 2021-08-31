@@ -11,3 +11,4 @@ function sha256(str, hex) {
     return hash.digest(hex ? "hex" : "base64");
 }
 exports.default = sha256;
+//# sourceMappingURL=sha256.js.map

@@ -46,23 +46,23 @@ function saveKeysComb(signKeys, encryptionKeys) {
         var skpub, skpriv, ekpub, ekpriv, jsonKeys;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, exportKey_1.default("spki", signKeys.publicKey)];
+                case 0: return [4 /*yield*/, (0, exportKey_1.default)("spki", signKeys.publicKey)];
                 case 1:
                     skpub = _a.sent();
-                    return [4 /*yield*/, exportKey_1.default("pkcs8", signKeys.privateKey)];
+                    return [4 /*yield*/, (0, exportKey_1.default)("pkcs8", signKeys.privateKey)];
                 case 2:
                     skpriv = _a.sent();
-                    return [4 /*yield*/, exportKey_1.default("spki", encryptionKeys.publicKey)];
+                    return [4 /*yield*/, (0, exportKey_1.default)("spki", encryptionKeys.publicKey)];
                 case 3:
                     ekpub = _a.sent();
-                    return [4 /*yield*/, exportKey_1.default("pkcs8", encryptionKeys.privateKey)];
+                    return [4 /*yield*/, (0, exportKey_1.default)("pkcs8", encryptionKeys.privateKey)];
                 case 4:
                     ekpriv = _a.sent();
                     jsonKeys = {
-                        skpub: encodeKeyString_1.default(skpub),
-                        skpriv: encodeKeyString_1.default(skpriv),
-                        ekpub: encodeKeyString_1.default(ekpub),
-                        ekpriv: encodeKeyString_1.default(ekpriv),
+                        skpub: (0, encodeKeyString_1.default)(skpub),
+                        skpriv: (0, encodeKeyString_1.default)(skpriv),
+                        ekpub: (0, encodeKeyString_1.default)(ekpub),
+                        ekpriv: (0, encodeKeyString_1.default)(ekpriv),
                     };
                     // ONLY FOR TESTING! NEVER ENABLE IN PROD
                     // localStorage.setItem("keys", JSON.stringify(jsonKeys));
@@ -72,3 +72,4 @@ function saveKeysComb(signKeys, encryptionKeys) {
     });
 }
 exports.default = saveKeysComb;
+//# sourceMappingURL=saveKeysComb.js.map

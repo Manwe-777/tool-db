@@ -7,17 +7,18 @@ var getCrypto_1 = __importDefault(require("../getCrypto"));
 var arrayBufferToString_1 = __importDefault(require("./arrayBufferToString"));
 var stringToArrayBuffer_1 = __importDefault(require("./stringToArrayBuffer"));
 function signData(data, privateKey) {
-    var crypto = getCrypto_1.default();
+    var crypto = (0, getCrypto_1.default)();
     return crypto.subtle
         .sign({
         name: "ECDSA",
         hash: { name: "SHA-256" }, // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     }, privateKey, // from generateKey or importKey above
-    stringToArrayBuffer_1.default(data) // ArrayBuffer of data you want to sign
+    (0, stringToArrayBuffer_1.default)(data) // ArrayBuffer of data you want to sign
     )
         .then(function (signature) {
         // returns an ArrayBuffer containing the signature
-        return arrayBufferToString_1.default(signature);
+        return (0, arrayBufferToString_1.default)(signature);
     });
 }
 exports.default = signData;
+//# sourceMappingURL=signData.js.map

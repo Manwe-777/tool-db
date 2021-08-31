@@ -4,6 +4,8 @@ import verifyMessage from "../utils/verifyMessage";
 import { GraphEntryValue } from "../types/graph";
 import catchReturn from "../utils/catchReturn";
 
+jest.mock("../getCrypto.ts");
+
 const putOk: GraphEntryValue = {
   key: "value",
   pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",

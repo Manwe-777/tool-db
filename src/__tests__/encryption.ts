@@ -3,13 +3,15 @@ import decryptWithPass from "../utils/crypto/decryptWithPass";
 import encryptWithPass from "../utils/crypto/encryptWithPass";
 import generateIv from "../utils/generateIv";
 
+jest.mock("../getCrypto.ts");
+
 const message = "A super secret encoded message";
 
 it("can encrypt with password", async () => {
-  let testEnc, testDec;
+  let testDec;
   const iv = generateIv();
 
-  testEnc = await encryptWithPass(message, "password", iv);
+  const testEnc = await encryptWithPass(message, "password", iv);
 
   expect(testEnc).toBeDefined();
 

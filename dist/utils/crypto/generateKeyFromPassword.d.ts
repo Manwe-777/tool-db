@@ -1,1 +1,1 @@
-export default function generateKeyFromPassword(password: string): Promise<CryptoKey>;
+export default function generateKeyFromPassword(password: string): any;

@@ -42,25 +42,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var exportKey_1 = __importDefault(require("../utils/crypto/exportKey"));
 var generateKeyPair_1 = __importDefault(require("../utils/crypto/generateKeyPair"));
 var generateKeysComb_1 = __importDefault(require("../utils/crypto/generateKeysComb"));
-var webcrypto_1 = require("@peculiar/webcrypto");
-window.crypto = new webcrypto_1.Crypto();
 it("Can generate key pair combination", function () {
-    return expect(generateKeysComb_1.default()).resolves.toBeDefined();
+    return expect((0, generateKeysComb_1.default)()).resolves.toBeDefined();
 });
 it("Can generate Signing/secure keys", function () { return __awaiter(void 0, void 0, void 0, function () {
     var keyPair, privKey, pubKey, e_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, generateKeyPair_1.default("ECDSA")];
+            case 0: return [4 /*yield*/, (0, generateKeyPair_1.default)("ECDSA")];
             case 1:
                 keyPair = _a.sent();
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, 5, , 6]);
-                return [4 /*yield*/, exportKey_1.default("pkcs8", keyPair.privateKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("pkcs8", keyPair.privateKey)];
             case 3:
                 privKey = _a.sent();
-                return [4 /*yield*/, exportKey_1.default("spki", keyPair.publicKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("spki", keyPair.publicKey)];
             case 4:
                 pubKey = _a.sent();
                 return [3 /*break*/, 6];
@@ -78,16 +76,16 @@ it("Can generate Encryption/secure keys", function () { return __awaiter(void 0,
     var keyPair, privKey, pubKey, e_2;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, generateKeyPair_1.default("ECDH")];
+            case 0: return [4 /*yield*/, (0, generateKeyPair_1.default)("ECDH")];
             case 1:
                 keyPair = _a.sent();
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, 5, , 6]);
-                return [4 /*yield*/, exportKey_1.default("pkcs8", keyPair.privateKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("pkcs8", keyPair.privateKey)];
             case 3:
                 privKey = _a.sent();
-                return [4 /*yield*/, exportKey_1.default("spki", keyPair.publicKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("spki", keyPair.publicKey)];
             case 4:
                 pubKey = _a.sent();
                 return [3 /*break*/, 6];
@@ -105,16 +103,16 @@ it("Can generate Signing/extractable keys", function () { return __awaiter(void 
     var keyPair, privKey, pubKey, e_3;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, generateKeyPair_1.default("ECDSA", true)];
+            case 0: return [4 /*yield*/, (0, generateKeyPair_1.default)("ECDSA", true)];
             case 1:
                 keyPair = _a.sent();
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, 5, , 6]);
-                return [4 /*yield*/, exportKey_1.default("pkcs8", keyPair.privateKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("pkcs8", keyPair.privateKey)];
             case 3:
                 privKey = _a.sent();
-                return [4 /*yield*/, exportKey_1.default("spki", keyPair.publicKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("spki", keyPair.publicKey)];
             case 4:
                 pubKey = _a.sent();
                 return [3 /*break*/, 6];
@@ -132,16 +130,16 @@ it("Can generate Encryption/extractable keys", function () { return __awaiter(vo
     var keyPair, privKey, pubKey, e_4;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, generateKeyPair_1.default("ECDH", true)];
+            case 0: return [4 /*yield*/, (0, generateKeyPair_1.default)("ECDH", true)];
             case 1:
                 keyPair = _a.sent();
                 _a.label = 2;
             case 2:
                 _a.trys.push([2, 5, , 6]);
-                return [4 /*yield*/, exportKey_1.default("pkcs8", keyPair.privateKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("pkcs8", keyPair.privateKey)];
             case 3:
                 privKey = _a.sent();
-                return [4 /*yield*/, exportKey_1.default("spki", keyPair.publicKey)];
+                return [4 /*yield*/, (0, exportKey_1.default)("spki", keyPair.publicKey)];
             case 4:
                 pubKey = _a.sent();
                 return [3 /*break*/, 6];
@@ -155,3 +153,4 @@ it("Can generate Encryption/extractable keys", function () { return __awaiter(vo
         }
     });
 }); });
+//# sourceMappingURL=keys.js.map

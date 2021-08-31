@@ -11,3 +11,4 @@ var VerifyResult;
     VerifyResult[VerifyResult["InvalidSignature"] = -1] = "InvalidSignature";
     VerifyResult[VerifyResult["Verified"] = 1] = "Verified";
 })(VerifyResult = exports.VerifyResult || (exports.VerifyResult = {}));
+//# sourceMappingURL=message.js.map

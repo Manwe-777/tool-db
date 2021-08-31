@@ -59,18 +59,18 @@ function toolDbSignUp(user, password) {
                     _this.getData(userRoot, false, 5000)
                         .then(function (data) {
                         if (data === null) {
-                            generateKeysComb_1.default()
+                            (0, generateKeysComb_1.default)()
                                 .then(function (keys) {
                                 if (keys) {
-                                    saveKeysComb_1.default(keys.signKeys, keys.encryptionKeys)
+                                    (0, saveKeysComb_1.default)(keys.signKeys, keys.encryptionKeys)
                                         .then(function (savedKeys) {
-                                        var iv = generateIv_1.default();
+                                        var iv = (0, generateIv_1.default)();
                                         var encskpriv = "";
                                         var encekpriv = "";
                                         // Encrypt sign key
-                                        encryptWithPass_1.default(savedKeys.skpriv, password, iv)
+                                        (0, encryptWithPass_1.default)(savedKeys.skpriv, password, iv)
                                             .then(function (skenc) {
-                                            encryptWithPass_1.default(savedKeys.ekpriv, password, iv)
+                                            (0, encryptWithPass_1.default)(savedKeys.ekpriv, password, iv)
                                                 .then(function (ekenc) {
                                                 if (skenc)
                                                     encskpriv = skenc;
@@ -79,26 +79,26 @@ function toolDbSignUp(user, password) {
                                                 var userData = {
                                                     keys: {
                                                         skpub: savedKeys.skpub,
-                                                        skpriv: toBase64_1.default(encskpriv),
+                                                        skpriv: (0, toBase64_1.default)(encskpriv),
                                                         ekpub: savedKeys.ekpub,
-                                                        ekpriv: toBase64_1.default(encekpriv),
+                                                        ekpriv: (0, toBase64_1.default)(encekpriv),
                                                     },
-                                                    iv: uint8ToBase64_1.default(iv),
-                                                    pass: sha256_1.default(password),
+                                                    iv: (0, uint8ToBase64_1.default)(iv),
+                                                    pass: (0, sha256_1.default)(password),
                                                 };
                                                 var timestamp = new Date().getTime();
                                                 var userDataString = "" + JSON.stringify(userData) + savedKeys.skpub + timestamp;
-                                                proofOfWork_1.default(userDataString, 3)
+                                                (0, proofOfWork_1.default)(userDataString, 3)
                                                     .then(function (_a) {
                                                     var hash = _a.hash, nonce = _a.nonce;
-                                                    signData_1.default(hash, keys.signKeys.privateKey).then(function (signature) {
+                                                    (0, signData_1.default)(hash, keys.signKeys.privateKey).then(function (signature) {
                                                         var signupMessage = {
                                                             key: userRoot,
                                                             pub: savedKeys.skpub,
                                                             nonce: nonce,
                                                             timestamp: timestamp,
                                                             hash: hash,
-                                                            sig: toBase64_1.default(signature),
+                                                            sig: (0, toBase64_1.default)(signature),
                                                             value: userData,
                                                         };
                                                         axios_1.default
@@ -135,3 +135,4 @@ function toolDbSignUp(user, password) {
     });
 }
 exports.default = toolDbSignUp;
+//# sourceMappingURL=toolDbSignUp.js.map
