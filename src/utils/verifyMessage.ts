@@ -17,7 +17,8 @@ export default async function verifyMessage<T>(
   // console.log("verify: ", msg);
   const strData = JSON.stringify(msg.value);
 
-  if (msg.timestamp > new Date().getTime()) {
+  // Max clock shift allowed is ten seconds
+  if (msg.timestamp > new Date().getTime() + 10000) {
     // console.warn("Invalid message timestamp.");
     return VerifyResult.InvalidTimestamp;
   }
