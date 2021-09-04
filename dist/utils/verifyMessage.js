@@ -57,7 +57,8 @@ function verifyMessage(msg) {
             switch (_a.label) {
                 case 0:
                     strData = JSON.stringify(msg.value);
-                    if (msg.timestamp > new Date().getTime()) {
+                    // Max clock shift allowed is ten seconds
+                    if (msg.timestamp > new Date().getTime() + 10000) {
                         // console.warn("Invalid message timestamp.");
                         return [2 /*return*/, message_1.VerifyResult.InvalidTimestamp];
                     }
