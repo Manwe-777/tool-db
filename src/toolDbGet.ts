@@ -23,9 +23,12 @@ export default function toolDbGet<T = any>(
     const finalKey = userNamespaced ? `~${this.user?.pubKey}.${key}` : key;
 
     axios
-      .get<GraphEntryValue<T>>(`${this.host}/api/get?key=${finalKey}`, {
-        timeout: timeoutMs,
-      })
+      .get<GraphEntryValue<T>>(
+        `${this.host}/api/get?key=${encodeURIComponent(finalKey)}`,
+        {
+          timeout: timeoutMs,
+        }
+      )
       .then((value) => {
         if (value.data === null) resolve(null);
         else {
