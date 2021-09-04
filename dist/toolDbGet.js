@@ -23,8 +23,11 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
         }
         var finalKey = userNamespaced ? "~" + ((_b = _this.user) === null || _b === void 0 ? void 0 : _b.pubKey) + "." + key : key;
         axios_1.default
-            .get(_this.host + "/api/get?key=" + finalKey, {
+            .get(_this.host + "/api/get?key=" + encodeURIComponent(finalKey), {
             timeout: timeoutMs,
+            headers: {
+                "content-type": "application/x-www-form-urlencoded;charset=utf-8",
+            },
         })
             .then(function (value) {
             if (value.data === null)

@@ -27,6 +27,9 @@ export default function toolDbGet<T = any>(
         `${this.host}/api/get?key=${encodeURIComponent(finalKey)}`,
         {
           timeout: timeoutMs,
+          headers: {
+            "content-type": "application/x-www-form-urlencoded;charset=utf-8",
+          },
         }
       )
       .then((value) => {
