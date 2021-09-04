@@ -4,13 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var axios_1 = __importDefault(require("axios"));
+var _1 = require(".");
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
  * @param key key of the data
  * @param onRemote Weter or not to trigger on additional remote responses if data was found locally before that.
  * @returns Promise<Data>
  */
-function toolChainGet(key, userNamespaced, timeoutMs) {
+function toolDbGet(key, userNamespaced, timeoutMs) {
     var _this = this;
     if (userNamespaced === void 0) { userNamespaced = false; }
     if (timeoutMs === void 0) { timeoutMs = 3000; }
@@ -26,10 +27,18 @@ function toolChainGet(key, userNamespaced, timeoutMs) {
             timeout: timeoutMs,
         })
             .then(function (value) {
-            resolve(value.data);
+            if (value.data === null)
+                resolve(null);
+            else {
+                return (0, _1.verifyMessage)(value.data)
+                    .then(function () {
+                    resolve(value.data.value);
+                })
+                    .catch(reject);
+            }
         })
             .catch(reject);
     });
 }
-exports.default = toolChainGet;
+exports.default = toolDbGet;
 //# sourceMappingURL=toolDbGet.js.map

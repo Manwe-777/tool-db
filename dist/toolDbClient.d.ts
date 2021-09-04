@@ -6,7 +6,7 @@ import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 declare class ToolDbClient {
     debug: boolean;
-    private _host;
+    host: string;
     getData: typeof toolDbGet;
     putData: typeof toolDbPut;
     getPubKey: typeof toolDbGetPubKey;
@@ -21,7 +21,6 @@ declare class ToolDbClient {
         name: string;
         pubKey: string;
     } | undefined;
-    constructor(host: string);
-    get host(): string;
+    constructor(_host: string);
 }
 export default ToolDbClient;

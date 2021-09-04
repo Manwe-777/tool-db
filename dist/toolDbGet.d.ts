@@ -5,4 +5,4 @@ import ToolDbClient from "./toolDbClient";
  * @param onRemote Weter or not to trigger on additional remote responses if data was found locally before that.
  * @returns Promise<Data>
  */
-export default function toolChainGet<T = any>(this: ToolDbClient, key: string, userNamespaced?: boolean, timeoutMs?: number): Promise<T>;
+export default function toolDbGet<T = any>(this: ToolDbClient, key: string, userNamespaced?: boolean, timeoutMs?: number): Promise<T | null>;

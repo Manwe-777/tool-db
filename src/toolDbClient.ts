@@ -8,7 +8,7 @@ import toolDbSignUp from "./toolDbSignUp";
 class ToolDbClient {
   public debug = false;
 
-  private _host = "";
+  public host = "";
 
   public getData = toolDbGet;
 
@@ -33,12 +33,8 @@ class ToolDbClient {
         pubKey: string;
       };
 
-  constructor(host: string) {
-    this._host = host;
-  }
-
-  get host(): string {
-    return this._host;
+  constructor(_host: string) {
+    this.host = _host;
   }
 }
 

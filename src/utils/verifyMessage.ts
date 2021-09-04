@@ -11,8 +11,8 @@ import sha256 from "./sha256";
  * @param msg AnyMessage
  * @returns boolean or undefined if the message type does not match
  */
-export default async function verifyMessage(
-  msg: GraphEntryValue
+export default async function verifyMessage<T>(
+  msg: GraphEntryValue<T>
 ): Promise<VerifyResult> {
   // console.log("verify: ", msg);
   const strData = JSON.stringify(msg.value);
