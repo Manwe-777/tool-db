@@ -1,4 +1,4 @@
-import axios from "axios";
+import { NullLiteral } from "typescript";
 import { verifyMessage } from ".";
 import ToolDbClient from "./toolDbClient";
 import { GraphEntryValue } from "./types/graph";
@@ -6,7 +6,8 @@ import { GraphEntryValue } from "./types/graph";
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
  * @param key key of the data
- * @param onRemote Weter or not to trigger on additional remote responses if data was found locally before that.
+ * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
+ * @param timeout Max time to wait for remote.
  * @returns Promise<Data>
  */
 export default function toolDbGet<T = any>(
@@ -20,28 +21,33 @@ export default function toolDbGet<T = any>(
       reject(new Error("You are not authorized yet!"));
       return;
     }
-    const finalKey = userNamespaced ? `~${this.user?.pubKey}.${key}` : key;
+    const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
+    if (this.debug) {
+      console.log("GET > " + finalKey);
+    }
 
-    axios
-      .get<GraphEntryValue<T>>(
-        `${this.host}/api/get?key=${encodeURIComponent(finalKey)}`,
-        {
-          timeout: timeoutMs,
-          headers: {
-            "content-type": "application/x-www-form-urlencoded;charset=utf-8",
-          },
+    let first = true;
+    this.gun.get(finalKey, (ack: any) => {
+      if (ack["@"] || ack.put) {
+        const d = ack.put;
+        if ((d && first) || (d && !first)) {
+          if (!d.v) {
+            resolve(null);
+          } else {
+            try {
+              const data = JSON.parse(d.v);
+              resolve(data.value);
+            } catch (e) {
+              console.error(e);
+              resolve(null);
+            }
+          }
         }
-      )
-      .then((value) => {
-        if (value.data === null) resolve(null);
-        else {
-          return verifyMessage<T>(value.data)
-            .then(() => {
-              resolve(value.data.value);
-            })
-            .catch(reject);
+        if (!d && !first) {
+          resolve(null);
         }
-      })
-      .catch(reject);
+        first = false;
+      }
+    });
   });
 }

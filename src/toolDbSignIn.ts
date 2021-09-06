@@ -21,7 +21,7 @@ export default function toolDbSignIn(
   | undefined
 > {
   return new Promise((resolve, reject) => {
-    this.getData<UserRootData>(`@${user}`)
+    this.getData<UserRootData>(`==${user}`)
       .then((_user) => {
         if (!_user) {
           reject(Error("Unvalid user data"));

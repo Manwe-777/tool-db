@@ -39,7 +39,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var axios_1 = __importDefault(require("axios"));
 var encryptWithPass_1 = __importDefault(require("./utils/crypto/encryptWithPass"));
 var generateKeysComb_1 = __importDefault(require("./utils/crypto/generateKeysComb"));
 var saveKeysComb_1 = __importDefault(require("./utils/crypto/saveKeysComb"));
@@ -54,7 +53,7 @@ function toolDbSignUp(user, password) {
         var userRoot;
         var _this = this;
         return __generator(this, function (_a) {
-            userRoot = "@" + user;
+            userRoot = "==" + user;
             return [2 /*return*/, new Promise(function (resolve, reject) {
                     _this.getData(userRoot, false, 5000)
                         .then(function (data) {
@@ -101,12 +100,16 @@ function toolDbSignUp(user, password) {
                                                             sig: (0, toBase64_1.default)(signature),
                                                             value: userData,
                                                         };
-                                                        axios_1.default
-                                                            .post(_this.host + "/api/put", signupMessage)
-                                                            .then(function (value) {
-                                                            resolve(value.data);
-                                                        })
-                                                            .catch(reject);
+                                                        _this.gun
+                                                            .get(signupMessage.key)
+                                                            .put({ v: JSON.stringify(signupMessage) }, function (ack) {
+                                                            if (ack.err) {
+                                                                reject(ack.err);
+                                                            }
+                                                            else {
+                                                                resolve(signupMessage.value);
+                                                            }
+                                                        });
                                                     });
                                                 })
                                                     .catch(reject);

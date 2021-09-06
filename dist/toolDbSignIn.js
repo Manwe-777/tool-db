@@ -60,7 +60,7 @@ var sha256_1 = __importDefault(require("./utils/sha256"));
 function toolDbSignIn(user, password) {
     var _this = this;
     return new Promise(function (resolve, reject) {
-        _this.getData("@" + user)
+        _this.getData("==" + user)
             .then(function (_user) {
             if (!_user) {
                 reject(Error("Unvalid user data"));

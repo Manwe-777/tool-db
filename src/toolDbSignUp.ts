@@ -1,4 +1,3 @@
-import axios from "axios";
 import toolDbClient from "./toolDbClient";
 import { GraphEntryValue, UserRootData } from "./types/graph";
 
@@ -17,7 +16,7 @@ export default async function toolDbSignUp(
   user: string,
   password: string
 ): Promise<any> {
-  const userRoot = `@${user}`;
+  const userRoot = `==${user}`;
   return new Promise((resolve, reject) => {
     this.getData<UserRootData>(userRoot, false, 5000)
       .then((data) => {
@@ -72,12 +71,18 @@ export default async function toolDbSignUp(
                                       value: userData,
                                     };
 
-                                  axios
-                                    .post(`${this.host}/api/put`, signupMessage)
-                                    .then((value) => {
-                                      resolve(value.data);
-                                    })
-                                    .catch(reject);
+                                  this.gun
+                                    .get(signupMessage.key)
+                                    .put(
+                                      { v: JSON.stringify(signupMessage) },
+                                      (ack) => {
+                                        if (ack.err) {
+                                          reject(ack.err);
+                                        } else {
+                                          resolve(signupMessage.value);
+                                        }
+                                      }
+                                    );
                                 });
                               })
                               .catch(reject);

@@ -1,3 +1,5 @@
+import Gun from "gun";
+import customGun from "./customGun";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbGet from "./toolDbGet";
 import toolDbGetPubKey from "./toolDbGetPubKey";
@@ -9,6 +11,8 @@ class ToolDbClient {
   public debug = false;
 
   public host = "";
+
+  private _gun;
 
   public getData = toolDbGet;
 
@@ -35,6 +39,15 @@ class ToolDbClient {
 
   constructor(_host: string) {
     this.host = _host;
+    customGun();
+
+    this._gun = new Gun({
+      peers: ["http://dev-gun.armsbook.com:8765/gun"],
+    });
+  }
+
+  get gun() {
+    return this._gun;
   }
 }
 

@@ -1,14 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var axios_1 = __importDefault(require("axios"));
-var _1 = require(".");
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
  * @param key key of the data
- * @param onRemote Weter or not to trigger on additional remote responses if data was found locally before that.
+ * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
+ * @param timeout Max time to wait for remote.
  * @returns Promise<Data>
  */
 function toolDbGet(key, userNamespaced, timeoutMs) {
@@ -21,26 +17,35 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
             reject(new Error("You are not authorized yet!"));
             return;
         }
-        var finalKey = userNamespaced ? "~" + ((_b = _this.user) === null || _b === void 0 ? void 0 : _b.pubKey) + "." + key : key;
-        axios_1.default
-            .get(_this.host + "/api/get?key=" + encodeURIComponent(finalKey), {
-            timeout: timeoutMs,
-            headers: {
-                "content-type": "application/x-www-form-urlencoded;charset=utf-8",
-            },
-        })
-            .then(function (value) {
-            if (value.data === null)
-                resolve(null);
-            else {
-                return (0, _1.verifyMessage)(value.data)
-                    .then(function () {
-                    resolve(value.data.value);
-                })
-                    .catch(reject);
+        var finalKey = userNamespaced ? ":" + ((_b = _this.user) === null || _b === void 0 ? void 0 : _b.pubKey) + "." + key : key;
+        if (_this.debug) {
+            console.log("GET > " + finalKey);
+        }
+        var first = true;
+        _this.gun.get(finalKey, function (ack) {
+            if (ack["@"] || ack.put) {
+                var d = ack.put;
+                if ((d && first) || (d && !first)) {
+                    if (!d.v) {
+                        resolve(null);
+                    }
+                    else {
+                        try {
+                            var data = JSON.parse(d.v);
+                            resolve(data.value);
+                        }
+                        catch (e) {
+                            console.error(e);
+                            resolve(null);
+                        }
+                    }
+                }
+                if (!d && !first) {
+                    resolve(null);
+                }
+                first = false;
             }
-        })
-            .catch(reject);
+        });
     });
 }
 exports.default = toolDbGet;

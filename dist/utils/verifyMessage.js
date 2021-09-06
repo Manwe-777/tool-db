@@ -56,6 +56,7 @@ function verifyMessage(msg) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    console.log("verify: ", msg);
                     strData = JSON.stringify(msg.value);
                     // Max clock shift allowed is ten seconds
                     if (msg.timestamp > new Date().getTime() + 10000) {
@@ -63,7 +64,7 @@ function verifyMessage(msg) {
                         return [2 /*return*/, message_1.VerifyResult.InvalidTimestamp];
                     }
                     publicKeyNamespace = false;
-                    if (msg.key.slice(0, 1) == "~") {
+                    if (msg.key.slice(0, 1) == ":") {
                         publicKeyNamespace = msg.key.split(".")[0].slice(1);
                     }
                     pubKeyString = msg.pub;

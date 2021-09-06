@@ -7,6 +7,7 @@ import toolDbSignUp from "./toolDbSignUp";
 declare class ToolDbClient {
     debug: boolean;
     host: string;
+    private _gun;
     getData: typeof toolDbGet;
     putData: typeof toolDbPut;
     getPubKey: typeof toolDbGetPubKey;
@@ -22,5 +23,6 @@ declare class ToolDbClient {
         pubKey: string;
     } | undefined;
     constructor(_host: string);
+    get gun(): import("gun/types/chain").IGunChainReference<any, any, "pre_root">;
 }
 export default ToolDbClient;

@@ -1,4 +1,7 @@
 import { GraphEntryValue } from "./types/graph";
+/**
+ * WIP move the remainder of this (custom verification) to client service!
+ */
 declare class ToolDbService {
     private debug;
     /**
@@ -21,5 +24,6 @@ declare class ToolDbService {
     private dataPutHandler;
     messageWrapper: (data: GraphEntryValue) => Promise<unknown>;
     constructor(debug?: boolean);
+    initialize(): void;
 }
 export default ToolDbService;

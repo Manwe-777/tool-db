@@ -41,6 +41,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var message_1 = require("./types/message");
 var verifyMessage_1 = __importDefault(require("./utils/verifyMessage"));
+/**
+ * WIP move the remainder of this (custom verification) to client service!
+ */
 var ToolDbService = /** @class */ (function () {
     function ToolDbService(debug) {
         var _this = this;
@@ -50,14 +53,14 @@ var ToolDbService = /** @class */ (function () {
          * These can be customized depending on your db of choice.
          */
         this.dbInit = function () {
-            console.log("You need to configure db!");
+            console.log("You need to configure a db!");
         };
         this.dbRead = function (key) {
-            console.log("You need to configure db!");
+            console.log("You need to configure a db!");
             return new Promise(function (r) { return r({}); });
         };
         this.dbWrite = function (key, msg) {
-            console.log("You need to configure db!");
+            console.log("You need to configure a db!");
         };
         this.triggerPut = function (msg) {
             //
@@ -113,7 +116,6 @@ var ToolDbService = /** @class */ (function () {
             });
         }); };
         this.debug = debug;
-        this.dbInit();
     }
     ToolDbService.prototype.dataPutHandler = function (msg) {
         return __awaiter(this, void 0, void 0, function () {
@@ -126,7 +128,7 @@ var ToolDbService = /** @class */ (function () {
                         // if (this.debug) console.log("Recv PUT", msg, oldValue);
                         if (!oldValue ||
                             (oldValue.timestamp < msg.timestamp &&
-                                (msg.key.slice(0, 1) == "~" ? oldValue.pub === msg.pub : true))) {
+                                (msg.key.slice(0, 1) == ":" ? oldValue.pub === msg.pub : true))) {
                             this.dbWrite(msg.key, msg);
                             this.triggerPut(msg);
                         }
@@ -137,6 +139,9 @@ var ToolDbService = /** @class */ (function () {
                 }
             });
         });
+    };
+    ToolDbService.prototype.initialize = function () {
+        this.dbInit();
     };
     return ToolDbService;
 }());

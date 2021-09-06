@@ -2,7 +2,9 @@ import { GraphEntryValue } from "./types/graph";
 import { VerifyResult } from "./types/message";
 
 import verifyMessage from "./utils/verifyMessage";
-
+/**
+ * WIP move the remainder of this (custom verification) to client service!
+ */
 class ToolDbService {
   private debug = false;
 
@@ -10,16 +12,16 @@ class ToolDbService {
    * These can be customized depending on your db of choice.
    */
   public dbInit = () => {
-    console.log("You need to configure db!");
+    console.log("You need to configure a db!");
   };
 
   public dbRead = <T>(key: string): Promise<T> => {
-    console.log("You need to configure db!");
+    console.log("You need to configure a db!");
     return new Promise((r) => r({} as T));
   };
 
   public dbWrite = <T>(key: string, msg: T) => {
-    console.log("You need to configure db!");
+    console.log("You need to configure a db!");
   };
 
   public triggerPut = (msg: GraphEntryValue) => {
@@ -56,7 +58,7 @@ class ToolDbService {
     if (
       !oldValue ||
       (oldValue.timestamp < msg.timestamp &&
-        (msg.key.slice(0, 1) == "~" ? oldValue.pub === msg.pub : true))
+        (msg.key.slice(0, 1) == ":" ? oldValue.pub === msg.pub : true))
     ) {
       this.dbWrite(msg.key, msg);
       this.triggerPut(msg);
@@ -95,6 +97,9 @@ class ToolDbService {
 
   constructor(debug = false) {
     this.debug = debug;
+  }
+
+  public initialize() {
     this.dbInit();
   }
 }

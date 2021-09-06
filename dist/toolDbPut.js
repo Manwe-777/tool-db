@@ -39,10 +39,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var axios_1 = __importDefault(require("axios"));
 var proofOfWork_1 = __importDefault(require("./utils/proofOfWork"));
 var signData_1 = __importDefault(require("./utils/signData"));
 var toBase64_1 = __importDefault(require("./utils/toBase64"));
+/**
+ * Triggers a PUT request to other peers.
+ * @param key key where we want to put the data at.
+ * @param value Data we want to any (any type)
+ * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
+ * @returns Promise<Data | null>
+ */
 function toolDbPut(key, value, userNamespaced) {
     var _this = this;
     if (userNamespaced === void 0) { userNamespaced = false; }
@@ -71,7 +77,7 @@ function toolDbPut(key, value, userNamespaced) {
                     var _a, _b;
                     return __generator(this, function (_c) {
                         data = {
-                            key: userNamespaced ? "~" + ((_a = this.user) === null || _a === void 0 ? void 0 : _a.pubKey) + "." + key : key,
+                            key: userNamespaced ? ":" + ((_a = this.user) === null || _a === void 0 ? void 0 : _a.pubKey) + "." + key : key,
                             pub: ((_b = this.user) === null || _b === void 0 ? void 0 : _b.pubKey) || "",
                             nonce: nonce,
                             timestamp: timestamp,
@@ -79,12 +85,17 @@ function toolDbPut(key, value, userNamespaced) {
                             sig: (0, toBase64_1.default)(signature),
                             value: value,
                         };
-                        axios_1.default
-                            .post(this.host + "/api/put", data)
-                            .then(function (value) {
-                            resolve(value.data);
-                        })
-                            .catch(reject);
+                        if (this.debug) {
+                            console.log("PUT > " + key, data);
+                        }
+                        this.gun.get(data.key).put({ v: JSON.stringify(data) }, function (ack) {
+                            if (ack.err) {
+                                reject(ack.err);
+                            }
+                            else {
+                                resolve(data.value);
+                            }
+                        });
                         return [2 /*return*/];
                     });
                 }); })

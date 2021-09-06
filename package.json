@@ -23,6 +23,7 @@
     "babel": "^6.23.0",
     "buffer": "^6.0.3",
     "crypto": "^1.0.1",
+    "gun": "github:amark/gun",
     "jest": "^27.0.6",
     "localforage": "^1.9.0",
     "localforage-startswith": "^1.4.0",

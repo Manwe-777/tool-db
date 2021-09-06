@@ -3,6 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var gun_1 = __importDefault(require("gun"));
+var customGun_1 = __importDefault(require("./customGun"));
 var toolDbAnonSignIn_1 = __importDefault(require("./toolDbAnonSignIn"));
 var toolDbGet_1 = __importDefault(require("./toolDbGet"));
 var toolDbGetPubKey_1 = __importDefault(require("./toolDbGetPubKey"));
@@ -21,7 +23,18 @@ var ToolDbClient = /** @class */ (function () {
         this.signUp = toolDbSignUp_1.default;
         this.user = undefined;
         this.host = _host;
+        (0, customGun_1.default)();
+        this._gun = new gun_1.default({
+            peers: ["http://dev-gun.armsbook.com:8765/gun"],
+        });
     }
+    Object.defineProperty(ToolDbClient.prototype, "gun", {
+        get: function () {
+            return this._gun;
+        },
+        enumerable: false,
+        configurable: true
+    });
     return ToolDbClient;
 }());
 exports.default = ToolDbClient;

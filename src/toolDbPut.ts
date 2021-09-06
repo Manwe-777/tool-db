@@ -1,4 +1,3 @@
-import axios from "axios";
 import toolDbClient from "./toolDbClient";
 import { GraphEntryValue } from "./types/graph";
 
@@ -7,6 +6,13 @@ import proofOfWork from "./utils/proofOfWork";
 import signData from "./utils/signData";
 import toBase64 from "./utils/toBase64";
 
+/**
+ * Triggers a PUT request to other peers.
+ * @param key key where we want to put the data at.
+ * @param value Data we want to any (any type)
+ * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
+ * @returns Promise<Data | null>
+ */
 export default function toolDbPut<T = any>(
   this: toolDbClient,
   key: string,
@@ -38,7 +44,7 @@ export default function toolDbPut<T = any>(
             .then(async (signature) => {
               // Compose the message
               const data: GraphEntryValue = {
-                key: userNamespaced ? `~${this.user?.pubKey}.${key}` : key,
+                key: userNamespaced ? `:${this.user?.pubKey}.${key}` : key,
                 pub: this.user?.pubKey || "",
                 nonce,
                 timestamp,
@@ -47,12 +53,16 @@ export default function toolDbPut<T = any>(
                 value,
               };
 
-              axios
-                .post(`${this.host}/api/put`, data)
-                .then((value) => {
-                  resolve(value.data);
-                })
-                .catch(reject);
+              if (this.debug) {
+                console.log("PUT > " + key, data);
+              }
+              this.gun.get(data.key).put({ v: JSON.stringify(data) }, (ack) => {
+                if (ack.err) {
+                  reject(ack.err);
+                } else {
+                  resolve(data.value);
+                }
+              });
             })
             .catch(reject);
         }
