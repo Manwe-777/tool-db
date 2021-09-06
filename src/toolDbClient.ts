@@ -10,8 +10,6 @@ import toolDbSignUp from "./toolDbSignUp";
 class ToolDbClient {
   public debug = false;
 
-  public host = "";
-
   private _gun;
 
   public getData = toolDbGet;
@@ -37,12 +35,11 @@ class ToolDbClient {
         pubKey: string;
       };
 
-  constructor(_host: string) {
-    this.host = _host;
+  constructor(peers: string[]) {
     customGun();
 
     this._gun = new Gun({
-      peers: ["http://dev-gun.armsbook.com:8765/gun"],
+      peers,
     });
   }
 
