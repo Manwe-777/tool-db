@@ -14,7 +14,7 @@ import sha256 from "./sha256";
 export default async function verifyMessage<T>(
   msg: GraphEntryValue<T>
 ): Promise<VerifyResult> {
-  console.log("verify: ", msg);
+  // console.log("verify: ", msg);
   const strData = JSON.stringify(msg.value);
 
   // Max clock shift allowed is ten seconds
