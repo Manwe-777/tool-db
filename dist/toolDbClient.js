@@ -12,9 +12,8 @@ var toolDbPut_1 = __importDefault(require("./toolDbPut"));
 var toolDbSignIn_1 = __importDefault(require("./toolDbSignIn"));
 var toolDbSignUp_1 = __importDefault(require("./toolDbSignUp"));
 var ToolDbClient = /** @class */ (function () {
-    function ToolDbClient(_host) {
+    function ToolDbClient(peers) {
         this.debug = false;
-        this.host = "";
         this.getData = toolDbGet_1.default;
         this.putData = toolDbPut_1.default;
         this.getPubKey = toolDbGetPubKey_1.default;
@@ -22,10 +21,9 @@ var ToolDbClient = /** @class */ (function () {
         this.anonSignIn = toolDbAnonSignIn_1.default;
         this.signUp = toolDbSignUp_1.default;
         this.user = undefined;
-        this.host = _host;
         (0, customGun_1.default)();
         this._gun = new gun_1.default({
-            peers: ["http://dev-gun.armsbook.com:8765/gun"],
+            peers: peers,
         });
     }
     Object.defineProperty(ToolDbClient.prototype, "gun", {
