@@ -1,4 +1,5 @@
 export enum VerifyResult {
+  InvalidData = -7,
   InvalidVerification = -6,
   InvalidTimestamp = -5,
   PubKeyMismatch = -4,

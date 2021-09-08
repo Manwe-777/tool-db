@@ -50,12 +50,21 @@ function security(msg) {
                     keys = Object.keys(msg.put);
                     promises = keys.map(function (key) { return __awaiter(_this, void 0, void 0, function () {
                         var data;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
+                        var _a;
+                        return __generator(this, function (_b) {
+                            switch (_b.label) {
                                 case 0:
-                                    data = JSON.parse(msg.put[key].v);
+                                    data = {};
+                                    if ((_a = msg.put[key]) === null || _a === void 0 ? void 0 : _a.v) {
+                                        try {
+                                            data = JSON.parse(msg.put[key].v);
+                                        }
+                                        catch (e) {
+                                            //
+                                        }
+                                    }
                                     return [4 /*yield*/, (0, _1.verifyMessage)(data)];
-                                case 1: return [2 /*return*/, _a.sent()];
+                                case 1: return [2 /*return*/, _b.sent()];
                             }
                         });
                     }); });

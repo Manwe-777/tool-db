@@ -5,4 +5,4 @@ import { VerifyResult } from "../types/message";
  * @param msg AnyMessage
  * @returns boolean or undefined if the message type does not match
  */
-export default function verifyMessage<T>(msg: GraphEntryValue<T>): Promise<VerifyResult>;
+export default function verifyMessage<T>(msg: Partial<GraphEntryValue<T>>): Promise<VerifyResult>;

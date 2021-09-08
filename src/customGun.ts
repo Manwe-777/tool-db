@@ -8,7 +8,14 @@ async function security(msg) {
   if (msg.put) {
     const keys = Object.keys(msg.put);
     const promises = keys.map(async (key) => {
-      const data = JSON.parse(msg.put[key].v);
+      let data = {};
+      if (msg.put[key]?.v) {
+        try {
+          data = JSON.parse(msg.put[key].v);
+        } catch (e) {
+          //
+        }
+      }
       return await verifyMessage(data);
     });
     const verifiedList = await Promise.all(promises).catch(console.error);

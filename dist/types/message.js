@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.VerifyResult = void 0;
 var VerifyResult;
 (function (VerifyResult) {
+    VerifyResult[VerifyResult["InvalidData"] = -7] = "InvalidData";
     VerifyResult[VerifyResult["InvalidVerification"] = -6] = "InvalidVerification";
     VerifyResult[VerifyResult["InvalidTimestamp"] = -5] = "InvalidTimestamp";
     VerifyResult[VerifyResult["PubKeyMismatch"] = -4] = "PubKeyMismatch";

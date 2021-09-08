@@ -12,10 +12,14 @@ import sha256 from "./sha256";
  * @returns boolean or undefined if the message type does not match
  */
 export default async function verifyMessage<T>(
-  msg: GraphEntryValue<T>
+  msg: Partial<GraphEntryValue<T>>
 ): Promise<VerifyResult> {
-  // console.log("verify: ", msg);
+  console.log("verify: ", msg);
   const strData = JSON.stringify(msg.value);
+
+  if (!msg.timestamp || !msg.key || !msg.hash || !msg.pub || !msg.sig) {
+    return VerifyResult.InvalidData;
+  }
 
   // Max clock shift allowed is ten seconds
   if (msg.timestamp > new Date().getTime() + 10000) {
