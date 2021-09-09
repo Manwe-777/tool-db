@@ -74,10 +74,10 @@ function verification(msg) {
                     if (verifiedList.filter(function (r) { return r === _1.VerifyResult.Verified; }).length ===
                         keys.length) {
                         this.to.next(msg);
-                        console.log("Verification OK", verifiedList);
+                        // console.log("Verification OK", keys);
                         return [2 /*return*/];
                     }
-                    console.log("Verification NOT OK", verifiedList, keys, msg);
+                    // console.log("Verification NOT OK", keys, verifiedList, msg);
                     return [2 /*return*/];
                 case 2:
                     this.to.next(msg);
