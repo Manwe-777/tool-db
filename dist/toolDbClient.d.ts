@@ -4,6 +4,11 @@ import toolDbGetPubKey from "./toolDbGetPubKey";
 import toolDbPut from "./toolDbPut";
 import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
+interface Listener {
+    key: string;
+    timeout: number | null;
+    fn: (msg: any) => void;
+}
 declare class ToolDbClient {
     debug: boolean;
     private _gun;
@@ -13,6 +18,9 @@ declare class ToolDbClient {
     signIn: typeof toolDbSignIn;
     anonSignIn: typeof toolDbAnonSignIn;
     signUp: typeof toolDbSignUp;
+    _keyListeners: (Listener | null)[];
+    addKeyListener: <T = any>(key: string, fn: (msg: T) => void) => number;
+    removeKeyListener: (id: number) => void;
     user: {
         keys: {
             signKeys: CryptoKeyPair;

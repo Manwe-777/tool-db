@@ -8,6 +8,12 @@ import toolDbPut from "./toolDbPut";
 import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 
+interface Listener {
+  key: string;
+  timeout: number | null;
+  fn: (msg: any) => void;
+}
+
 class ToolDbClient {
   public debug = false;
 
@@ -25,6 +31,26 @@ class ToolDbClient {
 
   public signUp = toolDbSignUp;
 
+  public _keyListeners: (Listener | null)[] = [];
+
+  public addKeyListener = <T = any>(key: string, fn: (msg: T) => void) => {
+    const newListener: Listener = {
+      key,
+      timeout: null,
+      fn,
+    };
+
+    this._keyListeners.push(newListener);
+    return this._keyListeners.length;
+  };
+
+  public removeKeyListener = (id: number) => {
+    if (this._keyListeners[id]?.timeout) {
+      clearTimeout(this._keyListeners[id]?.timeout || undefined);
+    }
+    this._keyListeners[id] = null;
+  };
+
   public user = undefined as
     | undefined
     | {
@@ -37,7 +63,10 @@ class ToolDbClient {
       };
 
   constructor(peers: string[]) {
-    customGun();
+    customGun(this, Gun);
+
+    if (typeof window !== "undefined") (window as any).toolDb = this;
+    if (typeof global !== "undefined") (global as any).toolDb = this;
 
     this._gun = new Gun({
       peers,

@@ -1,10 +1,9 @@
-/* eslint-disable */
 // @ts-nocheck
 
 import { verifyMessage, VerifyResult } from ".";
 
 async function verification(msg) {
-  // console.log("Middleware", msg);
+  // console.log("Middleware", this, msg);
   if (msg.put) {
     const keys = Object.keys(msg.put);
     const promises = keys.map(async (key) => {
@@ -35,25 +34,41 @@ async function verification(msg) {
   }
 }
 
-// function putCheck(msg) {
-//   // console.log("PUT", msg);
-//   if (msg.put) {
-//     const key = msg.put["#"];
-//     if (key && key.startsWith("==")) {
-//       if (msg._.root.graph[key]) {
-//         console.log("Illegal dupe, Not putting");
-//         return;
-//       }
-//     }
-//   }
-//   this.to.next(msg);
-// }
+function putCheck(msg) {
+  // console.log("PUT", this, window.toolDb, msg);
+  if (msg.put) {
+    const key = msg.put["#"];
+    (window || global).toolDb._keyListeners.forEach((listener) => {
+      if (listener.key === key) {
+        try {
+          const data = JSON.parse(msg.put[":"]);
+          if (data && data.value) {
+            if (listener.timeout) clearTimeout(listener.timeout);
+            listener.timeout = setTimeout(() => {
+              listener.fn(data.value);
+              listener.timeout = null;
+            }, 250);
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    });
+    // if (key && key.startsWith("==")) {
+    //   if (msg._.root.graph[key]) {
+    //     console.log("Illegal dupe, Not putting");
+    //     return;
+    //   }
+    // }
+  }
+  this.to.next(msg);
+}
 
-export default function customGun(g = undefined) {
-  (g || Gun).on("create", function (ctx) {
+export default function customGun(toolDb, _gun: any = undefined) {
+  (_gun || Gun).on("create", function (ctx) {
     ctx.on("in", verification);
     ctx.on("out", verification);
-    // ctx.on("put", putCheck);
+    ctx.on("put", putCheck);
     this.to.next(ctx);
   });
 }

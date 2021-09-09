@@ -1,5 +1,4 @@
 "use strict";
-/* eslint-disable */
 // @ts-nocheck
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -87,25 +86,43 @@ function verification(msg) {
         });
     });
 }
-// function putCheck(msg) {
-//   // console.log("PUT", msg);
-//   if (msg.put) {
-//     const key = msg.put["#"];
-//     if (key && key.startsWith("==")) {
-//       if (msg._.root.graph[key]) {
-//         console.log("Illegal dupe, Not putting");
-//         return;
-//       }
-//     }
-//   }
-//   this.to.next(msg);
-// }
-function customGun(g) {
-    if (g === void 0) { g = undefined; }
-    (g || Gun).on("create", function (ctx) {
+function putCheck(msg) {
+    // console.log("PUT", this, window.toolDb, msg);
+    if (msg.put) {
+        var key_1 = msg.put["#"];
+        (window || global).toolDb._keyListeners.forEach(function (listener) {
+            if (listener.key === key_1) {
+                try {
+                    var data_1 = JSON.parse(msg.put[":"]);
+                    if (data_1 && data_1.value) {
+                        if (listener.timeout)
+                            clearTimeout(listener.timeout);
+                        listener.timeout = setTimeout(function () {
+                            listener.fn(data_1.value);
+                            listener.timeout = null;
+                        }, 250);
+                    }
+                }
+                catch (e) {
+                    console.warn(e);
+                }
+            }
+        });
+        // if (key && key.startsWith("==")) {
+        //   if (msg._.root.graph[key]) {
+        //     console.log("Illegal dupe, Not putting");
+        //     return;
+        //   }
+        // }
+    }
+    this.to.next(msg);
+}
+function customGun(toolDb, _gun) {
+    if (_gun === void 0) { _gun = undefined; }
+    (_gun || Gun).on("create", function (ctx) {
         ctx.on("in", verification);
         ctx.on("out", verification);
-        // ctx.on("put", putCheck);
+        ctx.on("put", putCheck);
         this.to.next(ctx);
     });
 }
