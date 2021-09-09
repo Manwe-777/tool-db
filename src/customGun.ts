@@ -25,10 +25,10 @@ async function verification(msg) {
       keys.length
     ) {
       this.to.next(msg);
-      console.log("Verification OK", verifiedList);
+      // console.log("Verification OK", keys);
       return;
     }
-    console.log("Verification NOT OK", verifiedList, keys, msg);
+    // console.log("Verification NOT OK", keys, verifiedList, msg);
     return;
   } else {
     this.to.next(msg);
