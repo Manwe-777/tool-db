@@ -25,10 +25,10 @@ async function verification(msg) {
       keys.length
     ) {
       this.to.next(msg);
-      // console.log("Verification OK", verifiedList);
+      console.log("Verification OK", verifiedList);
       return;
     }
-    // console.log("Verification NOT OK", verifiedList, keys, msg);
+    console.log("Verification NOT OK", verifiedList, keys, msg);
     return;
   } else {
     this.to.next(msg);
@@ -49,8 +49,8 @@ async function verification(msg) {
 //   this.to.next(msg);
 // }
 
-export default function customGun() {
-  Gun.on("create", function (ctx) {
+export default function customGun(g = undefined) {
+  (g || Gun).on("create", function (ctx) {
     ctx.on("in", verification);
     ctx.on("out", verification);
     // ctx.on("put", putCheck);

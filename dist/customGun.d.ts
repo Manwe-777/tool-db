@@ -1,1 +1,1 @@
-export default function customGun(): void;
+export default function customGun(g?: undefined): void;
