@@ -3,7 +3,7 @@
 
 import { verifyMessage, VerifyResult } from ".";
 
-async function security(msg) {
+async function verification(msg) {
   // console.log("Middleware", msg);
   if (msg.put) {
     const keys = Object.keys(msg.put);
@@ -35,10 +35,25 @@ async function security(msg) {
   }
 }
 
+// function putCheck(msg) {
+//   // console.log("PUT", msg);
+//   if (msg.put) {
+//     const key = msg.put["#"];
+//     if (key && key.startsWith("==")) {
+//       if (msg._.root.graph[key]) {
+//         console.log("Illegal dupe, Not putting");
+//         return;
+//       }
+//     }
+//   }
+//   this.to.next(msg);
+// }
+
 export default function customGun() {
   Gun.on("create", function (ctx) {
-    ctx.on("in", security);
-    ctx.on("out", security);
+    ctx.on("in", verification);
+    ctx.on("out", verification);
+    // ctx.on("put", putCheck);
     this.to.next(ctx);
   });
 }

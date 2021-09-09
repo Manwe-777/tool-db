@@ -1,7 +1,4 @@
-import { NullLiteral } from "typescript";
-import { verifyMessage } from ".";
 import ToolDbClient from "./toolDbClient";
-import { GraphEntryValue } from "./types/graph";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.

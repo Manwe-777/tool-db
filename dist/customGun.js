@@ -39,7 +39,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var _1 = require(".");
-function security(msg) {
+function verification(msg) {
     return __awaiter(this, void 0, void 0, function () {
         var keys, promises, verifiedList;
         var _this = this;
@@ -87,10 +87,24 @@ function security(msg) {
         });
     });
 }
+// function putCheck(msg) {
+//   // console.log("PUT", msg);
+//   if (msg.put) {
+//     const key = msg.put["#"];
+//     if (key && key.startsWith("==")) {
+//       if (msg._.root.graph[key]) {
+//         console.log("Illegal dupe, Not putting");
+//         return;
+//       }
+//     }
+//   }
+//   this.to.next(msg);
+// }
 function customGun() {
     Gun.on("create", function (ctx) {
-        ctx.on("in", security);
-        ctx.on("out", security);
+        ctx.on("in", verification);
+        ctx.on("out", verification);
+        // ctx.on("put", putCheck);
         this.to.next(ctx);
     });
 }
