@@ -73,12 +73,13 @@ function verification(msg) {
                     if (verifiedList.filter(function (r) { return r === _1.VerifyResult.Verified; }).length ===
                         keys.length) {
                         this.to.next(msg);
-                        // console.log("Verification OK", keys);
+                        // console.log("Verification > OK", msg);
                         return [2 /*return*/];
                     }
-                    // console.log("Verification NOT OK", keys, verifiedList, msg);
+                    // console.log("Verification > NOT OK", msg);
                     return [2 /*return*/];
                 case 2:
+                    // console.log("Verification > Skipped", msg);
                     this.to.next(msg);
                     _a.label = 3;
                 case 3: return [2 /*return*/];
@@ -87,35 +88,47 @@ function verification(msg) {
     });
 }
 function putCheck(msg) {
-    // console.log("PUT", this, window.toolDb, msg);
-    if (msg.put) {
-        var key_1 = msg.put["#"];
-        (window || global).toolDb._keyListeners.forEach(function (listener) {
-            if (listener.key === key_1) {
-                try {
-                    var data_1 = JSON.parse(msg.put[":"]);
-                    if (data_1 && data_1.value) {
-                        if (listener.timeout)
-                            clearTimeout(listener.timeout);
-                        listener.timeout = setTimeout(function () {
-                            listener.fn(data_1.value);
-                            listener.timeout = null;
-                        }, 250);
+    return __awaiter(this, void 0, void 0, function () {
+        var key_1, data_1, verify;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!msg.put) return [3 /*break*/, 3];
+                    key_1 = msg.put["#"];
+                    data_1 = {};
+                    try {
+                        data_1 = JSON.parse(msg.put[":"]);
                     }
-                }
-                catch (e) {
-                    console.warn(e);
-                }
+                    catch (e) {
+                        // console.warn(e);
+                    }
+                    if (!(data_1 && data_1.value)) return [3 /*break*/, 2];
+                    console.log("PUT", key_1, data_1);
+                    (window || global).toolDb._keyListeners.forEach(function (listener) {
+                        if (key_1.startsWith(listener.key)) {
+                            if (listener.timeout)
+                                clearTimeout(listener.timeout);
+                            listener.timeout = setTimeout(function () {
+                                listener.fn(data_1.value);
+                                listener.timeout = null;
+                            }, 250);
+                        }
+                    });
+                    return [4 /*yield*/, (0, _1.verifyMessage)(data_1)];
+                case 1:
+                    verify = _a.sent();
+                    if (verify === _1.VerifyResult.Verified) {
+                        this.to.next(msg);
+                        return [2 /*return*/];
+                    }
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
+                case 3:
+                    this.to.next(msg);
+                    return [2 /*return*/];
             }
         });
-        // if (key && key.startsWith("==")) {
-        //   if (msg._.root.graph[key]) {
-        //     console.log("Illegal dupe, Not putting");
-        //     return;
-        //   }
-        // }
-    }
-    this.to.next(msg);
+    });
 }
 function customGun(toolDb, _gun) {
     if (_gun === void 0) { _gun = undefined; }

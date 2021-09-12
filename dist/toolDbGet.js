@@ -10,7 +10,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function toolDbGet(key, userNamespaced, timeoutMs) {
     var _this = this;
     if (userNamespaced === void 0) { userNamespaced = false; }
-    if (timeoutMs === void 0) { timeoutMs = 3000; }
+    if (timeoutMs === void 0) { timeoutMs = 1000; }
     return new Promise(function (resolve, reject) {
         var _a, _b;
         if (userNamespaced && ((_a = _this.user) === null || _a === void 0 ? void 0 : _a.pubKey) === undefined) {
@@ -22,26 +22,23 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
             console.log("GET > " + finalKey);
         }
         var first = true;
+        var timeout = setTimeout(function () {
+            resolve(null);
+        }, timeoutMs);
         _this.gun.get(finalKey, function (ack) {
             if (ack["@"] || ack.put) {
                 var d = ack.put;
                 if ((d && first) || (d && !first)) {
-                    if (!d.v) {
-                        resolve(null);
-                    }
-                    else {
+                    if (d.v) {
                         try {
                             var data = JSON.parse(d.v);
+                            clearTimeout(timeout);
                             resolve(data.value);
                         }
                         catch (e) {
                             console.error(e);
-                            resolve(null);
                         }
                     }
-                }
-                if (!d && !first) {
-                    resolve(null);
                 }
                 first = false;
             }

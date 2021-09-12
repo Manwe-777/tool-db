@@ -3,7 +3,6 @@
 import { verifyMessage, VerifyResult } from ".";
 
 async function verification(msg) {
-  // console.log("Middleware", this, msg);
   if (msg.put) {
     const keys = Object.keys(msg.put);
     const promises = keys.map(async (key) => {
@@ -24,36 +23,45 @@ async function verification(msg) {
       keys.length
     ) {
       this.to.next(msg);
-      // console.log("Verification OK", keys);
+      // console.log("Verification > OK", msg);
       return;
     }
-    // console.log("Verification NOT OK", keys, verifiedList, msg);
+    // console.log("Verification > NOT OK", msg);
     return;
   } else {
+    // console.log("Verification > Skipped", msg);
     this.to.next(msg);
   }
 }
 
-function putCheck(msg) {
-  // console.log("PUT", this, window.toolDb, msg);
+async function putCheck(msg) {
   if (msg.put) {
     const key = msg.put["#"];
-    (window || global).toolDb._keyListeners.forEach((listener) => {
-      if (listener.key === key) {
-        try {
-          const data = JSON.parse(msg.put[":"]);
-          if (data && data.value) {
-            if (listener.timeout) clearTimeout(listener.timeout);
-            listener.timeout = setTimeout(() => {
-              listener.fn(data.value);
-              listener.timeout = null;
-            }, 250);
-          }
-        } catch (e) {
-          console.warn(e);
+    let data = {};
+    try {
+      data = JSON.parse(msg.put[":"]);
+    } catch (e) {
+      // console.warn(e);
+    }
+    if (data && data.value) {
+      console.log("PUT", key, data);
+      (window || global).toolDb._keyListeners.forEach((listener) => {
+        if (key.startsWith(listener.key)) {
+          if (listener.timeout) clearTimeout(listener.timeout);
+          listener.timeout = setTimeout(() => {
+            listener.fn(data.value);
+            listener.timeout = null;
+          }, 250);
         }
+      });
+
+      const verify = await verifyMessage(data);
+      if (verify === VerifyResult.Verified) {
+        this.to.next(msg);
+        return;
       }
-    });
+    }
+    return;
     // if (key && key.startsWith("==")) {
     //   if (msg._.root.graph[key]) {
     //     console.log("Illegal dupe, Not putting");

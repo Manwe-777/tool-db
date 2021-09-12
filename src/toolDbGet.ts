@@ -11,7 +11,7 @@ export default function toolDbGet<T = any>(
   this: ToolDbClient,
   key: string,
   userNamespaced = false,
-  timeoutMs = 3000
+  timeoutMs = 1000
 ): Promise<T | null> {
   return new Promise((resolve, reject) => {
     if (userNamespaced && this.user?.pubKey === undefined) {
@@ -24,24 +24,24 @@ export default function toolDbGet<T = any>(
     }
 
     let first = true;
+
+    const timeout = setTimeout(() => {
+      resolve(null);
+    }, timeoutMs);
+
     this.gun.get(finalKey, (ack: any) => {
       if (ack["@"] || ack.put) {
         const d = ack.put;
         if ((d && first) || (d && !first)) {
-          if (!d.v) {
-            resolve(null);
-          } else {
+          if (d.v) {
             try {
               const data = JSON.parse(d.v);
+              clearTimeout(timeout);
               resolve(data.value);
             } catch (e) {
               console.error(e);
-              resolve(null);
             }
           }
-        }
-        if (!d && !first) {
-          resolve(null);
         }
         first = false;
       }
