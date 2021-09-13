@@ -1,4 +1,5 @@
 import Gun from "gun";
+import { IGunChainReference } from "gun/types/chain";
 
 import customGun from "./customGun";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
@@ -17,7 +18,7 @@ interface Listener {
 class ToolDbClient {
   public debug = false;
 
-  private _gun;
+  private _gun: IGunChainReference<any>;
 
   public getData = toolDbGet;
 

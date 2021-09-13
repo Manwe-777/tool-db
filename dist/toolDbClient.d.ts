@@ -1,3 +1,4 @@
+import { IGunChainReference } from "gun/types/chain";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbGet from "./toolDbGet";
 import toolDbGetPubKey from "./toolDbGetPubKey";
@@ -30,6 +31,6 @@ declare class ToolDbClient {
         pubKey: string;
     } | undefined;
     constructor(peers: string[]);
-    get gun(): import("gun/types/chain").IGunChainReference<any, any, "pre_root">;
+    get gun(): IGunChainReference<any, any, false>;
 }
 export default ToolDbClient;
