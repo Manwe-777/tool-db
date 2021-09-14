@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ToolDbClient = exports.ToolDbService = exports.customGun = exports.verifyData = exports.saveKeysComb = exports.loadKeysComb = exports.importKey = exports.generateKeysComb = exports.generateKeyPair = exports.generateKeyFromPassword = exports.exportKey = exports.encryptWithPass = exports.encryptData = exports.encodeKeyString = exports.deriveSecret = exports.decryptWithPass = exports.decryptData = exports.decodeKeyString = exports.verifyMessage = exports.uint8ToBase64 = exports.toBase64 = exports.textRandom = exports.stringToArrayBuffer = exports.randomAnimal = exports.generateIv = exports.fromBase64 = exports.base64ToUint8 = exports.base64ToArrayBuffer = exports.arrayBufferToString = exports.arrayBufferToBase64 = exports.signData = exports.sha256 = exports.sha1 = exports.proofOfWork = void 0;
+exports.ToolDbClient = exports.customGun = exports.verifyData = exports.saveKeysComb = exports.loadKeysComb = exports.importKey = exports.generateKeysComb = exports.generateKeyPair = exports.generateKeyFromPassword = exports.exportKey = exports.encryptWithPass = exports.encryptData = exports.encodeKeyString = exports.deriveSecret = exports.decryptWithPass = exports.decryptData = exports.decodeKeyString = exports.verifyMessage = exports.uint8ToBase64 = exports.toBase64 = exports.textRandom = exports.stringToArrayBuffer = exports.randomAnimal = exports.generateIv = exports.fromBase64 = exports.base64ToUint8 = exports.base64ToArrayBuffer = exports.arrayBufferToString = exports.arrayBufferToBase64 = exports.signData = exports.sha256 = exports.sha1 = exports.proofOfWork = void 0;
 /* eslint-disable no-undef */
 /* eslint-disable global-require */
 __exportStar(require("./types/graph"), exports);
@@ -96,8 +96,6 @@ var verifyData_1 = require("./utils/crypto/verifyData");
 Object.defineProperty(exports, "verifyData", { enumerable: true, get: function () { return __importDefault(verifyData_1).default; } });
 var customGun_1 = require("./customGun");
 Object.defineProperty(exports, "customGun", { enumerable: true, get: function () { return __importDefault(customGun_1).default; } });
-var toolDbService_1 = require("./toolDbService");
-Object.defineProperty(exports, "ToolDbService", { enumerable: true, get: function () { return __importDefault(toolDbService_1).default; } });
 var toolDbClient_1 = require("./toolDbClient");
 Object.defineProperty(exports, "ToolDbClient", { enumerable: true, get: function () { return __importDefault(toolDbClient_1).default; } });
 //# sourceMappingURL=index.js.map

@@ -48,7 +48,7 @@ function verification(msg) {
                     if (!msg.put) return [3 /*break*/, 2];
                     keys = Object.keys(msg.put);
                     promises = keys.map(function (key) { return __awaiter(_this, void 0, void 0, function () {
-                        var data;
+                        var data, toolDb;
                         var _a;
                         return __generator(this, function (_b) {
                             switch (_b.label) {
@@ -62,7 +62,8 @@ function verification(msg) {
                                             //
                                         }
                                     }
-                                    return [4 /*yield*/, (0, _1.verifyMessage)(data)];
+                                    toolDb = (window || global).toolDb;
+                                    return [4 /*yield*/, toolDb.verify(data)];
                                 case 1: return [2 /*return*/, _b.sent()];
                             }
                         });
@@ -89,11 +90,11 @@ function verification(msg) {
 }
 function putCheck(msg) {
     return __awaiter(this, void 0, void 0, function () {
-        var key_1, data_1, verify;
+        var key_1, data_1, toolDb, verify;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!msg.put) return [3 /*break*/, 3];
+                    if (!msg.put) return [3 /*break*/, 2];
                     key_1 = msg.put["#"];
                     data_1 = {};
                     try {
@@ -103,8 +104,15 @@ function putCheck(msg) {
                         // console.warn(e);
                     }
                     if (!(data_1 && data_1.value)) return [3 /*break*/, 2];
-                    console.log("PUT", key_1, data_1);
-                    (window || global).toolDb._keyListeners.forEach(function (listener) {
+                    toolDb = (window || global).toolDb;
+                    return [4 /*yield*/, toolDb.verify(data_1)];
+                case 1:
+                    verify = _a.sent();
+                    if (verify !== _1.VerifyResult.Verified) {
+                        return [2 /*return*/];
+                    }
+                    // Check listeners
+                    toolDb._keyListeners.forEach(function (listener) {
                         if (key_1.startsWith(listener.key)) {
                             if (listener.timeout)
                                 clearTimeout(listener.timeout);
@@ -114,16 +122,8 @@ function putCheck(msg) {
                             }, 250);
                         }
                     });
-                    return [4 /*yield*/, (0, _1.verifyMessage)(data_1)];
-                case 1:
-                    verify = _a.sent();
-                    if (verify === _1.VerifyResult.Verified) {
-                        this.to.next(msg);
-                        return [2 /*return*/];
-                    }
                     _a.label = 2;
-                case 2: return [2 /*return*/];
-                case 3:
+                case 2:
                     this.to.next(msg);
                     return [2 /*return*/];
             }

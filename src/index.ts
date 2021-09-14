@@ -56,5 +56,4 @@ export { default as verifyData } from "./utils/crypto/verifyData";
 
 export { default as customGun } from "./customGun";
 
-export { default as ToolDbService } from "./toolDbService";
 export { default as ToolDbClient } from "./toolDbClient";

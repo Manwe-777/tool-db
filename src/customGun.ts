@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { verifyMessage, VerifyResult } from ".";
+import { VerifyResult } from ".";
 
 async function verification(msg) {
   if (msg.put) {
@@ -14,7 +14,8 @@ async function verification(msg) {
           //
         }
       }
-      return await verifyMessage(data);
+      const toolDb = (window || global).toolDb;
+      return await toolDb.verify(data);
     });
     const verifiedList = await Promise.all(promises).catch(console.error);
 
@@ -44,8 +45,17 @@ async function putCheck(msg) {
       // console.warn(e);
     }
     if (data && data.value) {
-      console.log("PUT", key, data);
-      (window || global).toolDb._keyListeners.forEach((listener) => {
+      const toolDb = (window || global).toolDb;
+      // console.log("PUT", key, data);
+
+      // Stop if its not verified!
+      const verify = await toolDb.verify(data);
+      if (verify !== VerifyResult.Verified) {
+        return;
+      }
+
+      // Check listeners
+      toolDb._keyListeners.forEach((listener) => {
         if (key.startsWith(listener.key)) {
           if (listener.timeout) clearTimeout(listener.timeout);
           listener.timeout = setTimeout(() => {
@@ -54,14 +64,7 @@ async function putCheck(msg) {
           }, 250);
         }
       });
-
-      const verify = await verifyMessage(data);
-      if (verify === VerifyResult.Verified) {
-        this.to.next(msg);
-        return;
-      }
     }
-    return;
     // if (key && key.startsWith("==")) {
     //   if (msg._.root.graph[key]) {
     //     console.log("Illegal dupe, Not putting");
@@ -70,6 +73,7 @@ async function putCheck(msg) {
     // }
   }
   this.to.next(msg);
+  return;
 }
 
 export default function customGun(toolDb, _gun: any = undefined) {

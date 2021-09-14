@@ -11,6 +11,7 @@ var toolDbGetPubKey_1 = __importDefault(require("./toolDbGetPubKey"));
 var toolDbPut_1 = __importDefault(require("./toolDbPut"));
 var toolDbSignIn_1 = __importDefault(require("./toolDbSignIn"));
 var toolDbSignUp_1 = __importDefault(require("./toolDbSignUp"));
+var toolDbVerificationWrapper_1 = __importDefault(require("./toolDbVerificationWrapper"));
 var ToolDbClient = /** @class */ (function () {
     function ToolDbClient(peers) {
         var _this = this;
@@ -21,6 +22,7 @@ var ToolDbClient = /** @class */ (function () {
         this.signIn = toolDbSignIn_1.default;
         this.anonSignIn = toolDbAnonSignIn_1.default;
         this.signUp = toolDbSignUp_1.default;
+        this.verify = toolDbVerificationWrapper_1.default;
         this._keyListeners = [];
         this.addKeyListener = function (key, fn) {
             var newListener = {
@@ -37,6 +39,18 @@ var ToolDbClient = /** @class */ (function () {
                 clearTimeout(((_b = _this._keyListeners[id]) === null || _b === void 0 ? void 0 : _b.timeout) || undefined);
             }
             _this._keyListeners[id] = null;
+        };
+        this._customVerificator = [];
+        this.addCustomVerification = function (key, fn) {
+            var newListener = {
+                key: key,
+                fn: fn,
+            };
+            _this._customVerificator.push(newListener);
+            return _this._customVerificator.length;
+        };
+        this.removeCustomVerification = function (id) {
+            _this._customVerificator[id] = null;
         };
         this.user = undefined;
         (0, customGun_1.default)(this, gun_1.default);

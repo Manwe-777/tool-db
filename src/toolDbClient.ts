@@ -1,5 +1,6 @@
 import Gun from "gun";
 import { IGunChainReference } from "gun/types/chain";
+import { GraphEntryValue } from ".";
 
 import customGun from "./customGun";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
@@ -8,11 +9,17 @@ import toolDbGetPubKey from "./toolDbGetPubKey";
 import toolDbPut from "./toolDbPut";
 import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
+import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 
 interface Listener {
   key: string;
   timeout: number | null;
   fn: (msg: any) => void;
+}
+
+interface Verificator<T> {
+  key: string;
+  fn: (msg: GraphEntryValue<T>) => Promise<boolean>;
 }
 
 class ToolDbClient {
@@ -32,6 +39,8 @@ class ToolDbClient {
 
   public signUp = toolDbSignUp;
 
+  public verify = toolDbVerificationWrapper;
+
   public _keyListeners: (Listener | null)[] = [];
 
   public addKeyListener = <T = any>(key: string, fn: (msg: T) => void) => {
@@ -50,6 +59,25 @@ class ToolDbClient {
       clearTimeout(this._keyListeners[id]?.timeout || undefined);
     }
     this._keyListeners[id] = null;
+  };
+
+  public _customVerificator: (Verificator<any> | null)[] = [];
+
+  public addCustomVerification = <T = any>(
+    key: string,
+    fn: (msg: GraphEntryValue<T>) => Promise<boolean>
+  ) => {
+    const newListener: Verificator<T> = {
+      key,
+      fn,
+    };
+
+    this._customVerificator.push(newListener);
+    return this._customVerificator.length;
+  };
+
+  public removeCustomVerification = (id: number) => {
+    this._customVerificator[id] = null;
   };
 
   public user = undefined as

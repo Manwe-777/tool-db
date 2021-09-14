@@ -32,5 +32,4 @@ export { default as loadKeysComb } from "./utils/crypto/loadKeysComb";
 export { default as saveKeysComb } from "./utils/crypto/saveKeysComb";
 export { default as verifyData } from "./utils/crypto/verifyData";
 export { default as customGun } from "./customGun";
-export { default as ToolDbService } from "./toolDbService";
 export { default as ToolDbClient } from "./toolDbClient";
