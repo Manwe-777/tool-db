@@ -8,31 +8,35 @@ Base usage;
 
 Initializing;
 ```
-const client = new ToolChainClient([peers]);
+const client = new ToolChainClient([gunPeers]);
 ```
-Connect to the selected gun db peers. These can be normal gun relays or tool-db for a tighter protocol enforcement.
+Connects to the selected gun db peers. These can be normal gun relays or tool-db for a tighter protocol enforcement.
 
-You can sign as a guest or create a user;
-```
-client.anonSignIn().then();
-```
+You can create a user, sign in or create a random set of keys for anonymous usage;
 ```
 client.signUp(user, pass).then();
-```
-```
 client.signIn(user, pass).then(keys);
+client.anonSignIn().then();
 ```
 
-To retrieve your public key;
+To retrieve your public key; (only if logged in)
 ```
 client.getPubKey().then(pubKey);
+// or
+client.user?.pubKey
 ```
+
+You can check if you are correctly logged in by checking if the user field exists or not;
+```
+if (client.user) {
+  // Ok!
+}
+```
+
 
 Simple put and get:
 ```
 client.getData("key", userNamespaced?, timeout?).then();
-```
-```
 client.putData("key", value, userNamespaced?).then();
 ```
 UserNamespaced will check for the user namespace, so it will transform the key used to ":user.key", This way all peers reading this entry will understand the key belongs to this user and will enforce the verifications required to namespaced entries.
@@ -43,8 +47,7 @@ const listenerId = client.addKeyListener("value", console.log);
 client.removeKeyListener(listenerId);
 ```
 
-Similarly, for using a custom verification on a key (or subset of keys) you can create a new function that returns a Promise;
-
+Similarly, for using a custom verification on a key (or subset of keys) you can create a new function that returns a Promise boolean;
 ```
 const validateDn = (msg) => {
   return new Promise((resolve) => {
@@ -60,4 +63,4 @@ const validatorId = client.addCustomVerification("value", validateFn);
 client.removeCustomVerification(validatorId);
 ```
 
-Keep in mind validators should run on all client nodes, and even trough the nodes not running your validator will be able to store and relay invalid messages its up to each client and peer to check these messages on arrival. ToolDb does this automatically when using the custom validation, but its important to make sure every peer runs the same code to avoid issues.
+Keep in mind validators should run on all client nodes, and even though the nodes not running your validator will be able to store and relay invalid messages its up to each client and peer to check these messages on arrival. ToolDb does this automatically when using the custom validation, but its important to make sure every peer runs the same code to avoid issues.
