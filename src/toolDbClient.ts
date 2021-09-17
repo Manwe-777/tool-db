@@ -1,4 +1,3 @@
-import Gun from "gun";
 import { IGunChainReference } from "gun/types/chain";
 import { GraphEntryValue } from ".";
 
@@ -10,6 +9,8 @@ import toolDbPut from "./toolDbPut";
 import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
+
+const Gun = require("gun");
 
 interface Listener {
   key: string;
