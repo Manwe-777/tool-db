@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var gun_1 = __importDefault(require("gun"));
 var customGun_1 = __importDefault(require("./customGun"));
 var toolDbAnonSignIn_1 = __importDefault(require("./toolDbAnonSignIn"));
 var toolDbGet_1 = __importDefault(require("./toolDbGet"));
@@ -12,6 +11,7 @@ var toolDbPut_1 = __importDefault(require("./toolDbPut"));
 var toolDbSignIn_1 = __importDefault(require("./toolDbSignIn"));
 var toolDbSignUp_1 = __importDefault(require("./toolDbSignUp"));
 var toolDbVerificationWrapper_1 = __importDefault(require("./toolDbVerificationWrapper"));
+var Gun = require("gun");
 var ToolDbClient = /** @class */ (function () {
     function ToolDbClient(peers) {
         var _this = this;
@@ -53,12 +53,12 @@ var ToolDbClient = /** @class */ (function () {
             _this._customVerificator[id] = null;
         };
         this.user = undefined;
-        (0, customGun_1.default)(this, gun_1.default);
+        (0, customGun_1.default)(this, Gun);
         if (typeof window !== "undefined")
             window.toolDb = this;
         if (typeof global !== "undefined")
             global.toolDb = this;
-        this._gun = new gun_1.default({
+        this._gun = new Gun({
             peers: peers,
         });
     }
