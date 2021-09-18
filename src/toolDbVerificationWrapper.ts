@@ -10,7 +10,7 @@ export default function toolDbVerificationWrapper(
       if (verified) {
         let skipCustom = true;
         this._customVerificator.forEach((listener) => {
-          if (listener && data.key.startsWith(listener.key)) {
+          if (listener && data.key && data.key.startsWith(listener.key)) {
             skipCustom = false;
             listener
               .fn(data)
