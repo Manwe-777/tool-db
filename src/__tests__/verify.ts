@@ -38,6 +38,45 @@ it("Can catch tampered messages (signature)", () => {
   });
 });
 
+it("Can catch messages with missing data", () => {
+  const delA: any = delete { ...putOk }.hash;
+  const pa = verifyMessage(delA).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidData);
+  });
+
+  const delB: any = delete { ...putOk }.key;
+  const pb = verifyMessage(delB).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidData);
+  });
+
+  const delC: any = delete { ...putOk }.nonce;
+  const pc = verifyMessage(delC).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidData);
+  });
+
+  const delD: any = delete { ...putOk }.pub;
+  const pd = verifyMessage(delD).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidData);
+  });
+
+  const delE: any = delete { ...putOk }.sig;
+  const pe = verifyMessage(delE).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidData);
+  });
+
+  const delF: any = delete { ...putOk }.timestamp;
+  const pf = verifyMessage(delF).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidData);
+  });
+
+  const delG: any = delete { ...putOk }.value;
+  const pg = verifyMessage(delG).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidData);
+  });
+
+  return Promise.all([pa, pb, pc, pd, pe, pf, pg]);
+});
+
 it("Can print errors", async () => {
   const rejectPromise = new Promise((resolve, reject) => {
     reject();
