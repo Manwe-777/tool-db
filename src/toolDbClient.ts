@@ -1,4 +1,3 @@
-import { IGunChainReference } from "gun/types/chain";
 import { GraphEntryValue } from ".";
 
 import customGun from "./customGun";
@@ -27,7 +26,7 @@ interface Verificator<T> {
 class ToolDbClient {
   public debug = false;
 
-  private _gun: IGunChainReference<any>;
+  private _gun: any;
 
   public getData = toolDbGet;
 

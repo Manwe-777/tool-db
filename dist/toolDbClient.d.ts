@@ -1,4 +1,3 @@
-import { IGunChainReference } from "gun/types/chain";
 import { GraphEntryValue } from ".";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbGet from "./toolDbGet";
@@ -40,7 +39,7 @@ declare class ToolDbClient {
         name: string;
         pubKey: string;
     } | undefined;
-    constructor(peers: string[]);
-    get gun(): IGunChainReference<any, any, false>;
+    constructor(peers?: string[]);
+    get gun(): any;
 }
 export default ToolDbClient;

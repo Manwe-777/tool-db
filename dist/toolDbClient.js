@@ -56,10 +56,12 @@ var ToolDbClient = /** @class */ (function () {
         this.user = undefined;
         shared_1.default.toolDb = this;
         shared_1.default.gun = Gun;
-        (0, customGun_1.default)(this, Gun);
-        this._gun = new Gun({
-            peers: peers,
-        });
+        if (peers) {
+            (0, customGun_1.default)(this, Gun);
+            this._gun = new Gun({
+                peers: peers,
+            });
+        }
     }
     Object.defineProperty(ToolDbClient.prototype, "gun", {
         get: function () {
