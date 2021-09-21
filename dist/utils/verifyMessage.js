@@ -44,7 +44,7 @@ var decodeKeyString_1 = __importDefault(require("./crypto/decodeKeyString"));
 var importKey_1 = __importDefault(require("./crypto/importKey"));
 var verifyData_1 = __importDefault(require("./crypto/verifyData"));
 var fromBase64_1 = __importDefault(require("./fromBase64"));
-var sha256_1 = __importDefault(require("./sha256"));
+// import sha256 from "./sha256";
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
  * @param msg AnyMessage
@@ -73,18 +73,6 @@ function verifyMessage(msg) {
                     if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
                         // console.warn("Provided pub keys do not match");
                         return [2 /*return*/, message_1.VerifyResult.PubKeyMismatch];
-                    }
-                    // Verify hash and nonce (adjust zeroes for difficulty of the network)
-                    // While this POW does not enforce security per-se, it does make it harder
-                    // for attackers to spam the network, and could be adjusted by peers.
-                    // Disabled for now because it is painful on large requests
-                    // if (msg.hash.slice(0, 1) !== "0") {
-                    // console.warn("No valid hash (no pow)");
-                    // return VerifyResult.NoProofOfWork;
-                    // }
-                    if ((0, sha256_1.default)("" + strData + pubKeyString + msg.timestamp + msg.nonce) !== msg.hash) {
-                        // console.warn("Specified hash does not generate a valid pow");
-                        return [2 /*return*/, message_1.VerifyResult.InvalidHashNonce];
                     }
                     return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(pubKeyString), "spki", "ECDSA", ["verify"])];
                 case 1:
