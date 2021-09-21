@@ -17,7 +17,8 @@ export default function toolDbPut<T = any>(
   this: toolDbClient,
   key: string,
   value: T,
-  userNamespaced = false
+  userNamespaced = false,
+  pow: 0
 ): Promise<GraphEntryValue | null> {
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
@@ -36,7 +37,7 @@ export default function toolDbPut<T = any>(
       this.user.pubKey
     }${timestamp}`;
     // WORK
-    proofOfWork(dataString, 0)
+    proofOfWork(dataString, pow)
       .then(({ hash, nonce }) => {
         if (this.user?.keys) {
           // Sign our value
