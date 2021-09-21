@@ -18,7 +18,7 @@ export default function toolDbPut<T = any>(
   key: string,
   value: T,
   userNamespaced = false,
-  pow: 0
+  pow = 0
 ): Promise<GraphEntryValue | null> {
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
