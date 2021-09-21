@@ -54,7 +54,7 @@ export default async function toolDbSignUp(
                               userData
                             )}${savedKeys.skpub}${timestamp}`;
 
-                            proofOfWork(userDataString, 3)
+                            proofOfWork(userDataString, 0)
                               .then(({ hash, nonce }) => {
                                 signData(
                                   hash,

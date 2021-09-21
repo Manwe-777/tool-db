@@ -87,7 +87,7 @@ function toolDbSignUp(user, password) {
                                                 };
                                                 var timestamp = new Date().getTime();
                                                 var userDataString = "" + JSON.stringify(userData) + savedKeys.skpub + timestamp;
-                                                (0, proofOfWork_1.default)(userDataString, 3)
+                                                (0, proofOfWork_1.default)(userDataString, 0)
                                                     .then(function (_a) {
                                                     var hash = _a.hash, nonce = _a.nonce;
                                                     (0, signData_1.default)(hash, keys.signKeys.privateKey).then(function (signature) {

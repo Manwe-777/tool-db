@@ -65,7 +65,7 @@ function toolDbPut(key, value, userNamespaced) {
         var timestamp = new Date().getTime();
         var dataString = "" + JSON.stringify(value) + _this.user.pubKey + timestamp;
         // WORK
-        (0, proofOfWork_1.default)(dataString, 3)
+        (0, proofOfWork_1.default)(dataString, 0)
             .then(function (_a) {
             var _b;
             var hash = _a.hash, nonce = _a.nonce;

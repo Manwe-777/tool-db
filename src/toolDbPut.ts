@@ -36,7 +36,7 @@ export default function toolDbPut<T = any>(
       this.user.pubKey
     }${timestamp}`;
     // WORK
-    proofOfWork(dataString, 3)
+    proofOfWork(dataString, 0)
       .then(({ hash, nonce }) => {
         if (this.user?.keys) {
           // Sign our value

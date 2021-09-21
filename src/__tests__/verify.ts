@@ -101,21 +101,21 @@ it("Can catch tampered messages (time)", () => {
   });
 });
 
-const putPow: GraphEntryValue = {
-  key: "value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  nonce: 679,
-  timestamp: 1628918110150,
-  hash: "00a6fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  sig: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  value: "AzB4NzijkW",
-};
+// const putPow: GraphEntryValue = {
+//   key: "value",
+//   pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+//   nonce: 679,
+//   timestamp: 1628918110150,
+//   hash: "00a6fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
+//   sig: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+//   value: "AzB4NzijkW",
+// };
 
-it("Can catch tampered messages (pow)", () => {
-  return verifyMessage(putPow).then((result) => {
-    expect(result).toEqual(VerifyResult.NoProofOfWork);
-  });
-});
+// it("Can catch tampered messages (pow)", () => {
+//   return verifyMessage(putPow).then((result) => {
+//     expect(result).toEqual(VerifyResult.NoProofOfWork);
+//   });
+// });
 
 const putNonce: GraphEntryValue = {
   key: "value",

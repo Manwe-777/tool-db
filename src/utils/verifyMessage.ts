@@ -43,10 +43,11 @@ export default async function verifyMessage<T>(
   // Verify hash and nonce (adjust zeroes for difficulty of the network)
   // While this POW does not enforce security per-se, it does make it harder
   // for attackers to spam the network, and could be adjusted by peers.
-  if (msg.hash.slice(0, 3) !== "000") {
-    // console.warn("No valid hash (no pow)");
-    return VerifyResult.NoProofOfWork;
-  }
+  // Disabled for now because it is painful on large requests
+  // if (msg.hash.slice(0, 1) !== "0") {
+  // console.warn("No valid hash (no pow)");
+  // return VerifyResult.NoProofOfWork;
+  // }
 
   if (
     sha256(`${strData}${pubKeyString}${msg.timestamp}${msg.nonce}`) !== msg.hash
