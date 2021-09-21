@@ -93,14 +93,16 @@ class ToolDbClient {
         pubKey: string;
       };
 
-  constructor(peers: string[]) {
+  constructor(peers?: string[]) {
     shared.toolDb = this;
     shared.gun = Gun;
-    customGun(this, Gun);
+    if (peers) {
+      customGun(this, Gun);
 
-    this._gun = new Gun({
-      peers,
-    });
+      this._gun = new Gun({
+        peers,
+      });
+    }
   }
 
   get gun() {
