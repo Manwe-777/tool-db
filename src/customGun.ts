@@ -28,7 +28,7 @@ async function verification(msg) {
       // console.log("Verification > OK", msg);
       return;
     }
-    // console.log("Verification > NOT OK", msg);
+    // console.log("Verification > NOT OK", msg, verifiedList);
     return;
   } else {
     // console.log("Verification > Skipped", msg);

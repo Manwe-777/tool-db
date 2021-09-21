@@ -56,8 +56,13 @@ function verifyMessage(msg) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    console.log("verify: ", msg);
                     strData = JSON.stringify(msg.value);
-                    if (!msg.timestamp || !msg.key || !msg.hash || !msg.pub || !msg.sig) {
+                    if (msg.timestamp === undefined ||
+                        msg.key === undefined ||
+                        msg.hash === undefined ||
+                        msg.pub === undefined ||
+                        msg.sig === undefined) {
                         return [2 /*return*/, message_1.VerifyResult.InvalidData];
                     }
                     // Max clock shift allowed is ten seconds
@@ -77,6 +82,7 @@ function verifyMessage(msg) {
                     return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(pubKeyString), "spki", "ECDSA", ["verify"])];
                 case 1:
                     pubKey = _a.sent();
+                    console.log("Message verification: ", msg.hash, pubKeyString, msg);
                     return [4 /*yield*/, (0, verifyData_1.default)(msg.hash, (0, fromBase64_1.default)(msg.sig), pubKey)];
                 case 2:
                     verified = _a.sent();

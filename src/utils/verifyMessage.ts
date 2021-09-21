@@ -17,7 +17,13 @@ export default async function verifyMessage<T>(
   // console.log("verify: ", msg);
   const strData = JSON.stringify(msg.value);
 
-  if (!msg.timestamp || !msg.key || !msg.hash || !msg.pub || !msg.sig) {
+  if (
+    msg.timestamp === undefined ||
+    msg.key === undefined ||
+    msg.hash === undefined ||
+    msg.pub === undefined ||
+    msg.sig === undefined
+  ) {
     return VerifyResult.InvalidData;
   }
 
@@ -63,7 +69,7 @@ export default async function verifyMessage<T>(
     ["verify"]
   );
 
-  // console.log("Message verification: ", msg.hash, pubKeyString, msg.val.sig);
+  // console.log("Message verification: ", msg.hash, pubKeyString, msg);
 
   const verified = await verifyData(msg.hash, fromBase64(msg.sig), pubKey);
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
