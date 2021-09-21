@@ -132,7 +132,7 @@ function putCheck(msg) {
 }
 function customGun(toolDb, _gun) {
     if (_gun === void 0) { _gun = undefined; }
-    (_gun || Gun).on("create", function (ctx) {
+    (_gun || require("gun")).on("create", function (ctx) {
         ctx.on("in", verification);
         ctx.on("out", verification);
         ctx.on("put", putCheck);

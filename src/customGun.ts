@@ -77,7 +77,7 @@ async function putCheck(msg) {
 }
 
 export default function customGun(toolDb, _gun: any = undefined) {
-  (_gun || Gun).on("create", function (ctx) {
+  (_gun || require("gun")).on("create", function (ctx) {
     ctx.on("in", verification);
     ctx.on("out", verification);
     ctx.on("put", putCheck);
