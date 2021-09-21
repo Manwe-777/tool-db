@@ -1,6 +1,6 @@
 {
   "name": "tool-db",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "private": false,
   "description": "A decentralized database model for p2p networks.",
   "main": "dist/index.js",
