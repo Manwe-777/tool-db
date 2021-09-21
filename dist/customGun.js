@@ -78,13 +78,13 @@ function verification(msg) {
                     if (verifiedList.filter(function (r) { return r === _1.VerifyResult.Verified; }).length ===
                         keys.length) {
                         this.to.next(msg);
-                        console.log("Verification > OK", msg);
+                        // console.log("Verification > OK", msg);
                         return [2 /*return*/];
                     }
-                    console.log("Verification > NOT OK", msg, verifiedList);
+                    // console.log("Verification > NOT OK", msg, verifiedList);
                     return [2 /*return*/];
                 case 2:
-                    console.log("Verification > Skipped", msg);
+                    // console.log("Verification > Skipped", msg);
                     this.to.next(msg);
                     _a.label = 3;
                 case 3: return [2 /*return*/];
