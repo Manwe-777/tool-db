@@ -75,7 +75,7 @@ export default async function toolDbSignUp(
                                     .get(signupMessage.key)
                                     .put(
                                       { v: JSON.stringify(signupMessage) },
-                                      (ack) => {
+                                      (ack: any) => {
                                         if (ack.err) {
                                           reject(ack.err);
                                         } else {

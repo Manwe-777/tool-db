@@ -2,6 +2,7 @@ import { IGunChainReference } from "gun/types/chain";
 import { GraphEntryValue } from ".";
 
 import customGun from "./customGun";
+import shared from "./shared";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbGet from "./toolDbGet";
 import toolDbGetPubKey from "./toolDbGetPubKey";
@@ -93,10 +94,9 @@ class ToolDbClient {
       };
 
   constructor(peers: string[]) {
+    shared.toolDb = this;
+    shared.gun = Gun;
     customGun(this, Gun);
-
-    if (typeof window !== "undefined") (window as any).toolDb = this;
-    if (typeof global !== "undefined") (global as any).toolDb = this;
 
     this._gun = new Gun({
       peers,

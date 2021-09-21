@@ -36,8 +36,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var _1 = require(".");
+var shared_1 = __importDefault(require("./shared"));
 function verification(msg) {
     return __awaiter(this, void 0, void 0, function () {
         var keys, promises, verifiedList;
@@ -62,7 +66,7 @@ function verification(msg) {
                                             //
                                         }
                                     }
-                                    toolDb = (window || global).toolDb;
+                                    toolDb = shared_1.default.toolDb;
                                     return [4 /*yield*/, toolDb.verify(data)];
                                 case 1: return [2 /*return*/, _b.sent()];
                             }
@@ -104,7 +108,7 @@ function putCheck(msg) {
                         // console.warn(e);
                     }
                     if (!(data_1 && data_1.value)) return [3 /*break*/, 2];
-                    toolDb = (window || global).toolDb;
+                    toolDb = shared_1.default.toolDb;
                     return [4 /*yield*/, toolDb.verify(data_1)];
                 case 1:
                     verify = _a.sent();

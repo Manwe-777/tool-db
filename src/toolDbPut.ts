@@ -57,13 +57,15 @@ export default function toolDbPut<T = any>(
               if (this.debug) {
                 console.log("PUT > " + key, data);
               }
-              this.gun.get(data.key).put({ v: JSON.stringify(data) }, (ack) => {
-                if (ack.err) {
-                  reject(ack.err);
-                } else {
-                  resolve(data.value);
-                }
-              });
+              this.gun
+                .get(data.key)
+                .put({ v: JSON.stringify(data) }, (ack: any) => {
+                  if (ack.err) {
+                    reject(ack.err);
+                  } else {
+                    resolve(data.value);
+                  }
+                });
             })
             .catch(reject);
         }

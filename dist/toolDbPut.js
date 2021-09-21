@@ -89,7 +89,9 @@ function toolDbPut(key, value, userNamespaced, pow) {
                         if (this.debug) {
                             console.log("PUT > " + key, data);
                         }
-                        this.gun.get(data.key).put({ v: JSON.stringify(data) }, function (ack) {
+                        this.gun
+                            .get(data.key)
+                            .put({ v: JSON.stringify(data) }, function (ack) {
                             if (ack.err) {
                                 reject(ack.err);
                             }

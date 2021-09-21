@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import { VerifyResult } from ".";
+import shared from "./shared";
 
 async function verification(msg) {
   if (msg.put) {
@@ -14,7 +15,7 @@ async function verification(msg) {
           //
         }
       }
-      const toolDb = (window || global).toolDb;
+      const toolDb = shared.toolDb;
       return await toolDb.verify(data);
     });
     const verifiedList = await Promise.all(promises).catch(console.error);
@@ -45,7 +46,7 @@ async function putCheck(msg) {
       // console.warn(e);
     }
     if (data && data.value) {
-      const toolDb = (window || global).toolDb;
+      const toolDb = shared.toolDb;
       // console.log("PUT", key, data);
 
       // Stop if its not verified!
