@@ -7,4 +7,4 @@ import { GraphEntryValue } from "./types/graph";
  * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
  * @returns Promise<Data | null>
  */
-export default function toolDbPut<T = any>(this: toolDbClient, key: string, value: T, userNamespaced?: boolean): Promise<GraphEntryValue | null>;
+export default function toolDbPut<T = any>(this: toolDbClient, key: string, value: T, userNamespaced?: boolean, pow?: number): Promise<GraphEntryValue | null>;

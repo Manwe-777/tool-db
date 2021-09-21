@@ -49,9 +49,10 @@ var toBase64_1 = __importDefault(require("./utils/toBase64"));
  * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
  * @returns Promise<Data | null>
  */
-function toolDbPut(key, value, userNamespaced) {
+function toolDbPut(key, value, userNamespaced, pow) {
     var _this = this;
     if (userNamespaced === void 0) { userNamespaced = false; }
+    if (pow === void 0) { pow = 0; }
     return new Promise(function (resolve, reject) {
         if (key.includes(".")) {
             // Dots are used as a delimitator character between bublic keys and the key of the user's data
@@ -65,7 +66,7 @@ function toolDbPut(key, value, userNamespaced) {
         var timestamp = new Date().getTime();
         var dataString = "" + JSON.stringify(value) + _this.user.pubKey + timestamp;
         // WORK
-        (0, proofOfWork_1.default)(dataString, 0)
+        (0, proofOfWork_1.default)(dataString, pow)
             .then(function (_a) {
             var _b;
             var hash = _a.hash, nonce = _a.nonce;
