@@ -4,7 +4,7 @@ import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
 import verifyData from "./crypto/verifyData";
 import fromBase64 from "./fromBase64";
-import sha256 from "./sha256";
+// import sha256 from "./sha256";
 
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
@@ -49,12 +49,12 @@ export default async function verifyMessage<T>(
   // return VerifyResult.NoProofOfWork;
   // }
 
-  if (
-    sha256(`${strData}${pubKeyString}${msg.timestamp}${msg.nonce}`) !== msg.hash
-  ) {
-    // console.warn("Specified hash does not generate a valid pow");
-    return VerifyResult.InvalidHashNonce;
-  }
+  // if (
+  //   sha256(`${strData}${pubKeyString}${msg.timestamp}${msg.nonce}`) !== msg.hash
+  // ) {
+  //   // console.warn("Specified hash does not generate a valid pow");
+  //   return VerifyResult.InvalidHashNonce;
+  // }
 
   const pubKey = await importKey(
     decodeKeyString(pubKeyString),
