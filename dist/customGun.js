@@ -41,105 +41,121 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var _1 = require(".");
+var indexedb_1 = __importDefault(require("./gunlib/indexedb"));
 var shared_1 = __importDefault(require("./shared"));
-function verification(msg) {
-    return __awaiter(this, void 0, void 0, function () {
-        var keys, promises, verifiedList;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (!msg.put) return [3 /*break*/, 2];
-                    keys = Object.keys(msg.put);
-                    promises = keys.map(function (key) { return __awaiter(_this, void 0, void 0, function () {
-                        var data, toolDb;
-                        var _a;
-                        return __generator(this, function (_b) {
-                            switch (_b.label) {
-                                case 0:
-                                    data = {};
-                                    if ((_a = msg.put[key]) === null || _a === void 0 ? void 0 : _a.v) {
-                                        try {
-                                            data = JSON.parse(msg.put[key].v);
+function customGun(_gun) {
+    if (_gun === void 0) { _gun = require("gun"); }
+    var store = (0, indexedb_1.default)();
+    function verification(msg) {
+        return __awaiter(this, void 0, void 0, function () {
+            var keys, promises, verifiedList;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!msg.put) return [3 /*break*/, 2];
+                        keys = Object.keys(msg.put);
+                        promises = keys.map(function (key) { return __awaiter(_this, void 0, void 0, function () {
+                            var data, toolDb;
+                            var _a;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        data = {};
+                                        if ((_a = msg.put[key]) === null || _a === void 0 ? void 0 : _a.v) {
+                                            try {
+                                                data = JSON.parse(msg.put[key].v);
+                                            }
+                                            catch (e) {
+                                                //
+                                            }
                                         }
-                                        catch (e) {
-                                            //
-                                        }
-                                    }
-                                    toolDb = shared_1.default.toolDb;
-                                    return [4 /*yield*/, toolDb.verify(data)];
-                                case 1: return [2 /*return*/, _b.sent()];
+                                        toolDb = shared_1.default.toolDb;
+                                        return [4 /*yield*/, toolDb.verify(data)];
+                                    case 1: return [2 /*return*/, _b.sent()];
+                                }
+                            });
+                        }); });
+                        return [4 /*yield*/, Promise.all(promises).catch(console.error)];
+                    case 1:
+                        verifiedList = _a.sent();
+                        if (verifiedList.filter(function (r) { return r === _1.VerifyResult.Verified; }).length ===
+                            keys.length) {
+                            this.to.next(msg);
+                            // console.log("Verification > OK", msg);
+                            return [2 /*return*/];
+                        }
+                        // console.log("Verification > NOT OK", msg, verifiedList);
+                        return [2 /*return*/];
+                    case 2:
+                        // console.log("Verification > Skipped", msg);
+                        this.to.next(msg);
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    }
+    function putCheck(msg) {
+        return __awaiter(this, void 0, void 0, function () {
+            var key_1, data_1, toolDb, verify;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!msg.put) return [3 /*break*/, 2];
+                        key_1 = msg.put["#"];
+                        data_1 = {};
+                        try {
+                            data_1 = JSON.parse(msg.put[":"]);
+                        }
+                        catch (e) {
+                            // console.warn(e);
+                        }
+                        if (!(data_1 && data_1.value)) return [3 /*break*/, 2];
+                        toolDb = shared_1.default.toolDb;
+                        return [4 /*yield*/, toolDb.verify(data_1)];
+                    case 1:
+                        verify = _a.sent();
+                        if (verify !== _1.VerifyResult.Verified) {
+                            return [2 /*return*/];
+                        }
+                        // Check listeners
+                        toolDb._keyListeners.forEach(function (listener) {
+                            if (key_1.startsWith(listener.key)) {
+                                if (listener.timeout)
+                                    clearTimeout(listener.timeout);
+                                listener.timeout = setTimeout(function () {
+                                    listener.fn(data_1.value);
+                                    listener.timeout = null;
+                                }, 250);
                             }
                         });
-                    }); });
-                    return [4 /*yield*/, Promise.all(promises).catch(console.error)];
-                case 1:
-                    verifiedList = _a.sent();
-                    if (verifiedList.filter(function (r) { return r === _1.VerifyResult.Verified; }).length ===
-                        keys.length) {
+                        store.put(key_1, data_1);
+                        _a.label = 2;
+                    case 2:
                         this.to.next(msg);
-                        // console.log("Verification > OK", msg);
                         return [2 /*return*/];
-                    }
-                    // console.log("Verification > NOT OK", msg, verifiedList);
-                    return [2 /*return*/];
-                case 2:
-                    // console.log("Verification > Skipped", msg);
-                    this.to.next(msg);
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
-            }
+                }
+            });
         });
-    });
-}
-function putCheck(msg) {
-    return __awaiter(this, void 0, void 0, function () {
-        var key_1, data_1, toolDb, verify;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (!msg.put) return [3 /*break*/, 2];
-                    key_1 = msg.put["#"];
-                    data_1 = {};
-                    try {
-                        data_1 = JSON.parse(msg.put[":"]);
-                    }
-                    catch (e) {
-                        // console.warn(e);
-                    }
-                    if (!(data_1 && data_1.value)) return [3 /*break*/, 2];
-                    toolDb = shared_1.default.toolDb;
-                    return [4 /*yield*/, toolDb.verify(data_1)];
-                case 1:
-                    verify = _a.sent();
-                    if (verify !== _1.VerifyResult.Verified) {
-                        return [2 /*return*/];
-                    }
-                    // Check listeners
-                    toolDb._keyListeners.forEach(function (listener) {
-                        if (key_1.startsWith(listener.key)) {
-                            if (listener.timeout)
-                                clearTimeout(listener.timeout);
-                            listener.timeout = setTimeout(function () {
-                                listener.fn(data_1.value);
-                                listener.timeout = null;
-                            }, 250);
-                        }
-                    });
-                    _a.label = 2;
-                case 2:
-                    this.to.next(msg);
-                    return [2 /*return*/];
-            }
+    }
+    function getCheck(msg) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                this.to.next(msg);
+                // console.log("GET CHECK", msg);
+                store.get(msg.get["#"], function (data) {
+                    _gun.on.get.ack(msg, data);
+                });
+                return [2 /*return*/];
+            });
         });
-    });
-}
-function customGun(toolDb, _gun) {
-    if (_gun === void 0) { _gun = undefined; }
-    (_gun || require("gun")).on("create", function (ctx) {
+    }
+    _gun.on("create", function (ctx) {
         ctx.on("in", verification);
         ctx.on("out", verification);
         ctx.on("put", putCheck);
+        ctx.on("get", getCheck);
         this.to.next(ctx);
     });
 }

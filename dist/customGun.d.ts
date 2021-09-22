@@ -1,1 +1,1 @@
-export default function customGun(toolDb: any, _gun?: any): void;
+export default function customGun(_gun?: any): void;

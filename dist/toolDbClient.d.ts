@@ -39,7 +39,7 @@ declare class ToolDbClient {
         name: string;
         pubKey: string;
     } | undefined;
-    constructor(peers?: string[]);
+    constructor(peers?: string[], gunRef?: any);
     get gun(): any;
     get requiredGun(): any;
 }

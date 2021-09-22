@@ -1,6 +1,7 @@
 import { GraphEntryValue } from ".";
 
 import customGun from "./customGun";
+import indexedb from "./gunlib/indexedb";
 import shared from "./shared";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbGet from "./toolDbGet";
@@ -9,7 +10,6 @@ import toolDbPut from "./toolDbPut";
 import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
-
 const Gun = require("gun");
 
 interface Listener {
@@ -92,13 +92,15 @@ class ToolDbClient {
         pubKey: string;
       };
 
-  constructor(peers?: string[]) {
+  constructor(peers?: string[], gunRef?: any) {
     shared.toolDb = this;
-    shared.gun = Gun;
+    shared.gun = gunRef || Gun;
     if (peers) {
-      customGun(this, Gun);
+      customGun(shared.gun);
 
-      this._gun = new Gun({
+      this._gun = new shared.gun({
+        localStorage: false,
+        store: indexedb(),
         peers,
       });
     }
