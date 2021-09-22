@@ -107,6 +107,10 @@ class ToolDbClient {
   get gun() {
     return this._gun;
   }
+
+  get requiredGun() {
+    return shared.gun;
+  }
 }
 
 export default ToolDbClient;

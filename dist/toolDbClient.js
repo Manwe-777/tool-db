@@ -70,6 +70,13 @@ var ToolDbClient = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(ToolDbClient.prototype, "requiredGun", {
+        get: function () {
+            return shared_1.default.gun;
+        },
+        enumerable: false,
+        configurable: true
+    });
     return ToolDbClient;
 }());
 exports.default = ToolDbClient;

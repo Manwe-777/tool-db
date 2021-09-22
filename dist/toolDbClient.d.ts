@@ -41,5 +41,6 @@ declare class ToolDbClient {
     } | undefined;
     constructor(peers?: string[]);
     get gun(): any;
+    get requiredGun(): any;
 }
 export default ToolDbClient;
