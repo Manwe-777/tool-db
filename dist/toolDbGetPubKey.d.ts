@@ -1,2 +1,2 @@
-import ToolDbClient from "./toolDbClient";
-export default function toolDbGetPubKey(this: ToolDbClient): Promise<string>;
+import ToolDb from "./tooldb";
+export default function toolDbGetPubKey(this: ToolDb): Promise<string>;

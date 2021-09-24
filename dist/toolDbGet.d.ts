@@ -1,4 +1,4 @@
-import ToolDbClient from "./toolDbClient";
+import ToolDb from "./tooldb";
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
  * @param key key of the data
@@ -6,4 +6,4 @@ import ToolDbClient from "./toolDbClient";
  * @param timeout Max time to wait for remote.
  * @returns Promise<Data>
  */
-export default function toolDbGet<T = any>(this: ToolDbClient, key: string, userNamespaced?: boolean, timeoutMs?: number): Promise<T | null>;
+export default function toolDbGet<T = any>(this: ToolDb, key: string, userNamespaced?: boolean, timeoutMs?: number): Promise<T | null>;

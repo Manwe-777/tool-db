@@ -7,7 +7,7 @@ export interface ParsedKeys {
 export declare type GenericObject = {
     [key: string]: any;
 };
-export interface GraphEntryValue<T = any> {
+export interface ToolDbEntryValue<T = any> {
     key: string;
     pub: string;
     hash: string;

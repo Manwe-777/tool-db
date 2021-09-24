@@ -1,8 +1,14 @@
 // @ts-nocheck
 
-export default function indexedb() {
-  const dbName = "tooldb";
-
+export default function indexedb(dbName = "tooldb"): {
+  start: () => void;
+  put: (
+    key: string,
+    data: any,
+    cb: (err: any | null, data?: any) => void
+  ) => void;
+  get: (key: string, cb: (err: any | null, data?: any) => void) => void;
+} {
   let db = null;
 
   const store = {};
@@ -38,7 +44,7 @@ export default function indexedb() {
         obj.onsuccess =
         tx.onsuccess =
           () => {
-            cb(null, 1);
+            cb(null);
           };
       req.onabort =
         obj.onabort =

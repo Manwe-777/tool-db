@@ -1,4 +1,5 @@
-import { GraphEntryValue } from "../types/graph";
+import { sha256 } from "..";
+import { ToolDbEntryValue } from "../types/graph";
 import { VerifyResult } from "../types/message";
 import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
@@ -9,10 +10,12 @@ import fromBase64 from "./fromBase64";
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
  * @param msg AnyMessage
+ * @param pow amount of proof of work required, number of leading zeroes (default is 0/no pow)
  * @returns boolean or undefined if the message type does not match
  */
 export default async function verifyMessage<T>(
-  msg: Partial<GraphEntryValue<T>>
+  msg: Partial<ToolDbEntryValue<T>>,
+  pow = 0
 ): Promise<VerifyResult> {
   // console.log("verify: ", msg);
   const strData = JSON.stringify(msg.value);
@@ -50,17 +53,20 @@ export default async function verifyMessage<T>(
   // While this POW does not enforce security per-se, it does make it harder
   // for attackers to spam the network, and could be adjusted by peers.
   // Disabled for now because it is painful on large requests
-  // if (msg.hash.slice(0, 1) !== "0") {
-  // console.warn("No valid hash (no pow)");
-  // return VerifyResult.NoProofOfWork;
-  // }
+  if (pow > 0) {
+    if (msg.hash.slice(0, pow) !== new Array(pow).fill("0").join("")) {
+      console.warn("No valid hash (no pow)");
+      return VerifyResult.NoProofOfWork;
+    }
 
-  // if (
-  //   sha256(`${strData}${pubKeyString}${msg.timestamp}${msg.nonce}`) !== msg.hash
-  // ) {
-  //   // console.warn("Specified hash does not generate a valid pow");
-  //   return VerifyResult.InvalidHashNonce;
-  // }
+    if (
+      sha256(`${strData}${pubKeyString}${msg.timestamp}${msg.nonce}`) !==
+      msg.hash
+    ) {
+      // console.warn("Specified hash does not generate a valid pow");
+      return VerifyResult.InvalidHashNonce;
+    }
+  }
 
   const pubKey = await importKey(
     decodeKeyString(pubKeyString),

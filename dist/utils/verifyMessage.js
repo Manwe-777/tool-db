@@ -39,6 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var __1 = require("..");
 var message_1 = require("../types/message");
 var decodeKeyString_1 = __importDefault(require("./crypto/decodeKeyString"));
 var importKey_1 = __importDefault(require("./crypto/importKey"));
@@ -48,9 +49,11 @@ var fromBase64_1 = __importDefault(require("./fromBase64"));
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
  * @param msg AnyMessage
+ * @param pow amount of proof of work required, number of leading zeroes (default is 0/no pow)
  * @returns boolean or undefined if the message type does not match
  */
-function verifyMessage(msg) {
+function verifyMessage(msg, pow) {
+    if (pow === void 0) { pow = 0; }
     return __awaiter(this, void 0, void 0, function () {
         var strData, publicKeyNamespace, pubKeyString, pubKey, verified;
         return __generator(this, function (_a) {
@@ -77,6 +80,21 @@ function verifyMessage(msg) {
                     if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
                         // console.warn("Provided pub keys do not match");
                         return [2 /*return*/, message_1.VerifyResult.PubKeyMismatch];
+                    }
+                    // Verify hash and nonce (adjust zeroes for difficulty of the network)
+                    // While this POW does not enforce security per-se, it does make it harder
+                    // for attackers to spam the network, and could be adjusted by peers.
+                    // Disabled for now because it is painful on large requests
+                    if (pow > 0) {
+                        if (msg.hash.slice(0, pow) !== new Array(pow).fill("0").join("")) {
+                            console.warn("No valid hash (no pow)");
+                            return [2 /*return*/, message_1.VerifyResult.NoProofOfWork];
+                        }
+                        if ((0, __1.sha256)("" + strData + pubKeyString + msg.timestamp + msg.nonce) !==
+                            msg.hash) {
+                            // console.warn("Specified hash does not generate a valid pow");
+                            return [2 /*return*/, message_1.VerifyResult.InvalidHashNonce];
+                        }
                     }
                     return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(pubKeyString), "spki", "ECDSA", ["verify"])];
                 case 1:

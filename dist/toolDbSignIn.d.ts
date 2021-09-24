@@ -1,5 +1,5 @@
-import ToolDbClient from "./toolDbClient";
-export default function toolDbSignIn(this: ToolDbClient, user: string, password: string): Promise<{
+import ToolDb from "./tooldb";
+export default function toolDbSignIn(this: ToolDb, user: string, password: string): Promise<{
     signKeys: CryptoKeyPair;
     encryptionKeys: CryptoKeyPair;
 } | undefined>;

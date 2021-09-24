@@ -41,7 +41,7 @@ function toolDbVerificationWrapper(data) {
     var _this = this;
     // This wrapper function adds our custom verification functions to all messages.
     return new Promise(function (resolve, reject) {
-        (0, _1.verifyMessage)(data).then(function (verified) { return __awaiter(_this, void 0, void 0, function () {
+        (0, _1.verifyMessage)(data, _this.options.pow).then(function (verified) { return __awaiter(_this, void 0, void 0, function () {
             var skipCustom_1;
             return __generator(this, function (_a) {
                 if (verified) {

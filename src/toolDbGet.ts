@@ -1,4 +1,5 @@
-import ToolDbClient from "./toolDbClient";
+import { textRandom } from ".";
+import ToolDb from "./tooldb";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -8,7 +9,7 @@ import ToolDbClient from "./toolDbClient";
  * @returns Promise<Data>
  */
 export default function toolDbGet<T = any>(
-  this: ToolDbClient,
+  this: ToolDb,
   key: string,
   userNamespaced = false,
   timeoutMs = 1000
@@ -19,32 +20,16 @@ export default function toolDbGet<T = any>(
       return;
     }
     const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
-    if (this.debug) {
+    if (this.options.debug) {
       console.log("GET > " + finalKey);
     }
 
-    let first = true;
-
-    const timeout = setTimeout(() => {
-      resolve(null);
-    }, timeoutMs);
-
-    this.gun.get(finalKey, (ack: any) => {
-      if (ack["@"] || ack.put) {
-        const d = ack.put;
-        if ((d && first) || (d && !first)) {
-          if (d.v) {
-            try {
-              const data = JSON.parse(d.v);
-              clearTimeout(timeout);
-              resolve(data.value);
-            } catch (e) {
-              console.error(e);
-            }
-          }
-        }
-        first = false;
-      }
+    // Do get
+    this.websockets.send({
+      type: "get",
+      to: this.websockets.activePeers,
+      key: key,
+      id: textRandom(10),
     });
   });
 }

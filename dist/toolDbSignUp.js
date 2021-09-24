@@ -100,16 +100,7 @@ function toolDbSignUp(user, password) {
                                                             sig: (0, toBase64_1.default)(signature),
                                                             value: userData,
                                                         };
-                                                        _this.gun
-                                                            .get(signupMessage.key)
-                                                            .put({ v: JSON.stringify(signupMessage) }, function (ack) {
-                                                            if (ack.err) {
-                                                                reject(ack.err);
-                                                            }
-                                                            else {
-                                                                resolve(signupMessage.value);
-                                                            }
-                                                        });
+                                                        // PUT THIS
                                                     });
                                                 })
                                                     .catch(reject);

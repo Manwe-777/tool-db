@@ -1,12 +1,12 @@
-import { GraphEntryValue, ToolDbClient, verifyMessage, VerifyResult } from ".";
+import { ToolDb, ToolDbEntryValue, verifyMessage, VerifyResult } from ".";
 
 export default function toolDbVerificationWrapper(
-  this: ToolDbClient,
-  data: GraphEntryValue<any>
+  this: ToolDb,
+  data: ToolDbEntryValue<any>
 ) {
   // This wrapper function adds our custom verification functions to all messages.
   return new Promise((resolve, reject) => {
-    verifyMessage(data).then(async (verified) => {
+    verifyMessage(data, this.options.pow).then(async (verified) => {
       if (verified) {
         let skipCustom = true;
         this._customVerificator.forEach((listener) => {
@@ -14,7 +14,7 @@ export default function toolDbVerificationWrapper(
             skipCustom = false;
             listener
               .fn(data)
-              .then((verified) => {
+              .then((verified: boolean) => {
                 if (verified) {
                   resolve(VerifyResult.Verified);
                 } else {

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var _1 = require(".");
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
  * @param key key of the data
@@ -18,30 +19,15 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
             return;
         }
         var finalKey = userNamespaced ? ":" + ((_b = _this.user) === null || _b === void 0 ? void 0 : _b.pubKey) + "." + key : key;
-        if (_this.debug) {
+        if (_this.options.debug) {
             console.log("GET > " + finalKey);
         }
-        var first = true;
-        var timeout = setTimeout(function () {
-            resolve(null);
-        }, timeoutMs);
-        _this.gun.get(finalKey, function (ack) {
-            if (ack["@"] || ack.put) {
-                var d = ack.put;
-                if ((d && first) || (d && !first)) {
-                    if (d.v) {
-                        try {
-                            var data = JSON.parse(d.v);
-                            clearTimeout(timeout);
-                            resolve(data.value);
-                        }
-                        catch (e) {
-                            console.error(e);
-                        }
-                    }
-                }
-                first = false;
-            }
+        // Do get
+        _this.websockets.send({
+            type: "get",
+            to: _this.websockets.activePeers,
+            key: key,
+            id: (0, _1.textRandom)(10),
         });
     });
 }

@@ -1,5 +1,6 @@
-import toolDbClient from "./toolDbClient";
-import { GraphEntryValue, UserRootData } from "./types/graph";
+import { ToolDbEntryValue, UserRootData } from ".";
+
+import ToolDb from "./tooldb";
 
 import encryptWithPass from "./utils/crypto/encryptWithPass";
 import generateKeysComb from "./utils/crypto/generateKeysComb";
@@ -12,7 +13,7 @@ import toBase64 from "./utils/toBase64";
 import uint8ToBase64 from "./utils/uint8ToBase64";
 
 export default async function toolDbSignUp(
-  this: toolDbClient,
+  this: ToolDb,
   user: string,
   password: string
 ): Promise<any> {
@@ -60,7 +61,7 @@ export default async function toolDbSignUp(
                                   hash,
                                   keys.signKeys.privateKey as CryptoKey
                                 ).then((signature) => {
-                                  const signupMessage: GraphEntryValue<UserRootData> =
+                                  const signupMessage: ToolDbEntryValue<UserRootData> =
                                     {
                                       key: userRoot,
                                       pub: savedKeys.skpub,
@@ -70,19 +71,7 @@ export default async function toolDbSignUp(
                                       sig: toBase64(signature),
                                       value: userData,
                                     };
-
-                                  this.gun
-                                    .get(signupMessage.key)
-                                    .put(
-                                      { v: JSON.stringify(signupMessage) },
-                                      (ack: any) => {
-                                        if (ack.err) {
-                                          reject(ack.err);
-                                        } else {
-                                          resolve(signupMessage.value);
-                                        }
-                                      }
-                                    );
+                                  // PUT THIS
                                 });
                               })
                               .catch(reject);
