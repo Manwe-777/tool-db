@@ -10,8 +10,8 @@ import toolDbSignIn from "./toolDbSignIn";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
-import { ToolDbEntryValue } from ".";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
+import { VerificationData } from ".";
 export interface Listener {
     key: string;
     timeout: number | null;
@@ -19,12 +19,14 @@ export interface Listener {
 }
 interface Verificator<T> {
     key: string;
-    fn: (msg: ToolDbEntryValue<T>) => Promise<boolean>;
+    fn: (msg: VerificationData) => Promise<boolean>;
 }
 export default class ToolDb {
     private _deduplicator;
     private _websockets;
+    private _store;
     private _documents;
+    private _syncStates;
     serverOnMessage: typeof toolDbServerOnMessage;
     clientOnMessage: typeof toolDbClientOnMessage;
     getData: typeof toolDbGet;
@@ -38,7 +40,7 @@ export default class ToolDb {
     addKeyListener: <T = any>(key: string, fn: (msg: T) => void) => number;
     removeKeyListener: (id: number) => void;
     _customVerificator: (Verificator<any> | null)[];
-    addCustomVerification: <T = any>(key: string, fn: (msg: ToolDbEntryValue<T>) => Promise<boolean>) => number;
+    addCustomVerification: <T = any>(key: string, fn: (msg: VerificationData) => Promise<boolean>) => number;
     removeCustomVerification: (id: number) => void;
     user: {
         keys: {
@@ -52,7 +54,13 @@ export default class ToolDb {
     get options(): ToolDbOptions;
     get deduplicator(): Deduplicator;
     get websockets(): WSS;
+    get store(): {
+        start: () => void;
+        put: (key: string, data: any, cb: (err: any, data?: any) => void) => void;
+        get: (key: string, cb: (err: any, data?: any) => void) => void;
+    };
     get documents(): Record<string, Automerge.FreezeObject<any>>;
+    get syncStates(): Record<string, Record<string, Automerge.SyncState>>;
     constructor(options?: Partial<ToolDbOptions>);
 }
 export {};

@@ -94,11 +94,11 @@ function toolDbSignUp(user, password) {
                                                         var signupMessage = {
                                                             key: userRoot,
                                                             pub: savedKeys.skpub,
-                                                            nonce: nonce,
-                                                            timestamp: timestamp,
+                                                            non: nonce,
+                                                            time: timestamp,
                                                             hash: hash,
                                                             sig: (0, toBase64_1.default)(signature),
-                                                            value: userData,
+                                                            val: userData,
                                                         };
                                                         // PUT THIS
                                                     });

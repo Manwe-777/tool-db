@@ -1,4 +1,4 @@
-import { ToolDbEntryValue, UserRootData } from ".";
+import { UserRootData, VerificationData } from ".";
 
 import ToolDb from "./tooldb";
 
@@ -61,15 +61,15 @@ export default async function toolDbSignUp(
                                   hash,
                                   keys.signKeys.privateKey as CryptoKey
                                 ).then((signature) => {
-                                  const signupMessage: ToolDbEntryValue<UserRootData> =
+                                  const signupMessage: VerificationData<UserRootData> =
                                     {
                                       key: userRoot,
                                       pub: savedKeys.skpub,
-                                      nonce,
-                                      timestamp,
+                                      non: nonce,
+                                      time: timestamp,
                                       hash: hash,
                                       sig: toBase64(signature),
-                                      value: userData,
+                                      val: userData,
                                     };
                                   // PUT THIS
                                 });

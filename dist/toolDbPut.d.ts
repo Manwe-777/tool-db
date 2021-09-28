@@ -1,4 +1,4 @@
-import { ToolDbEntryValue } from ".";
+import { PutMessage } from ".";
 import ToolDb from "./tooldb";
 /**
  * Triggers a PUT request to other peers.
@@ -7,4 +7,4 @@ import ToolDb from "./tooldb";
  * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
  * @returns Promise<Data | null>
  */
-export default function toolDbPut<T = any>(this: ToolDb, key: string, value: T, userNamespaced?: boolean): Promise<ToolDbEntryValue | null>;
+export default function toolDbPut<T = any>(this: ToolDb, key: string, value: T, userNamespaced?: boolean): Promise<PutMessage | null>;

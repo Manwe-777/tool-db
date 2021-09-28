@@ -33,7 +33,7 @@ export default function toolDbServerOnMessage(
         }
       }
       if (message.type === "put") {
-        this.store.put(message.data.key, message.data, (err, data) => {
+        this.store.put(message.key, message, (err, data) => {
           //
         });
       }

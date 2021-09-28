@@ -10,10 +10,11 @@ import toolDbSignIn from "./toolDbSignIn";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
-import { ToolDbEntryValue } from ".";
+
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import indexedb from "./utils/indexedb";
 import leveldb from "./utils/leveldb";
+import { VerificationData } from ".";
 
 export interface Listener {
   key: string;
@@ -23,7 +24,7 @@ export interface Listener {
 
 interface Verificator<T> {
   key: string;
-  fn: (msg: ToolDbEntryValue<T>) => Promise<boolean>;
+  fn: (msg: VerificationData) => Promise<boolean>;
 }
 
 /*
@@ -99,7 +100,7 @@ export default class ToolDb {
 
   public addCustomVerification = <T = any>(
     key: string,
-    fn: (msg: ToolDbEntryValue<T>) => Promise<boolean>
+    fn: (msg: VerificationData) => Promise<boolean>
   ) => {
     const newListener: Verificator<T> = {
       key,

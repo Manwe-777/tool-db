@@ -1,4 +1,3 @@
-import { ToolDbEntryValue } from "./graph";
 export declare enum VerifyResult {
     CustomVerificationFailed = -8,
     InvalidData = -7,
@@ -10,6 +9,15 @@ export declare enum VerifyResult {
     InvalidSignature = -1,
     Verified = 1
 }
+export interface VerificationData<T = any> {
+    key: string;
+    pub: string;
+    non: number;
+    hash: string;
+    time: number;
+    sig: string;
+    val: T;
+}
 export declare type MessageType = "get" | "put";
 export interface BaseMessage {
     type: MessageType;
@@ -20,8 +28,7 @@ export interface GetMessage extends BaseMessage {
     key: string;
     to: string[];
 }
-export interface PutMessage extends BaseMessage {
+export interface PutMessage extends BaseMessage, VerificationData {
     type: "put";
-    value: ToolDbEntryValue;
 }
 export declare type ToolDbMessage = GetMessage | PutMessage;

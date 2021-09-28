@@ -25,6 +25,8 @@ var toolDbAnonSignIn_1 = __importDefault(require("./toolDbAnonSignIn"));
 var toolDbSignUp_1 = __importDefault(require("./toolDbSignUp"));
 var toolDbVerificationWrapper_1 = __importDefault(require("./toolDbVerificationWrapper"));
 var toolDbClientOnMessage_1 = __importDefault(require("./toolDbClientOnMessage"));
+var indexedb_1 = __importDefault(require("./utils/indexedb"));
+var leveldb_1 = __importDefault(require("./utils/leveldb"));
 /*
 
 Each document is a automerge doc
@@ -51,6 +53,8 @@ var ToolDb = /** @class */ (function () {
         var _this = this;
         if (options === void 0) { options = {}; }
         this._documents = {};
+        // syncstate[peerUrl][key] = syncstate
+        this._syncStates = {};
         this.serverOnMessage = toolDbServerOnMessage_1.default;
         this.clientOnMessage = toolDbClientOnMessage_1.default;
         this.getData = toolDbGet_1.default;
@@ -91,8 +95,9 @@ var ToolDb = /** @class */ (function () {
         };
         this.user = undefined;
         this._options = {
+            db: "tooldb",
             peers: [],
-            maxRetries: 10,
+            maxRetries: 5,
             wait: 2000,
             pow: 0,
             server: false,
@@ -100,9 +105,10 @@ var ToolDb = /** @class */ (function () {
             debug: false,
         };
         this._options = __assign(__assign({}, this._options), options);
+        // These could be made to be customizable by setting the variables as public
         this._deduplicator = new deduplicator_1.default();
         this._websockets = new wss_1.default(this);
-        // Initialize stuff here
+        this._store = typeof window === "undefined" ? (0, indexedb_1.default)() : (0, leveldb_1.default)();
     }
     Object.defineProperty(ToolDb.prototype, "options", {
         get: function () {
@@ -125,9 +131,23 @@ var ToolDb = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(ToolDb.prototype, "store", {
+        get: function () {
+            return this._store;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(ToolDb.prototype, "documents", {
         get: function () {
             return this._documents;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(ToolDb.prototype, "syncStates", {
+        get: function () {
+            return this._syncStates;
         },
         enumerable: false,
         configurable: true

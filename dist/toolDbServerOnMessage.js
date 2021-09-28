@@ -1,16 +1,41 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Triggers a GET request to other peers. If the data is available locally it will return that instead.
- * @param key key of the data
- * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
- * @param timeout Max time to wait for remote.
- * @returns Promise<Data>
- */
-function toolDbServerOnMessage(message, socket) {
+var automerge_1 = __importDefault(require("automerge"));
+function toolDbServerOnMessage(data, socket) {
+    var _this = this;
     return new Promise(function (resolve, reject) {
-        // socket.send("something");
-        console.log(message);
+        console.log("server got:", data);
+        if (typeof data === "string") {
+            var message = JSON.parse(data);
+            if (message.type === "get") {
+                var doc_1;
+                if (_this.documents[message.key]) {
+                    doc_1 = _this.documents[message.key];
+                }
+                else {
+                    _this.store.get(message.key, function (err, data) {
+                        if (!err) {
+                            console.log("Automerge load data from db", data);
+                            doc_1 = automerge_1.default.load(data);
+                        }
+                    });
+                }
+                if (doc_1) {
+                    socket.send({});
+                }
+                else {
+                    // say we got nothing
+                }
+            }
+            if (message.type === "put") {
+                _this.store.put(message.key, message, function (err, data) {
+                    //
+                });
+            }
+        }
     });
 }
 exports.default = toolDbServerOnMessage;

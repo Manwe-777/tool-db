@@ -1,4 +1,4 @@
-import { textRandom, ToolDbEntryValue } from ".";
+import { PutMessage, textRandom, uint8ToBase64, VerificationData } from ".";
 import ToolDb from "./tooldb";
 import Automerge from "automerge";
 
@@ -17,9 +17,9 @@ import toBase64 from "./utils/toBase64";
 export default function toolDbPut<T = any>(
   this: ToolDb,
   key: string,
-  doc: Automerge.FreezeObject<T>,
+  value: T,
   userNamespaced = false
-): Promise<ToolDbEntryValue | null> {
+): Promise<PutMessage | null> {
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
       // Dots are used as a delimitator character between bublic keys and the key of the user's data
@@ -44,19 +44,15 @@ export default function toolDbPut<T = any>(
           // Sign our value
           signData(hash, this.user.keys.signKeys.privateKey as CryptoKey)
             .then(async (signature) => {
-              const [syncState, syncMessage] = Automerge.generateSyncMessage(
-                doc,
-                this.syncStates[key]
-              );
               // Compose the message
-              const data: ToolDbEntryValue = {
+              const data: VerificationData = {
                 key: userNamespaced ? `:${this.user?.pubKey}.${key}` : key,
                 pub: this.user?.pubKey || "",
-                nonce,
-                timestamp,
+                non: nonce,
+                time: timestamp,
                 hash,
                 sig: toBase64(signature),
-                value: syncMessage,
+                val: value,
               };
 
               if (this.options.debug) {
@@ -66,7 +62,7 @@ export default function toolDbPut<T = any>(
               this.websockets.send({
                 type: "put",
                 id: textRandom(10),
-                data,
+                ...data,
               });
             })
             .catch(reject);

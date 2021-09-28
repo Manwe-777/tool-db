@@ -1,8 +1,8 @@
 "use strict";
 // @ts-nocheck
 Object.defineProperty(exports, "__esModule", { value: true });
-function indexedb() {
-    var dbName = "tooldb";
+function indexedb(dbName) {
+    if (dbName === void 0) { dbName = "tooldb"; }
     var db = null;
     var store = {};
     store.start = function () {
@@ -35,7 +35,7 @@ function indexedb() {
                 obj.onsuccess =
                     tx.onsuccess =
                         function () {
-                            cb(null, 1);
+                            cb(null);
                         };
             req.onabort =
                 obj.onabort =

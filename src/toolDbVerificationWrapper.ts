@@ -1,8 +1,8 @@
-import { ToolDb, ToolDbEntryValue, verifyMessage, VerifyResult } from ".";
+import { ToolDb, VerificationData, verifyMessage, VerifyResult } from ".";
 
 export default function toolDbVerificationWrapper(
   this: ToolDb,
-  data: ToolDbEntryValue<any>
+  data: VerificationData<any>
 ) {
   // This wrapper function adds our custom verification functions to all messages.
   return new Promise((resolve, reject) => {

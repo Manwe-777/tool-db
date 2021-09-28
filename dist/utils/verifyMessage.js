@@ -59,8 +59,8 @@ function verifyMessage(msg, pow) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    strData = JSON.stringify(msg.value);
-                    if (msg.timestamp === undefined ||
+                    strData = JSON.stringify(msg.val);
+                    if (msg.time === undefined ||
                         msg.key === undefined ||
                         msg.hash === undefined ||
                         msg.pub === undefined ||
@@ -68,7 +68,7 @@ function verifyMessage(msg, pow) {
                         return [2 /*return*/, message_1.VerifyResult.InvalidData];
                     }
                     // Max clock shift allowed is ten seconds
-                    if (msg.timestamp > new Date().getTime() + 10000) {
+                    if (msg.time > new Date().getTime() + 10000) {
                         // console.warn("Invalid message timestamp.");
                         return [2 /*return*/, message_1.VerifyResult.InvalidTimestamp];
                     }
@@ -90,8 +90,7 @@ function verifyMessage(msg, pow) {
                             console.warn("No valid hash (no pow)");
                             return [2 /*return*/, message_1.VerifyResult.NoProofOfWork];
                         }
-                        if ((0, __1.sha256)("" + strData + pubKeyString + msg.timestamp + msg.nonce) !==
-                            msg.hash) {
+                        if ((0, __1.sha256)("" + strData + pubKeyString + msg.time + msg.non) !== msg.hash) {
                             // console.warn("Specified hash does not generate a valid pow");
                             return [2 /*return*/, message_1.VerifyResult.InvalidHashNonce];
                         }

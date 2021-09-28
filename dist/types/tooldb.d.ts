@@ -1,4 +1,5 @@
 export interface ToolDbOptions {
+    db: string;
     debug: boolean;
     peers: string[];
     maxRetries: number;

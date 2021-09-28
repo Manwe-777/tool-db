@@ -1,6 +1,5 @@
 import { sha256 } from "..";
-import { ToolDbEntryValue } from "../types/graph";
-import { VerifyResult } from "../types/message";
+import { VerifyResult, VerificationData } from "../types/message";
 import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
 import verifyData from "./crypto/verifyData";
@@ -14,14 +13,14 @@ import fromBase64 from "./fromBase64";
  * @returns boolean or undefined if the message type does not match
  */
 export default async function verifyMessage<T>(
-  msg: Partial<ToolDbEntryValue<T>>,
+  msg: Partial<VerificationData<T>>,
   pow = 0
 ): Promise<VerifyResult> {
   // console.log("verify: ", msg);
-  const strData = JSON.stringify(msg.value);
+  const strData = JSON.stringify(msg.val);
 
   if (
-    msg.timestamp === undefined ||
+    msg.time === undefined ||
     msg.key === undefined ||
     msg.hash === undefined ||
     msg.pub === undefined ||
@@ -31,7 +30,7 @@ export default async function verifyMessage<T>(
   }
 
   // Max clock shift allowed is ten seconds
-  if (msg.timestamp > new Date().getTime() + 10000) {
+  if (msg.time > new Date().getTime() + 10000) {
     // console.warn("Invalid message timestamp.");
     return VerifyResult.InvalidTimestamp;
   }
@@ -59,10 +58,7 @@ export default async function verifyMessage<T>(
       return VerifyResult.NoProofOfWork;
     }
 
-    if (
-      sha256(`${strData}${pubKeyString}${msg.timestamp}${msg.nonce}`) !==
-      msg.hash
-    ) {
+    if (sha256(`${strData}${pubKeyString}${msg.time}${msg.non}`) !== msg.hash) {
       // console.warn("Specified hash does not generate a valid pow");
       return VerifyResult.InvalidHashNonce;
     }

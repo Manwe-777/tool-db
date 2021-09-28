@@ -83,7 +83,6 @@ var WSS = /** @class */ (function () {
             this.server = new ws_1.default.Server({ port: this.options.port });
             this.server.on("connection", function (socket) {
                 socket.on("message", function (message) {
-                    console.log("received: ", message);
                     _this.tooldb.serverOnMessage(message, socket);
                 });
             });
