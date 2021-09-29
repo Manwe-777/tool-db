@@ -23,27 +23,30 @@ export default function toolDbGet<T = any>(
       console.log("GET > " + finalKey);
     }
 
-    let first = true;
+    let hasData = false;
+    let data: T | null = null;
 
-    const timeout = setTimeout(() => {
-      resolve(null);
+    let timeout = setTimeout(() => {
+      resolve(data);
     }, timeoutMs);
 
     this.gun.get(finalKey, (ack: any) => {
       if (ack["@"] || ack.put) {
-        const d = ack.put;
-        if ((d && first) || (d && !first)) {
-          if (d.v) {
-            try {
-              const data = JSON.parse(d.v);
-              clearTimeout(timeout);
-              resolve(data.value);
-            } catch (e) {
-              console.error(e);
-            }
+        // console.log("ACK", ack);
+        if (ack.put && ack.put.v) {
+          try {
+            const recv = JSON.parse(ack.put.v);
+            hasData = true;
+            data = recv.value;
+          } catch (e) {
+            console.error(e);
           }
         }
-        first = false;
+
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          resolve(data);
+        }, timeoutMs);
       }
     });
   });

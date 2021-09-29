@@ -21,26 +21,28 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
         if (_this.debug) {
             console.log("GET > " + finalKey);
         }
-        var first = true;
+        var hasData = false;
+        var data = null;
         var timeout = setTimeout(function () {
-            resolve(null);
+            resolve(data);
         }, timeoutMs);
         _this.gun.get(finalKey, function (ack) {
             if (ack["@"] || ack.put) {
-                var d = ack.put;
-                if ((d && first) || (d && !first)) {
-                    if (d.v) {
-                        try {
-                            var data = JSON.parse(d.v);
-                            clearTimeout(timeout);
-                            resolve(data.value);
-                        }
-                        catch (e) {
-                            console.error(e);
-                        }
+                // console.log("ACK", ack);
+                if (ack.put && ack.put.v) {
+                    try {
+                        var recv = JSON.parse(ack.put.v);
+                        hasData = true;
+                        data = recv.value;
+                    }
+                    catch (e) {
+                        console.error(e);
                     }
                 }
-                first = false;
+                clearTimeout(timeout);
+                timeout = setTimeout(function () {
+                    resolve(data);
+                }, timeoutMs);
             }
         });
     });
