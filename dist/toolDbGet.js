@@ -23,9 +23,10 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
         }
         var hasData = false;
         var data = null;
-        var timeout = setTimeout(function () {
+        var resolveTimeout = function () {
             resolve(data);
-        }, timeoutMs);
+        };
+        var timeout = setTimeout(resolveTimeout, timeoutMs);
         _this.gun.get(finalKey, function (ack) {
             if (ack["@"] || ack.put) {
                 // console.log("ACK", ack);
@@ -40,9 +41,7 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
                     }
                 }
                 clearTimeout(timeout);
-                timeout = setTimeout(function () {
-                    resolve(data);
-                }, timeoutMs);
+                timeout = setTimeout(resolveTimeout, timeoutMs);
             }
         });
     });

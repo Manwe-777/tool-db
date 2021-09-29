@@ -26,9 +26,11 @@ export default function toolDbGet<T = any>(
     let hasData = false;
     let data: T | null = null;
 
-    let timeout = setTimeout(() => {
+    const resolveTimeout = () => {
       resolve(data);
-    }, timeoutMs);
+    };
+
+    let timeout = setTimeout(resolveTimeout, timeoutMs);
 
     this.gun.get(finalKey, (ack: any) => {
       if (ack["@"] || ack.put) {
@@ -44,9 +46,7 @@ export default function toolDbGet<T = any>(
         }
 
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          resolve(data);
-        }, timeoutMs);
+        timeout = setTimeout(resolveTimeout, timeoutMs);
       }
     });
   });
