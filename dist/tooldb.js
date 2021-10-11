@@ -16,7 +16,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var deduplicator_1 = __importDefault(require("./deduplicator"));
 var wss_1 = __importDefault(require("./wss"));
-var toolDbServerOnMessage_1 = __importDefault(require("./toolDbServerOnMessage"));
 var toolDbGet_1 = __importDefault(require("./toolDbGet"));
 var toolDbPut_1 = __importDefault(require("./toolDbPut"));
 var toolDbGetPubKey_1 = __importDefault(require("./toolDbGetPubKey"));
@@ -27,27 +26,6 @@ var toolDbVerificationWrapper_1 = __importDefault(require("./toolDbVerificationW
 var toolDbClientOnMessage_1 = __importDefault(require("./toolDbClientOnMessage"));
 var indexedb_1 = __importDefault(require("./utils/indexedb"));
 var leveldb_1 = __importDefault(require("./utils/leveldb"));
-/*
-
-Each document is a automerge doc
-Each message applies to a doc and has a hash
-The state of the doc is the merkle tree of all hashes
-We only store one doc per key
-
-GET: (id, key, to, myMerkle)
-  server checks if it has key
-  if it has key, check if merkle matches
-  if merkle does not match reply with the missing messages (PUTs using id)
-
-PUT: (id, key, to, operation, value)
-  check if we have this message or not
-  if we dont
-    verify validity
-    add it to deduplicator
-    apply crdt operation on document at key
-    relay to other peers not in "to" list
-
-*/
 var ToolDb = /** @class */ (function () {
     function ToolDb(options) {
         var _this = this;
@@ -55,7 +33,6 @@ var ToolDb = /** @class */ (function () {
         this._documents = {};
         // syncstate[peerUrl][key] = syncstate
         this._syncStates = {};
-        this.serverOnMessage = toolDbServerOnMessage_1.default;
         this.clientOnMessage = toolDbClientOnMessage_1.default;
         this.getData = toolDbGet_1.default;
         this.putData = toolDbPut_1.default;
@@ -64,6 +41,19 @@ var ToolDb = /** @class */ (function () {
         this.anonSignIn = toolDbAnonSignIn_1.default;
         this.signUp = toolDbSignUp_1.default;
         this.verify = toolDbVerificationWrapper_1.default;
+        /**
+         * id listeners listen for a specific message ID just once
+         */
+        this._idListeners = {};
+        this.addIdListener = function (id, fn) {
+            _this._idListeners[id] = fn;
+        };
+        this.removeIdListener = function (id) {
+            delete _this._idListeners[id];
+        };
+        /**
+         * Key listeners listen for a specific key, as long as the listener remains active
+         */
         this._keyListeners = [];
         this.addKeyListener = function (key, fn) {
             var newListener = {
@@ -81,6 +71,9 @@ var ToolDb = /** @class */ (function () {
             }
             _this._keyListeners[id] = null;
         };
+        /**
+         * Custom verificators can enhance default verification on any key field
+         */
         this._customVerificator = [];
         this.addCustomVerification = function (key, fn) {
             var newListener = {

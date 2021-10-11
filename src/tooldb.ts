@@ -14,7 +14,7 @@ import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import indexedb from "./utils/indexedb";
 import leveldb from "./utils/leveldb";
-import { VerificationData } from ".";
+import { ToolDbMessage, VerificationData } from ".";
 
 export interface Listener {
   key: string;
@@ -24,30 +24,9 @@ export interface Listener {
 
 interface Verificator<T> {
   key: string;
-  fn: (msg: VerificationData) => Promise<boolean>;
+  fn: (msg: VerificationData<T>) => Promise<boolean>;
 }
 
-/*
-
-Each document is a automerge doc
-Each message applies to a doc and has a hash
-The state of the doc is the merkle tree of all hashes
-We only store one doc per key
-
-GET: (id, key, to, myMerkle)
-  server checks if it has key
-  if it has key, check if merkle matches
-  if merkle does not match reply with the missing messages (PUTs using id)
-
-PUT: (id, key, to, operation, value)
-  check if we have this message or not
-  if we dont
-    verify validity
-    add it to deduplicator
-    apply crdt operation on document at key
-    relay to other peers not in "to" list
-
-*/
 export default class ToolDb {
   private _deduplicator;
   private _websockets;
@@ -57,8 +36,6 @@ export default class ToolDb {
 
   // syncstate[peerUrl][key] = syncstate
   private _syncStates: Record<string, Record<string, Automerge.SyncState>> = {};
-
-  public serverOnMessage = toolDbServerOnMessage;
 
   public clientOnMessage = toolDbClientOnMessage;
 
@@ -76,6 +53,22 @@ export default class ToolDb {
 
   public verify = toolDbVerificationWrapper;
 
+  /**
+   * id listeners listen for a specific message ID just once
+   */
+  public _idListeners: Record<string, (msg: ToolDbMessage) => void> = {};
+
+  public addIdListener = (id: string, fn: (msg: ToolDbMessage) => void) => {
+    this._idListeners[id] = fn;
+  };
+
+  public removeIdListener = (id: string) => {
+    delete this._idListeners[id];
+  };
+
+  /**
+   * Key listeners listen for a specific key, as long as the listener remains active
+   */
   public _keyListeners: (Listener | null)[] = [];
 
   public addKeyListener = <T = any>(key: string, fn: (msg: T) => void) => {
@@ -96,6 +89,9 @@ export default class ToolDb {
     this._keyListeners[id] = null;
   };
 
+  /**
+   * Custom verificators can enhance default verification on any key field
+   */
   public _customVerificator: (Verificator<any> | null)[] = [];
 
   public addCustomVerification = <T = any>(

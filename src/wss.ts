@@ -46,8 +46,8 @@ export default class WSS {
       this.server = new WebSocket.Server({ port: this.options.port });
 
       this.server.on("connection", (socket) => {
-        socket.on("message", (message) => {
-          this.tooldb.serverOnMessage(message, socket);
+        socket.on("message", (message: ToolDbMessage) => {
+          this.tooldb.clientOnMessage(message, socket);
         });
       });
     }

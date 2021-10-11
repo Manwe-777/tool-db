@@ -18,10 +18,19 @@ export interface VerificationData<T = any> {
     sig: string;
     val: T;
 }
-export declare type MessageType = "get" | "put";
+export declare type MessageType = "query" | "queryAck" | "get" | "put";
 export interface BaseMessage {
     type: MessageType;
     id: string;
+}
+export interface QueryMessage extends BaseMessage {
+    type: "query";
+    key: string;
+    to: string[];
+}
+export interface QueryAckMessage extends BaseMessage {
+    type: "queryAck";
+    keys: string[];
 }
 export interface GetMessage extends BaseMessage {
     type: "get";
@@ -31,4 +40,4 @@ export interface GetMessage extends BaseMessage {
 export interface PutMessage extends BaseMessage, VerificationData {
     type: "put";
 }
-export declare type ToolDbMessage = GetMessage | PutMessage;
+export declare type ToolDbMessage = QueryMessage | QueryAckMessage | GetMessage | PutMessage;

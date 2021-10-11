@@ -1,3 +1,3 @@
 import { ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
-export default function toolDbClientOnMessage(this: ToolDb, message: ToolDbMessage, socket: any): Promise<void>;
+export default function toolDbClientOnMessage(this: ToolDb, data: ToolDbMessage, socket: any): Promise<void>;

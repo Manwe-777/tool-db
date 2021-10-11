@@ -20,11 +20,36 @@ export interface VerificationData<T = any> {
   val: T; // value
 }
 
-export type MessageType = "get" | "put";
+export type MessageType =
+  | "ping"
+  | "pong"
+  | "query"
+  | "queryAck"
+  | "get"
+  | "put";
 
 export interface BaseMessage {
   type: MessageType;
   id: string; // unique random id for the message, to ack back
+}
+
+export interface PingMessage extends BaseMessage {
+  type: "ping";
+}
+
+export interface PongMessage extends BaseMessage {
+  type: "pong";
+}
+
+export interface QueryMessage extends BaseMessage {
+  type: "query";
+  key: string; // key we want to get
+  to: string[]; // who was this message sent to already
+}
+
+export interface QueryAckMessage extends BaseMessage {
+  type: "queryAck";
+  keys: string[];
 }
 
 export interface GetMessage extends BaseMessage {
@@ -37,4 +62,10 @@ export interface PutMessage extends BaseMessage, VerificationData {
   type: "put";
 }
 
-export type ToolDbMessage = GetMessage | PutMessage;
+export type ToolDbMessage =
+  | PingMessage
+  | PongMessage
+  | QueryMessage
+  | QueryAckMessage
+  | GetMessage
+  | PutMessage;

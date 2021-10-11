@@ -24,12 +24,38 @@ export default function toolDbGet<T = any>(
       console.log("GET > " + finalKey);
     }
 
+    const msgId = textRandom(10);
+
+    const tryGetLocally = () => {
+      this.store.get(key, (err, data) => {
+        if (!err) {
+          resolve(data);
+        } else {
+          resolve(null);
+        }
+      });
+    };
+
+    const cancelTimeout = setTimeout(() => {
+      tryGetLocally();
+    }, timeoutMs);
+
+    this.addIdListener(msgId, (msg) => {
+      clearTimeout(cancelTimeout);
+      console.log("GET RECV  > " + finalKey, msg);
+      if (msg.type === "put") {
+        resolve(msg.val);
+      } else {
+        tryGetLocally();
+      }
+    });
+
     // Do get
     this.websockets.send({
       type: "get",
       to: this.websockets.activePeers,
       key: key,
-      id: textRandom(10),
+      id: msgId,
     });
   });
 }

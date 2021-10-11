@@ -22,12 +22,36 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
         if (_this.options.debug) {
             console.log("GET > " + finalKey);
         }
+        var msgId = (0, _1.textRandom)(10);
+        var tryGetLocally = function () {
+            _this.store.get(key, function (err, data) {
+                if (!err) {
+                    resolve(data);
+                }
+                else {
+                    resolve(null);
+                }
+            });
+        };
+        var cancelTimeout = setTimeout(function () {
+            tryGetLocally();
+        }, timeoutMs);
+        _this.addIdListener(msgId, function (msg) {
+            clearTimeout(cancelTimeout);
+            console.log("GET RECV  > " + finalKey, msg);
+            if (msg.type === "put") {
+                resolve(msg.val);
+            }
+            else {
+                tryGetLocally();
+            }
+        });
         // Do get
         _this.websockets.send({
             type: "get",
             to: _this.websockets.activePeers,
             key: key,
-            id: (0, _1.textRandom)(10),
+            id: msgId,
         });
     });
 }
