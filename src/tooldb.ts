@@ -1,8 +1,8 @@
 import Deduplicator from "./deduplicator";
 import WSS from "./wss";
-import Automerge from "automerge";
+
 import { ToolDbOptions } from "./types/tooldb";
-import toolDbServerOnMessage from "./toolDbServerOnMessage";
+
 import toolDbGet from "./toolDbGet";
 import toolDbPut from "./toolDbPut";
 import toolDbGetPubKey from "./toolDbGetPubKey";
@@ -14,7 +14,8 @@ import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import indexedb from "./utils/indexedb";
 import leveldb from "./utils/leveldb";
-import { ToolDbMessage, VerificationData } from ".";
+import { PutMessage, ToolDbMessage, VerificationData } from ".";
+import toolDbSubscribe from "./toolDbSubscribe";
 
 export interface Listener {
   key: string;
@@ -32,12 +33,9 @@ export default class ToolDb {
   private _websockets;
   private _store;
 
-  private _documents: Record<string, Automerge.FreezeObject<any>> = {};
-
-  // syncstate[peerUrl][key] = syncstate
-  private _syncStates: Record<string, Record<string, Automerge.SyncState>> = {};
-
   public clientOnMessage = toolDbClientOnMessage;
+
+  public subscribeData = toolDbSubscribe;
 
   public getData = toolDbGet;
 
@@ -71,7 +69,10 @@ export default class ToolDb {
    */
   public _keyListeners: (Listener | null)[] = [];
 
-  public addKeyListener = <T = any>(key: string, fn: (msg: T) => void) => {
+  public addKeyListener = <T>(
+    key: string,
+    fn: (msg: PutMessage<T>) => void
+  ) => {
     const newListener: Listener = {
       key,
       timeout: null,
@@ -149,20 +150,12 @@ export default class ToolDb {
     return this._store;
   }
 
-  get documents() {
-    return this._documents;
-  }
-
-  get syncStates() {
-    return this._syncStates;
-  }
-
   constructor(options: Partial<ToolDbOptions> = {}) {
     this._options = { ...this._options, ...options };
 
     // These could be made to be customizable by setting the variables as public
     this._deduplicator = new Deduplicator();
     this._websockets = new WSS(this);
-    this._store = typeof window === "undefined" ? indexedb() : leveldb();
+    this._store = typeof window === "undefined" ? leveldb() : indexedb();
   }
 }

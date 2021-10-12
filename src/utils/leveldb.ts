@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 export default function leveldb(dbName = "tooldb"): {
   start: () => void;
   put: (
@@ -9,6 +8,7 @@ export default function leveldb(dbName = "tooldb"): {
   ) => void;
   get: (key: string, cb: (err: any | null, data?: any) => void) => void;
 } {
+  const level = require("level");
   let db = null;
 
   const store = {};

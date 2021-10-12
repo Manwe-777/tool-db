@@ -1,6 +1,5 @@
 import Deduplicator from "./deduplicator";
 import WSS from "./wss";
-import Automerge from "automerge";
 import { ToolDbOptions } from "./types/tooldb";
 import toolDbGet from "./toolDbGet";
 import toolDbPut from "./toolDbPut";
@@ -10,7 +9,8 @@ import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
-import { ToolDbMessage, VerificationData } from ".";
+import { PutMessage, ToolDbMessage, VerificationData } from ".";
+import toolDbSubscribe from "./toolDbSubscribe";
 export interface Listener {
     key: string;
     timeout: number | null;
@@ -24,9 +24,8 @@ export default class ToolDb {
     private _deduplicator;
     private _websockets;
     private _store;
-    private _documents;
-    private _syncStates;
     clientOnMessage: typeof toolDbClientOnMessage;
+    subscribeData: typeof toolDbSubscribe;
     getData: typeof toolDbGet;
     putData: typeof toolDbPut;
     getPubKey: typeof toolDbGetPubKey;
@@ -44,7 +43,7 @@ export default class ToolDb {
      * Key listeners listen for a specific key, as long as the listener remains active
      */
     _keyListeners: (Listener | null)[];
-    addKeyListener: <T = any>(key: string, fn: (msg: T) => void) => number;
+    addKeyListener: <T>(key: string, fn: (msg: PutMessage<T>) => void) => number;
     removeKeyListener: (id: number) => void;
     /**
      * Custom verificators can enhance default verification on any key field
@@ -69,8 +68,6 @@ export default class ToolDb {
         put: (key: string, data: any, cb: (err: any, data?: any) => void) => void;
         get: (key: string, cb: (err: any, data?: any) => void) => void;
     };
-    get documents(): Record<string, Automerge.FreezeObject<any>>;
-    get syncStates(): Record<string, Record<string, Automerge.SyncState>>;
     constructor(options?: Partial<ToolDbOptions>);
 }
 export {};

@@ -47,7 +47,7 @@ var WSS = /** @class */ (function () {
                     if (!msg) {
                         return;
                     }
-                    _this.tooldb.clientOnMessage(msg, wss_1);
+                    _this.tooldb.clientOnMessage(msg.data.toString(), wss_1);
                 };
                 return wss_1;
             }
@@ -95,6 +95,10 @@ var WSS = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    WSS.prototype.connectTo = function (url) {
+        var conn = this.open(url);
+        this._connections[url] = { tries: 0, peer: conn, defer: null };
+    };
     WSS.prototype.send = function (msg) {
         Object.values(this._connections).forEach(function (conn) {
             if (conn.peer) {

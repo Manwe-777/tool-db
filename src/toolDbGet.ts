@@ -28,7 +28,7 @@ export default function toolDbGet<T = any>(
 
     const tryGetLocally = () => {
       this.store.get(key, (err, data) => {
-        if (!err) {
+        if (err !== null && err !== undefined) {
           resolve(data);
         } else {
           resolve(null);
@@ -36,13 +36,14 @@ export default function toolDbGet<T = any>(
       });
     };
 
-    const cancelTimeout = setTimeout(() => {
-      tryGetLocally();
-    }, timeoutMs);
+    const cancelTimeout = setTimeout(tryGetLocally, timeoutMs);
 
     this.addIdListener(msgId, (msg) => {
+      if (this.options.debug) {
+        console.log("GET RECV  > " + finalKey, msg);
+      }
+
       clearTimeout(cancelTimeout);
-      console.log("GET RECV  > " + finalKey, msg);
       if (msg.type === "put") {
         resolve(msg.val);
       } else {

@@ -25,6 +25,7 @@ export type MessageType =
   | "pong"
   | "query"
   | "queryAck"
+  | "subscribe"
   | "get"
   | "put";
 
@@ -52,13 +53,18 @@ export interface QueryAckMessage extends BaseMessage {
   keys: string[];
 }
 
+export interface SubscribeMessage extends BaseMessage {
+  type: "subscribe";
+  key: string;
+}
+
 export interface GetMessage extends BaseMessage {
   type: "get";
   key: string; // key we want to get
   to: string[]; // who was this message sent to already
 }
 
-export interface PutMessage extends BaseMessage, VerificationData {
+export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {
   type: "put";
 }
 
@@ -67,5 +73,6 @@ export type ToolDbMessage =
   | PongMessage
   | QueryMessage
   | QueryAckMessage
+  | SubscribeMessage
   | GetMessage
   | PutMessage;

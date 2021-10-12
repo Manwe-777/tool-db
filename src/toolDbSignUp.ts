@@ -1,4 +1,4 @@
-import { UserRootData, VerificationData } from ".";
+import { PutMessage, textRandom, UserRootData, VerificationData } from ".";
 
 import ToolDb from "./tooldb";
 
@@ -19,7 +19,7 @@ export default async function toolDbSignUp(
 ): Promise<any> {
   const userRoot = `==${user}`;
   return new Promise((resolve, reject) => {
-    this.getData<UserRootData>(userRoot, false, 5000)
+    this.getData<UserRootData>(userRoot, false, 3000)
       .then((data) => {
         if (data === null) {
           generateKeysComb()
@@ -71,7 +71,19 @@ export default async function toolDbSignUp(
                                       sig: toBase64(signature),
                                       val: userData,
                                     };
-                                  // PUT THIS
+
+                                  if (this.options.debug) {
+                                    console.log(
+                                      "SIGNUP PUT > " + userRoot,
+                                      signupMessage
+                                    );
+                                  }
+
+                                  this.websockets.send({
+                                    type: "put",
+                                    id: textRandom(10),
+                                    ...signupMessage,
+                                  } as PutMessage);
                                 });
                               })
                               .catch(reject);

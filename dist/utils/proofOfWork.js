@@ -7,7 +7,7 @@ var sha256_1 = __importDefault(require("./sha256"));
 function proofOfWork(value, difficulty) {
     return new Promise(function (resolve) {
         var nonce = 0;
-        var hash = "";
+        var hash = (0, sha256_1.default)("" + value + nonce);
         while (hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
             nonce += 1;
             hash = (0, sha256_1.default)("" + value + nonce);

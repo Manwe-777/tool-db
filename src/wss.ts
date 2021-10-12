@@ -46,11 +46,16 @@ export default class WSS {
       this.server = new WebSocket.Server({ port: this.options.port });
 
       this.server.on("connection", (socket) => {
-        socket.on("message", (message: ToolDbMessage) => {
+        socket.on("message", (message: string) => {
           this.tooldb.clientOnMessage(message, socket);
         });
       });
     }
+  }
+
+  public connectTo(url: string) {
+    const conn = this.open(url);
+    this._connections[url] = { tries: 0, peer: conn, defer: null };
   }
 
   /**
@@ -85,11 +90,11 @@ export default class WSS {
         // hi peer
       };
 
-      wss.onmessage = (msg: ToolDbMessage) => {
+      wss.onmessage = (msg: WebSocket.MessageEvent) => {
         if (!msg) {
           return;
         }
-        this.tooldb.clientOnMessage(msg, wss);
+        this.tooldb.clientOnMessage(msg.data.toString(), wss);
       };
 
       return wss;

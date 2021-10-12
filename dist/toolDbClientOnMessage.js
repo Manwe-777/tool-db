@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -11,7 +22,7 @@ function toolDbClientOnMessage(data, socket // Hm browser websocket types??
     return new Promise(function (resolve, reject) {
         if (typeof data === "string") {
             var message_1 = JSON.parse(data);
-            console.log(message_1);
+            console.log("toolDbClientOnMessage", message_1);
             // Check if we are listening for this ID
             if (message_1.id) {
                 var msgId = message_1.id;
@@ -20,13 +31,28 @@ function toolDbClientOnMessage(data, socket // Hm browser websocket types??
                     _this.removeIdListener(msgId);
                 }
             }
+            if (message_1.type === "ping") {
+                socket.send(JSON.stringify({
+                    type: "pong",
+                    id: message_1.id,
+                }));
+            }
+            if (message_1.type === "subscribe") {
+                _this.addKeyListener(message_1.key, function (msg) {
+                    if (msg.type === "put") {
+                        socket.send(JSON.stringify(msg));
+                    }
+                });
+            }
             if (message_1.type === "get") {
                 _this.store.get(message_1.key, function (err, data) {
                     if (!err) {
-                        socket.send(data);
+                        // Use the id of the get so the other client knows we are replying
+                        var oldData = __assign(__assign({}, JSON.parse(data)), { id: message_1.id });
+                        socket.send(JSON.stringify(oldData));
                     }
                     else {
-                        socket.send(data);
+                        // socket.send(data);
                     }
                 });
             }
@@ -39,9 +65,12 @@ function toolDbClientOnMessage(data, socket // Hm browser websocket types??
                                 listener.timeout = setTimeout(function () { return listener.fn(message_1); }, 100);
                             }
                         });
-                        _this.store.put(message_1.key, message_1, function (err, data) {
+                        _this.store.put(message_1.key, JSON.stringify(message_1), function (err, data) {
                             //
                         });
+                    }
+                    else {
+                        console.log("unverified message", value, message_1);
                     }
                 });
             }

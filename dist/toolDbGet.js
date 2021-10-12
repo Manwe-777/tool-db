@@ -25,7 +25,7 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
         var msgId = (0, _1.textRandom)(10);
         var tryGetLocally = function () {
             _this.store.get(key, function (err, data) {
-                if (!err) {
+                if (err !== null && err !== undefined) {
                     resolve(data);
                 }
                 else {
@@ -33,12 +33,12 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
                 }
             });
         };
-        var cancelTimeout = setTimeout(function () {
-            tryGetLocally();
-        }, timeoutMs);
+        var cancelTimeout = setTimeout(tryGetLocally, timeoutMs);
         _this.addIdListener(msgId, function (msg) {
+            if (_this.options.debug) {
+                console.log("GET RECV  > " + finalKey, msg);
+            }
             clearTimeout(cancelTimeout);
-            console.log("GET RECV  > " + finalKey, msg);
             if (msg.type === "put") {
                 resolve(msg.val);
             }

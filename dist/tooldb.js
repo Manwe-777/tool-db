@@ -26,14 +26,13 @@ var toolDbVerificationWrapper_1 = __importDefault(require("./toolDbVerificationW
 var toolDbClientOnMessage_1 = __importDefault(require("./toolDbClientOnMessage"));
 var indexedb_1 = __importDefault(require("./utils/indexedb"));
 var leveldb_1 = __importDefault(require("./utils/leveldb"));
+var toolDbSubscribe_1 = __importDefault(require("./toolDbSubscribe"));
 var ToolDb = /** @class */ (function () {
     function ToolDb(options) {
         var _this = this;
         if (options === void 0) { options = {}; }
-        this._documents = {};
-        // syncstate[peerUrl][key] = syncstate
-        this._syncStates = {};
         this.clientOnMessage = toolDbClientOnMessage_1.default;
+        this.subscribeData = toolDbSubscribe_1.default;
         this.getData = toolDbGet_1.default;
         this.putData = toolDbPut_1.default;
         this.getPubKey = toolDbGetPubKey_1.default;
@@ -101,7 +100,7 @@ var ToolDb = /** @class */ (function () {
         // These could be made to be customizable by setting the variables as public
         this._deduplicator = new deduplicator_1.default();
         this._websockets = new wss_1.default(this);
-        this._store = typeof window === "undefined" ? (0, indexedb_1.default)() : (0, leveldb_1.default)();
+        this._store = typeof window === "undefined" ? (0, leveldb_1.default)() : (0, indexedb_1.default)();
     }
     Object.defineProperty(ToolDb.prototype, "options", {
         get: function () {
@@ -127,20 +126,6 @@ var ToolDb = /** @class */ (function () {
     Object.defineProperty(ToolDb.prototype, "store", {
         get: function () {
             return this._store;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(ToolDb.prototype, "documents", {
-        get: function () {
-            return this._documents;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(ToolDb.prototype, "syncStates", {
-        get: function () {
-            return this._syncStates;
         },
         enumerable: false,
         configurable: true

@@ -10,6 +10,7 @@ export default class WSS {
     private _activePeers;
     get activePeers(): string[];
     constructor(db: ToolDb);
+    connectTo(url: string): void;
     /**
      * Open a connection to a federated server
      * @param url URL of the server (including port)

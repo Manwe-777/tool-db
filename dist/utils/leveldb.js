@@ -1,8 +1,9 @@
 "use strict";
-// @ts-nocheck
 Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 function leveldb(dbName) {
     if (dbName === void 0) { dbName = "tooldb"; }
+    var level = require("level");
     var db = null;
     var store = {};
     store.start = function () {

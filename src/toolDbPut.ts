@@ -1,6 +1,5 @@
 import { PutMessage, textRandom, uint8ToBase64, VerificationData } from ".";
 import ToolDb from "./tooldb";
-import Automerge from "automerge";
 
 import proofOfWork from "./utils/proofOfWork";
 
@@ -19,7 +18,7 @@ export default function toolDbPut<T = any>(
   key: string,
   value: T,
   userNamespaced = false
-): Promise<PutMessage | null> {
+): Promise<PutMessage<T> | null> {
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
       // Dots are used as a delimitator character between bublic keys and the key of the user's data
@@ -63,7 +62,7 @@ export default function toolDbPut<T = any>(
                 type: "put",
                 id: textRandom(10),
                 ...data,
-              });
+              } as PutMessage);
             })
             .catch(reject);
         }
