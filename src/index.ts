@@ -28,6 +28,8 @@ export { default as signData } from "./utils/signData";
 export { default as arrayBufferToBase64 } from "./utils/arrayBufferToBase64";
 export { default as arrayBufferToString } from "./utils/arrayBufferToString";
 export { default as base64ToArrayBuffer } from "./utils/base64ToArrayBuffer";
+export { default as base64ToBinaryChange } from "./utils/base64ToBinaryChange";
+export { default as base64ToBinaryDocument } from "./utils/base64ToBinaryDocument";
 export { default as base64ToUint8 } from "./utils/base64ToUint8";
 export { default as fromBase64 } from "./utils/fromBase64";
 export { default as generateIv } from "./utils/generateIv";

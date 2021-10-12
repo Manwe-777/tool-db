@@ -28,7 +28,9 @@ export type MessageType =
   | "subscribe"
   | "get"
   | "put"
-  | "crdtPut";
+  | "crdtPut"
+  | "crdtGet"
+  | "crdt";
 
 export interface BaseMessage {
   type: MessageType;
@@ -69,6 +71,21 @@ export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {
   type: "put";
 }
 
+export interface CrdtPutMessage extends BaseMessage, VerificationData<string> {
+  type: "crdtPut";
+}
+
+export interface CrdtGetMessage extends BaseMessage {
+  type: "crdtGet";
+  key: string;
+}
+
+export interface CrdtMessage extends BaseMessage {
+  type: "crdt";
+  key: string;
+  doc: string;
+}
+
 export type ToolDbMessage =
   | PingMessage
   | PongMessage
@@ -76,4 +93,7 @@ export type ToolDbMessage =
   | QueryAckMessage
   | SubscribeMessage
   | GetMessage
-  | PutMessage;
+  | PutMessage
+  | CrdtPutMessage
+  | CrdtGetMessage
+  | CrdtMessage;

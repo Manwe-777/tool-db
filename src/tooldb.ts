@@ -14,8 +14,10 @@ import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import indexedb from "./utils/indexedb";
 import leveldb from "./utils/leveldb";
-import { PutMessage, ToolDbMessage, VerificationData } from ".";
+import { CrdtMessage, PutMessage, ToolDbMessage, VerificationData } from ".";
 import toolDbSubscribe from "./toolDbSubscribe";
+import toolDbCrdtPut from "./toolDbCrdtPut";
+import { FreezeObject } from "automerge";
 
 export interface Listener {
   key: string;
@@ -33,6 +35,8 @@ export default class ToolDb {
   private _websockets;
   private _store;
 
+  private _documents: Record<string, FreezeObject<any>> = {};
+
   public clientOnMessage = toolDbClientOnMessage;
 
   public subscribeData = toolDbSubscribe;
@@ -48,6 +52,8 @@ export default class ToolDb {
   public getData = toolDbGet;
 
   public putData = toolDbPut;
+
+  public putCrdt = toolDbCrdtPut;
 
   public getPubKey = toolDbGetPubKey;
 
@@ -79,7 +85,7 @@ export default class ToolDb {
 
   public addKeyListener = <T>(
     key: string,
-    fn: (msg: PutMessage<T>) => void
+    fn: (msg: PutMessage<T> | CrdtMessage) => void
   ) => {
     const newListener: Listener = {
       key,
@@ -156,6 +162,10 @@ export default class ToolDb {
 
   get store() {
     return this._store;
+  }
+
+  get documents() {
+    return this._documents;
   }
 
   constructor(options: Partial<ToolDbOptions> = {}) {
