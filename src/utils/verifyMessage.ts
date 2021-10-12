@@ -1,4 +1,4 @@
-import { sha256 } from "..";
+import sha256 from "./sha256";
 import { VerifyResult, VerificationData } from "../types/message";
 import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
