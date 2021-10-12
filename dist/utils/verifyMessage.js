@@ -59,24 +59,24 @@ function verifyMessage(msg, pow) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    strData = JSON.stringify(msg.val);
-                    if (msg.time === undefined ||
-                        msg.key === undefined ||
-                        msg.hash === undefined ||
-                        msg.pub === undefined ||
-                        msg.sig === undefined) {
+                    strData = JSON.stringify(msg.v);
+                    if (msg.t === undefined ||
+                        msg.k === undefined ||
+                        msg.h === undefined ||
+                        msg.p === undefined ||
+                        msg.s === undefined) {
                         return [2 /*return*/, message_1.VerifyResult.InvalidData];
                     }
                     // Max clock shift allowed is ten seconds
-                    if (msg.time > new Date().getTime() + 10000) {
+                    if (msg.t > new Date().getTime() + 10000) {
                         // console.warn("Invalid message timestamp.");
                         return [2 /*return*/, message_1.VerifyResult.InvalidTimestamp];
                     }
                     publicKeyNamespace = false;
-                    if (msg.key.slice(0, 1) == ":") {
-                        publicKeyNamespace = msg.key.split(".")[0].slice(1);
+                    if (msg.k.slice(0, 1) == ":") {
+                        publicKeyNamespace = msg.k.split(".")[0].slice(1);
                     }
-                    pubKeyString = msg.pub;
+                    pubKeyString = msg.p;
                     if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
                         // console.warn("Provided pub keys do not match");
                         return [2 /*return*/, message_1.VerifyResult.PubKeyMismatch];
@@ -86,11 +86,11 @@ function verifyMessage(msg, pow) {
                     // for attackers to spam the network, and could be adjusted by peers.
                     // Disabled for now because it is painful on large requests
                     if (pow > 0) {
-                        if (msg.hash.slice(0, pow) !== new Array(pow).fill("0").join("")) {
+                        if (msg.h.slice(0, pow) !== new Array(pow).fill("0").join("")) {
                             console.warn("No valid hash (no pow)");
                             return [2 /*return*/, message_1.VerifyResult.NoProofOfWork];
                         }
-                        if ((0, __1.sha256)("" + strData + pubKeyString + msg.time + msg.non) !== msg.hash) {
+                        if ((0, __1.sha256)("" + strData + pubKeyString + msg.t + msg.n) !== msg.h) {
                             // console.warn("Specified hash does not generate a valid pow");
                             return [2 /*return*/, message_1.VerifyResult.InvalidHashNonce];
                         }
@@ -98,7 +98,7 @@ function verifyMessage(msg, pow) {
                     return [4 /*yield*/, (0, importKey_1.default)((0, decodeKeyString_1.default)(pubKeyString), "spki", "ECDSA", ["verify"])];
                 case 1:
                     pubKey = _a.sent();
-                    return [4 /*yield*/, (0, verifyData_1.default)(msg.hash, (0, fromBase64_1.default)(msg.sig), pubKey)];
+                    return [4 /*yield*/, (0, verifyData_1.default)(msg.h, (0, fromBase64_1.default)(msg.s), pubKey)];
                 case 2:
                     verified = _a.sent();
                     // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);

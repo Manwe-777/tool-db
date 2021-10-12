@@ -36,6 +36,14 @@ export default function toolDbClientOnMessage(
             socket.send(JSON.stringify(msg));
           }
         });
+
+        // basically the exact same as GET, below
+        this.store.get(message.key, (err, data) => {
+          if (!err) {
+            const oldData = { ...JSON.parse(data), id: message.id };
+            socket.send(JSON.stringify(oldData));
+          }
+        });
       }
 
       if (message.type === "get") {
@@ -53,7 +61,7 @@ export default function toolDbClientOnMessage(
       if (message.type === "put") {
         toolDbVerificationWrapper.call(this, message).then((value) => {
           if (value === VerifyResult.Verified) {
-            const key = message.key;
+            const key = message.k;
             this._keyListeners.forEach((listener) => {
               if (listener?.key === key) {
                 listener.timeout = setTimeout(
@@ -63,13 +71,9 @@ export default function toolDbClientOnMessage(
               }
             });
 
-            this.store.put(
-              message.key,
-              JSON.stringify(message),
-              (err, data) => {
-                //
-              }
-            );
+            this.store.put(message.k, JSON.stringify(message), (err, data) => {
+              //
+            });
           } else {
             console.log("unverified message", value, message);
           }

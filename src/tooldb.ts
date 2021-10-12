@@ -37,6 +37,14 @@ export default class ToolDb {
 
   public subscribeData = toolDbSubscribe;
 
+  public onConnect = () => {
+    //
+  };
+
+  public onReconnect = () => {
+    //
+  };
+
   public getData = toolDbGet;
 
   public putData = toolDbPut;

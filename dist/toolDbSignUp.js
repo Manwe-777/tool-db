@@ -104,13 +104,13 @@ function toolDbSignUp(user, password) {
                                                     var hash = _a.hash, nonce = _a.nonce;
                                                     (0, signData_1.default)(hash, keys.signKeys.privateKey).then(function (signature) {
                                                         var signupMessage = {
-                                                            key: userRoot,
-                                                            pub: savedKeys.skpub,
-                                                            non: nonce,
-                                                            time: timestamp,
-                                                            hash: hash,
-                                                            sig: (0, toBase64_1.default)(signature),
-                                                            val: userData,
+                                                            k: userRoot,
+                                                            p: savedKeys.skpub,
+                                                            n: nonce,
+                                                            t: timestamp,
+                                                            h: hash,
+                                                            s: (0, toBase64_1.default)(signature),
+                                                            v: userData,
                                                         };
                                                         if (_this.options.debug) {
                                                             console.log("SIGNUP PUT > " + userRoot, signupMessage);

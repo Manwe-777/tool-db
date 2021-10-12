@@ -47,7 +47,7 @@ function toolDbVerificationWrapper(data) {
                 if (verified) {
                     skipCustom_1 = true;
                     this._customVerificator.forEach(function (listener) {
-                        if (listener && data.key && data.key.startsWith(listener.key)) {
+                        if (listener && data.k && data.k.startsWith(listener.key)) {
                             skipCustom_1 = false;
                             listener
                                 .fn(data)

@@ -10,15 +10,15 @@ export declare enum VerifyResult {
     Verified = 1
 }
 export interface VerificationData<T = any> {
-    key: string;
-    pub: string;
-    non: number;
-    hash: string;
-    time: number;
-    sig: string;
-    val: T;
+    k: string;
+    p: string;
+    n: number;
+    h: string;
+    t: number;
+    s: string;
+    v: T;
 }
-export declare type MessageType = "ping" | "pong" | "query" | "queryAck" | "subscribe" | "get" | "put";
+export declare type MessageType = "ping" | "pong" | "query" | "queryAck" | "subscribe" | "get" | "put" | "crdtPut";
 export interface BaseMessage {
     type: MessageType;
     id: string;

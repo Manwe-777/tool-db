@@ -17,31 +17,31 @@ export default async function verifyMessage<T>(
   pow = 0
 ): Promise<VerifyResult> {
   // console.log("verify: ", msg);
-  const strData = JSON.stringify(msg.val);
+  const strData = JSON.stringify(msg.v);
 
   if (
-    msg.time === undefined ||
-    msg.key === undefined ||
-    msg.hash === undefined ||
-    msg.pub === undefined ||
-    msg.sig === undefined
+    msg.t === undefined ||
+    msg.k === undefined ||
+    msg.h === undefined ||
+    msg.p === undefined ||
+    msg.s === undefined
   ) {
     return VerifyResult.InvalidData;
   }
 
   // Max clock shift allowed is ten seconds
-  if (msg.time > new Date().getTime() + 10000) {
+  if (msg.t > new Date().getTime() + 10000) {
     // console.warn("Invalid message timestamp.");
     return VerifyResult.InvalidTimestamp;
   }
 
   // This is a user namespace
   let publicKeyNamespace: false | string = false;
-  if (msg.key.slice(0, 1) == ":") {
-    publicKeyNamespace = msg.key.split(".")[0].slice(1);
+  if (msg.k.slice(0, 1) == ":") {
+    publicKeyNamespace = msg.k.split(".")[0].slice(1);
   }
 
-  const pubKeyString = msg.pub;
+  const pubKeyString = msg.p;
 
   if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
     // console.warn("Provided pub keys do not match");
@@ -53,12 +53,12 @@ export default async function verifyMessage<T>(
   // for attackers to spam the network, and could be adjusted by peers.
   // Disabled for now because it is painful on large requests
   if (pow > 0) {
-    if (msg.hash.slice(0, pow) !== new Array(pow).fill("0").join("")) {
+    if (msg.h.slice(0, pow) !== new Array(pow).fill("0").join("")) {
       console.warn("No valid hash (no pow)");
       return VerifyResult.NoProofOfWork;
     }
 
-    if (sha256(`${strData}${pubKeyString}${msg.time}${msg.non}`) !== msg.hash) {
+    if (sha256(`${strData}${pubKeyString}${msg.t}${msg.n}`) !== msg.h) {
       // console.warn("Specified hash does not generate a valid pow");
       return VerifyResult.InvalidHashNonce;
     }
@@ -73,7 +73,7 @@ export default async function verifyMessage<T>(
 
   // console.log("Message verification: ", msg.hash, pubKeyString, msg);
 
-  const verified = await verifyData(msg.hash, fromBase64(msg.sig), pubKey);
+  const verified = await verifyData(msg.h, fromBase64(msg.s), pubKey);
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;

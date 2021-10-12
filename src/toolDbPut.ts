@@ -45,13 +45,13 @@ export default function toolDbPut<T = any>(
             .then(async (signature) => {
               // Compose the message
               const data: VerificationData = {
-                key: userNamespaced ? `:${this.user?.pubKey}.${key}` : key,
-                pub: this.user?.pubKey || "",
-                non: nonce,
-                time: timestamp,
-                hash,
-                sig: toBase64(signature),
-                val: value,
+                k: userNamespaced ? `:${this.user?.pubKey}.${key}` : key,
+                p: this.user?.pubKey || "",
+                n: nonce,
+                t: timestamp,
+                h: hash,
+                s: toBase64(signature),
+                v: value,
               };
 
               if (this.options.debug) {

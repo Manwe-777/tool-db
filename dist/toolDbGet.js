@@ -40,7 +40,7 @@ function toolDbGet(key, userNamespaced, timeoutMs) {
             }
             clearTimeout(cancelTimeout);
             if (msg.type === "put") {
-                resolve(msg.val);
+                resolve(msg.v);
             }
             else {
                 tryGetLocally();

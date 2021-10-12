@@ -45,7 +45,7 @@ export default function toolDbGet<T = any>(
 
       clearTimeout(cancelTimeout);
       if (msg.type === "put") {
-        resolve(msg.val);
+        resolve(msg.v);
       } else {
         tryGetLocally();
       }

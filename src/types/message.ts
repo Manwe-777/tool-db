@@ -11,13 +11,13 @@ export enum VerifyResult {
 }
 
 export interface VerificationData<T = any> {
-  key: string; // Key/id
-  pub: string; // public key
-  non: number; // nonce
-  hash: string; // hash of JSON.stringify(value) + nonce
-  time: number; // Timestamp this was created
-  sig: string; // signature
-  val: T; // value
+  k: string; // Key/id
+  p: string; // public key
+  n: number; // nonce
+  h: string; // hash of JSON.stringify(value) + nonce
+  t: number; // Timestamp this was created
+  s: string; // signature
+  v: T; // value
 }
 
 export type MessageType =
@@ -27,7 +27,8 @@ export type MessageType =
   | "queryAck"
   | "subscribe"
   | "get"
-  | "put";
+  | "put"
+  | "crdtPut";
 
 export interface BaseMessage {
   type: MessageType;

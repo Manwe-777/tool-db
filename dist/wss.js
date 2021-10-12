@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var ws_1 = __importDefault(require("ws"));
+var _1 = require(".");
 var WSS = /** @class */ (function () {
     function WSS(db) {
         var _this = this;
@@ -40,8 +41,18 @@ var WSS = /** @class */ (function () {
                     if (!_this._activePeers.includes(url)) {
                         _this._activePeers.push(url);
                     }
-                    _this._connections[url].tries = 0;
+                    if (_this._connections[url]) {
+                        _this._connections[url] = { tries: 0, peer: wss_1, defer: null };
+                        _this._tooldb.onReconnect();
+                    }
+                    else {
+                        _this._tooldb.onConnect();
+                    }
                     // hi peer
+                    wss_1.send(JSON.stringify({
+                        type: "ping",
+                        id: (0, _1.textRandom)(10),
+                    }));
                 };
                 wss_1.onmessage = function (msg) {
                     if (!msg) {
@@ -64,7 +75,7 @@ var WSS = /** @class */ (function () {
             if (peer.tries < _this.options.maxRetries) {
                 var defer = function () {
                     peer.tries += 1;
-                    console.log("Retry");
+                    console.warn("Connection to " + url + " retry.");
                     _this.open(url);
                 };
                 peer.defer = setTimeout(defer, _this.options.wait);
@@ -96,13 +107,18 @@ var WSS = /** @class */ (function () {
         configurable: true
     });
     WSS.prototype.connectTo = function (url) {
-        var conn = this.open(url);
-        this._connections[url] = { tries: 0, peer: conn, defer: null };
+        this.open(url);
     };
     WSS.prototype.send = function (msg) {
+        var _this = this;
         Object.values(this._connections).forEach(function (conn) {
             if (conn.peer) {
-                conn.peer.send(JSON.stringify(msg));
+                if (conn.peer.readyState === conn.peer.OPEN) {
+                    conn.peer.send(JSON.stringify(msg));
+                }
+                else {
+                    _this.reconnect(conn.peer.url);
+                }
             }
         });
     };

@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { ToolDbMessage } from ".";
+import { PingMessage, textRandom, ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
 import { ToolDbOptions } from "./types/tooldb";
 
@@ -54,8 +54,7 @@ export default class WSS {
   }
 
   public connectTo(url: string) {
-    const conn = this.open(url);
-    this._connections[url] = { tries: 0, peer: conn, defer: null };
+    this.open(url);
   }
 
   /**
@@ -86,8 +85,19 @@ export default class WSS {
         if (!this._activePeers.includes(url)) {
           this._activePeers.push(url);
         }
-        this._connections[url].tries = 0;
+        if (this._connections[url]) {
+          this._connections[url] = { tries: 0, peer: wss, defer: null };
+          this._tooldb.onReconnect();
+        } else {
+          this._tooldb.onConnect();
+        }
         // hi peer
+        wss.send(
+          JSON.stringify({
+            type: "ping",
+            id: textRandom(10),
+          } as PingMessage)
+        );
       };
 
       wss.onmessage = (msg: WebSocket.MessageEvent) => {
@@ -107,7 +117,11 @@ export default class WSS {
   public send(msg: ToolDbMessage) {
     Object.values(this._connections).forEach((conn) => {
       if (conn.peer) {
-        conn.peer.send(JSON.stringify(msg));
+        if (conn.peer.readyState === conn.peer.OPEN) {
+          conn.peer.send(JSON.stringify(msg));
+        } else {
+          this.reconnect(conn.peer.url);
+        }
       }
     });
   }
@@ -121,7 +135,7 @@ export default class WSS {
     if (peer.tries < this.options.maxRetries) {
       const defer = () => {
         peer.tries += 1;
-        console.log("Retry");
+        console.warn("Connection to " + url + " retry.");
         this.open(url);
       };
 

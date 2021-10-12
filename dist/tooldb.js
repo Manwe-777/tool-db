@@ -33,6 +33,12 @@ var ToolDb = /** @class */ (function () {
         if (options === void 0) { options = {}; }
         this.clientOnMessage = toolDbClientOnMessage_1.default;
         this.subscribeData = toolDbSubscribe_1.default;
+        this.onConnect = function () {
+            //
+        };
+        this.onReconnect = function () {
+            //
+        };
         this.getData = toolDbGet_1.default;
         this.putData = toolDbPut_1.default;
         this.getPubKey = toolDbGetPubKey_1.default;

@@ -89,13 +89,13 @@ function toolDbPut(key, value, userNamespaced) {
                     var _a, _b;
                     return __generator(this, function (_c) {
                         data = {
-                            key: userNamespaced ? ":" + ((_a = this.user) === null || _a === void 0 ? void 0 : _a.pubKey) + "." + key : key,
-                            pub: ((_b = this.user) === null || _b === void 0 ? void 0 : _b.pubKey) || "",
-                            non: nonce,
-                            time: timestamp,
-                            hash: hash,
-                            sig: (0, toBase64_1.default)(signature),
-                            val: value,
+                            k: userNamespaced ? ":" + ((_a = this.user) === null || _a === void 0 ? void 0 : _a.pubKey) + "." + key : key,
+                            p: ((_b = this.user) === null || _b === void 0 ? void 0 : _b.pubKey) || "",
+                            n: nonce,
+                            t: timestamp,
+                            h: hash,
+                            s: (0, toBase64_1.default)(signature),
+                            v: value,
                         };
                         if (this.options.debug) {
                             console.log("PUT > " + key, data);

@@ -43,6 +43,13 @@ function toolDbClientOnMessage(data, socket // Hm browser websocket types??
                         socket.send(JSON.stringify(msg));
                     }
                 });
+                // basically the exact same as GET, below
+                _this.store.get(message_1.key, function (err, data) {
+                    if (!err) {
+                        var oldData = __assign(__assign({}, JSON.parse(data)), { id: message_1.id });
+                        socket.send(JSON.stringify(oldData));
+                    }
+                });
             }
             if (message_1.type === "get") {
                 _this.store.get(message_1.key, function (err, data) {
@@ -59,13 +66,13 @@ function toolDbClientOnMessage(data, socket // Hm browser websocket types??
             if (message_1.type === "put") {
                 toolDbVerificationWrapper_1.default.call(_this, message_1).then(function (value) {
                     if (value === _1.VerifyResult.Verified) {
-                        var key_1 = message_1.key;
+                        var key_1 = message_1.k;
                         _this._keyListeners.forEach(function (listener) {
                             if ((listener === null || listener === void 0 ? void 0 : listener.key) === key_1) {
                                 listener.timeout = setTimeout(function () { return listener.fn(message_1); }, 100);
                             }
                         });
-                        _this.store.put(message_1.key, JSON.stringify(message_1), function (err, data) {
+                        _this.store.put(message_1.k, JSON.stringify(message_1), function (err, data) {
                             //
                         });
                     }

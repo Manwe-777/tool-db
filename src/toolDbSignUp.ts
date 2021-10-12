@@ -63,13 +63,13 @@ export default async function toolDbSignUp(
                                 ).then((signature) => {
                                   const signupMessage: VerificationData<UserRootData> =
                                     {
-                                      key: userRoot,
-                                      pub: savedKeys.skpub,
-                                      non: nonce,
-                                      time: timestamp,
-                                      hash: hash,
-                                      sig: toBase64(signature),
-                                      val: userData,
+                                      k: userRoot,
+                                      p: savedKeys.skpub,
+                                      n: nonce,
+                                      t: timestamp,
+                                      h: hash,
+                                      s: toBase64(signature),
+                                      v: userData,
                                     };
 
                                   if (this.options.debug) {

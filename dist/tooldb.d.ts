@@ -26,6 +26,8 @@ export default class ToolDb {
     private _store;
     clientOnMessage: typeof toolDbClientOnMessage;
     subscribeData: typeof toolDbSubscribe;
+    onConnect: () => void;
+    onReconnect: () => void;
     getData: typeof toolDbGet;
     putData: typeof toolDbPut;
     getPubKey: typeof toolDbGetPubKey;
