@@ -43,9 +43,12 @@ export default function toolDbPut<T = any>(
           // Sign our value
           signData(hash, this.user.keys.signKeys.privateKey as CryptoKey)
             .then(async (signature) => {
+              const finalKey = userNamespaced
+                ? `:${this.user?.pubKey}.${key}`
+                : key;
               // Compose the message
               const data: VerificationData = {
-                k: userNamespaced ? `:${this.user?.pubKey}.${key}` : key,
+                k: finalKey,
                 p: this.user?.pubKey || "",
                 n: nonce,
                 t: timestamp,
@@ -54,15 +57,22 @@ export default function toolDbPut<T = any>(
                 v: value,
               };
 
+              this.store.put(finalKey, JSON.stringify(data), (err, data) => {
+                //
+              });
+
               if (this.options.debug) {
                 console.log("PUT > " + key, data);
               }
 
-              this.websockets.send({
+              const finalMessage: PutMessage = {
                 type: "put",
                 id: textRandom(10),
                 ...data,
-              } as PutMessage);
+              };
+              this.websockets.send(finalMessage);
+
+              resolve(finalMessage);
             })
             .catch(reject);
         }

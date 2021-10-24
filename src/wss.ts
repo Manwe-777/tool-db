@@ -119,8 +119,6 @@ export default class WSS {
       if (conn.peer) {
         if (conn.peer.readyState === conn.peer.OPEN) {
           conn.peer.send(JSON.stringify(msg));
-        } else {
-          this.reconnect(conn.peer.url);
         }
       }
     });

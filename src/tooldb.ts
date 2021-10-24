@@ -18,11 +18,12 @@ import { CrdtMessage, PutMessage, ToolDbMessage, VerificationData } from ".";
 import toolDbSubscribe from "./toolDbSubscribe";
 import toolDbCrdtPut from "./toolDbCrdtPut";
 import { FreezeObject } from "automerge";
+import loadCrdtDocument from "./loadCrdtDocument";
 
 export interface Listener {
   key: string;
   timeout: number | null;
-  fn: (msg: any) => void;
+  fn: (msg: PutMessage | CrdtMessage) => void;
 }
 
 interface Verificator<T> {
@@ -48,6 +49,8 @@ export default class ToolDb {
   public onReconnect = () => {
     //
   };
+
+  public loadCrdtDocument = loadCrdtDocument;
 
   public getData = toolDbGet;
 
@@ -78,6 +81,10 @@ export default class ToolDb {
     delete this._idListeners[id];
   };
 
+  public getUserNamespacedKey(key: string) {
+    return ":" + (this.user?.pubKey || "") + "." + key;
+  }
+
   /**
    * Key listeners listen for a specific key, as long as the listener remains active
    */
@@ -102,6 +109,17 @@ export default class ToolDb {
       clearTimeout(this._keyListeners[id]?.timeout || undefined);
     }
     this._keyListeners[id] = null;
+  };
+
+  public triggerKeyListener = (
+    key: string,
+    message: PutMessage | CrdtMessage
+  ) => {
+    this._keyListeners.forEach((listener) => {
+      if (listener?.key === key) {
+        listener.timeout = setTimeout(() => listener.fn(message), 100) as any;
+      }
+    });
   };
 
   /**

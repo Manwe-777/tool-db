@@ -26,17 +26,31 @@ export default function toolDbGet<T = any>(
 
     const msgId = textRandom(10);
 
-    const tryGetLocally = () => {
+    this.store.get(key, (err, data) => {
+      if (data) {
+        try {
+          const message = JSON.parse(data);
+          this.triggerKeyListener(key, message);
+        } catch (e) {
+          // do nothing
+        }
+      }
+    });
+
+    const cancelTimeout = setTimeout(() => {
       this.store.get(key, (err, data) => {
-        if (err !== null && err !== undefined) {
-          resolve(data);
+        if (data) {
+          try {
+            const message = JSON.parse(data);
+            resolve(message.v);
+          } catch (e) {
+            resolve(null);
+          }
         } else {
           resolve(null);
         }
       });
-    };
-
-    const cancelTimeout = setTimeout(tryGetLocally, timeoutMs);
+    }, timeoutMs);
 
     this.addIdListener(msgId, (msg) => {
       if (this.options.debug) {
@@ -46,8 +60,6 @@ export default function toolDbGet<T = any>(
       clearTimeout(cancelTimeout);
       if (msg.type === "put") {
         resolve(msg.v);
-      } else {
-        tryGetLocally();
       }
     });
 
@@ -55,7 +67,7 @@ export default function toolDbGet<T = any>(
     this.websockets.send({
       type: "get",
       to: this.websockets.activePeers,
-      key: key,
+      key: finalKey,
       id: msgId,
     });
   });

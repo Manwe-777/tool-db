@@ -23,7 +23,7 @@ export default function leveldb(dbName = "tooldb"): {
       if (err) {
         if (cb) cb(err);
       } else {
-        if (cb) cb(null);
+        if (cb) cb(false);
       }
     });
   };
@@ -40,7 +40,7 @@ export default function leveldb(dbName = "tooldb"): {
       if (err) {
         if (cb) cb(err);
       } else {
-        if (cb) cb(null, value);
+        if (cb) cb(false, value);
       }
     });
   };

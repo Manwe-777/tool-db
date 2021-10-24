@@ -44,7 +44,7 @@ export default function indexedb(dbName = "tooldb"): {
         obj.onsuccess =
         tx.onsuccess =
           () => {
-            cb(null);
+            cb(false);
           };
       req.onabort =
         obj.onabort =
@@ -73,7 +73,7 @@ export default function indexedb(dbName = "tooldb"): {
     const obj = tx.objectStore(dbName);
     const req = obj.get("" + key);
     req.onsuccess = function () {
-      cb(null, req.result);
+      cb(false, req.result);
     };
     req.onabort = function (eve) {
       cb(eve || 4);

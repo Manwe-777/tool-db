@@ -1,5 +1,6 @@
-import { textRandom } from ".";
+import { CrdtMessage, textRandom, uint8ToBase64 } from ".";
 import ToolDb from "./tooldb";
+import Automerge from "automerge";
 
 /**
  * Subscribe to all PUT updates for this key.
@@ -24,11 +25,37 @@ export default function toolDbSubscribe(
 
     const msgId = textRandom(10);
 
+    this.store.get(finalKey, (err, data) => {
+      if (data) {
+        try {
+          const message = JSON.parse(data);
+          this.triggerKeyListener(finalKey, message);
+        } catch (e) {
+          // do nothing
+        }
+      }
+    });
+
+    // console.log("do subscribe", finalKey);
+    this.loadCrdtDocument(finalKey, false).then((doc) => {
+      if (doc) {
+        const savedDoc = Automerge.save(doc);
+        const msg: CrdtMessage = {
+          type: "crdt",
+          key: finalKey,
+          id: textRandom(10),
+          doc: uint8ToBase64(savedDoc),
+        };
+        this.triggerKeyListener(finalKey, msg);
+      }
+    });
+
     this.websockets.send({
       type: "subscribe",
       key: finalKey,
       id: msgId,
     });
+
     resolve();
   });
 }

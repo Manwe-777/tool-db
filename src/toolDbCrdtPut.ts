@@ -57,14 +57,16 @@ export default function toolDbCrdtPut<T = any>(
               };
 
               if (this.options.debug) {
-                console.log("PUT > " + key, data);
+                console.log("PUT CRDT > " + key, data);
               }
 
-              this.websockets.send({
+              const finalMessage: CrdtPutMessage = {
                 type: "crdtPut",
                 id: textRandom(10),
                 ...data,
-              } as CrdtPutMessage);
+              };
+              this.websockets.send(finalMessage);
+              resolve(finalMessage);
             })
             .catch(reject);
         }
