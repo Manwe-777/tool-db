@@ -96,9 +96,10 @@ export default function toolDbClientOnMessage(
     if (message.type === "put") {
       toolDbVerificationWrapper.call(this, message).then((value) => {
         if (value === VerifyResult.Verified) {
-          this.store.get(message.k, (err, oldData: PutMessage) => {
+          this.store.get(message.k, (err, oldData: string) => {
             if (oldData) {
-              if (oldData.t < message.t) {
+              const parsedOldData: PutMessage = JSON.parse(oldData);
+              if (parsedOldData.t < message.t) {
                 const key = message.k;
                 this.triggerKeyListener(key, message);
                 this.store.put(
@@ -107,6 +108,10 @@ export default function toolDbClientOnMessage(
                   (err, data) => {
                     //
                   }
+                );
+              } else if (this.options.debug) {
+                console.log(
+                  `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
                 );
               }
             } else {
