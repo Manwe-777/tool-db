@@ -69,10 +69,12 @@ export interface GetMessage extends BaseMessage {
 
 export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {
   type: "put";
+  to: string[]; // who was this message sent to already
 }
 
 export interface CrdtPutMessage extends BaseMessage, VerificationData<string> {
   type: "crdtPut";
+  to: string[]; // who was this message sent to already
 }
 
 export interface CrdtGetMessage extends BaseMessage {

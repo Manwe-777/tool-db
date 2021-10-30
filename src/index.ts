@@ -39,6 +39,7 @@ export { default as textRandom } from "./utils/textRandom";
 export { default as toBase64 } from "./utils/toBase64";
 export { default as uint8ToBase64 } from "./utils/uint8ToBase64";
 export { default as verifyMessage } from "./utils/verifyMessage";
+export { default as getIpFromUrl } from "./utils/getIpFromUrl";
 
 export { default as decodeKeyString } from "./utils/crypto/decodeKeyString";
 export { default as decryptData } from "./utils/crypto/decryptData";

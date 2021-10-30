@@ -1,6 +1,7 @@
 import {
   base64ToBinaryDocument,
   CrdtMessage,
+  getIpFromUrl,
   PongMessage,
   PutMessage,
   textRandom,
@@ -96,6 +97,9 @@ export default function toolDbClientOnMessage(
     if (message.type === "put") {
       toolDbVerificationWrapper.call(this, message).then((value) => {
         if (value === VerifyResult.Verified) {
+          // relay to other servers
+          this.websockets.send(message, message.to);
+
           this.store.get(message.k, (err, oldData: string) => {
             if (oldData) {
               const parsedOldData: PutMessage = JSON.parse(oldData);
@@ -109,11 +113,12 @@ export default function toolDbClientOnMessage(
                     //
                   }
                 );
-              } else if (this.options.debug) {
-                console.log(
-                  `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
-                );
               }
+              // } else if (this.options.debug) {
+              //   console.log(
+              //     `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
+              //   );
+              // }
             } else {
               const key = message.k;
               this.triggerKeyListener(key, message);
@@ -138,6 +143,9 @@ export default function toolDbClientOnMessage(
       const writeStart = new Date().getTime();
       toolDbVerificationWrapper.call(this, message).then((value) => {
         if (value === VerifyResult.Verified) {
+          // relay to other servers
+          this.websockets.send(message, message.to);
+
           const key = message.k;
           let data: string[] = [];
           try {

@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { PingMessage, textRandom, ToolDbMessage } from ".";
+import { getIpFromUrl, PingMessage, textRandom, ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
 import { ToolDbOptions } from "./types/tooldb";
 
@@ -26,6 +26,10 @@ export default class WSS {
       peer: any;
     }
   > = {};
+
+  get allPeers(): string[] {
+    return Object.keys(this._connections).map(getIpFromUrl);
+  }
 
   private _activePeers: string[] = [];
 
@@ -66,6 +70,9 @@ export default class WSS {
     try {
       const wsUrl = url.replace(/^http/, "ws");
       const wss = new this._wss(wsUrl);
+      if (!this._connections[url]) {
+        this._connections[url] = { tries: 0, peer: wss, defer: null };
+      }
 
       wss.onclose = (e: any) => {
         if (this._activePeers.includes(url)) {
@@ -78,19 +85,16 @@ export default class WSS {
         if (this._activePeers.includes(url)) {
           this._activePeers.splice(this._activePeers.indexOf(url), 1);
         }
-        this.reconnect(url);
+        if (_error.error.code !== "ETIMEDOUT") {
+          this.reconnect(url);
+        }
       };
 
       wss.onopen = () => {
         if (!this._activePeers.includes(url)) {
           this._activePeers.push(url);
         }
-        if (this._connections[url]) {
-          this._connections[url] = { tries: 0, peer: wss, defer: null };
-          this._tooldb.onReconnect();
-        } else {
-          this._tooldb.onConnect();
-        }
+
         // hi peer
         wss.send(
           JSON.stringify({
@@ -114,32 +118,53 @@ export default class WSS {
     return undefined;
   };
 
-  public send(msg: ToolDbMessage) {
-    Object.values(this._connections).forEach((conn) => {
-      if (conn.peer) {
-        if (conn.peer.readyState === conn.peer.OPEN) {
-          conn.peer.send(JSON.stringify(msg));
-        }
-      }
+  public send(msg: ToolDbMessage, filterUrls: string[] = []) {
+    const filteredConns = Object.keys(this._connections)
+      .filter((url) => !filterUrls.includes(url))
+      .map((url) => this._connections[url])
+      .filter((conn) => conn.peer && conn.peer.readyState === conn.peer.OPEN);
+
+    console.log(
+      "Send to ",
+      filteredConns.map((c) => c.peer._url),
+      "but not to",
+      filterUrls
+    );
+
+    filteredConns.forEach((conn) => {
+      conn.peer.send(JSON.stringify(msg));
     });
   }
 
   private reconnect = (url: string) => {
     const peer = this._connections[url];
-    if (peer.defer) {
-      clearTimeout(peer.defer);
-    }
+    if (peer) {
+      if (peer.defer) {
+        clearTimeout(peer.defer);
+      }
 
-    if (peer.tries < this.options.maxRetries) {
-      const defer = () => {
-        peer.tries += 1;
-        console.warn("Connection to " + url + " retry.");
-        this.open(url);
-      };
+      if (peer.tries < this.options.maxRetries) {
+        const defer = () => {
+          peer.tries += 1;
+          console.warn("Connection to " + url + " retry.");
+          this.open(url);
+        };
 
-      peer.defer = setTimeout(defer, this.options.wait) as any;
+        peer.defer = setTimeout(defer, this.options.wait) as any;
+      } else {
+        console.warn("Connection attempts to " + url + " exceeded.");
+        if (this._activePeers.includes(url)) {
+          this._activePeers.splice(this._activePeers.indexOf(url), 1);
+        }
+        delete this._connections[url];
+
+        // There are no more peers to connect!
+        if (Object.keys(this._connections).length === 0) {
+          this._tooldb.onDisconnect();
+        }
+      }
     } else {
-      console.warn("Connection attempts to " + url + " exceeded.");
+      // no peer at url?
     }
   };
 

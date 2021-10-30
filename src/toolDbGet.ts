@@ -1,5 +1,6 @@
 import { textRandom } from ".";
 import ToolDb from "./tooldb";
+import getIpFromUrl from "./utils/getIpFromUrl";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -66,7 +67,7 @@ export default function toolDbGet<T = any>(
     // Do get
     this.websockets.send({
       type: "get",
-      to: this.websockets.activePeers,
+      to: this.websockets.activePeers.map(getIpFromUrl),
       key: finalKey,
       id: msgId,
     });

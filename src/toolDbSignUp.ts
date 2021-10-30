@@ -6,6 +6,7 @@ import encryptWithPass from "./utils/crypto/encryptWithPass";
 import generateKeysComb from "./utils/crypto/generateKeysComb";
 import saveKeysComb from "./utils/crypto/saveKeysComb";
 import generateIv from "./utils/generateIv";
+import getIpFromUrl from "./utils/getIpFromUrl";
 import proofOfWork from "./utils/proofOfWork";
 import sha256 from "./utils/sha256";
 import signData from "./utils/signData";
@@ -82,6 +83,9 @@ export default async function toolDbSignUp(
                                   this.websockets.send({
                                     type: "put",
                                     id: textRandom(10),
+                                    to: this.websockets.activePeers.map(
+                                      getIpFromUrl
+                                    ),
                                     ...signupMessage,
                                   } as PutMessage);
                                 });

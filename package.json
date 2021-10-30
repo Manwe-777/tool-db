@@ -30,7 +30,6 @@
   "devDependencies": {
     "@babel/preset-env": "^7.15.0",
     "@babel/preset-typescript": "^7.15.0",
-    "@types/gun": "^0.9.3",
     "@types/jest": "^26.0.24",
     "@types/lodash": "^4.14.172",
     "@types/node": "^15.0.1",
