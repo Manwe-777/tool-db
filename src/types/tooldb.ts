@@ -4,7 +4,7 @@ export interface ToolDbOptions {
   peers: string[];
   maxRetries: number;
   wait: number;
-  pow: 0;
+  pow: number;
   server: boolean;
   port: number;
 }

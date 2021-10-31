@@ -85,7 +85,7 @@ export default class WSS {
         if (this._activePeers.includes(url)) {
           this._activePeers.splice(this._activePeers.indexOf(url), 1);
         }
-        if (_error.error.code !== "ETIMEDOUT") {
+        if (_error?.error?.code !== "ETIMEDOUT") {
           this.reconnect(url);
         }
       };
@@ -120,13 +120,13 @@ export default class WSS {
 
   public send(msg: ToolDbMessage, filterUrls: string[] = []) {
     const filteredConns = Object.keys(this._connections)
-      .filter((url) => !filterUrls.includes(url))
+      .filter((url) => !filterUrls.includes(getIpFromUrl(url)))
       .map((url) => this._connections[url])
       .filter((conn) => conn.peer && conn.peer.readyState === conn.peer.OPEN);
 
     console.log(
       "Send to ",
-      filteredConns.map((c) => c.peer._url),
+      filteredConns.map((c) => c.peer.url),
       "but not to",
       filterUrls
     );
