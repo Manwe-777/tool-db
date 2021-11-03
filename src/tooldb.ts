@@ -19,6 +19,7 @@ import toolDbSubscribe from "./toolDbSubscribe";
 import toolDbCrdtPut from "./toolDbCrdtPut";
 import { FreezeObject } from "automerge";
 import loadCrdtDocument from "./loadCrdtDocument";
+import toolDbKeysSignIn from "./toolDbKeysSignIn";
 
 export interface Listener {
   key: string;
@@ -59,6 +60,8 @@ export default class ToolDb {
   public signIn = toolDbSignIn;
 
   public anonSignIn = toolDbAnonSignIn;
+
+  public keysSignIn = toolDbKeysSignIn;
 
   public signUp = toolDbSignUp;
 

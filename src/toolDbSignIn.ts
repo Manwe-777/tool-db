@@ -25,7 +25,7 @@ export default function toolDbSignIn(
     this.getData<UserRootData>(`==${user}`, false, 5000)
       .then((_user) => {
         if (!_user) {
-          reject(Error("Unvalid user data"));
+          reject(Error("Could not find user"));
           return;
         }
 
