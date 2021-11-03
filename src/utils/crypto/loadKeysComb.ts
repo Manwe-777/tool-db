@@ -35,7 +35,7 @@ async function importKeys(parsedKeys: ParsedKeys) {
   return { skpub, skpriv, ekpub, ekpriv };
 }
 
-export default function loadKeysComb(): Promise<
+export default function loadKeysComb(parsedKeys: ParsedKeys): Promise<
   | {
       signKeys: CryptoKeyPair;
       encryptionKeys: CryptoKeyPair;
@@ -43,29 +43,21 @@ export default function loadKeysComb(): Promise<
   | undefined
 > {
   return new Promise((resolve, reject) => {
-    const jsonKeys = localStorage.getItem("keys");
-
-    if (jsonKeys) {
-      const parsedKeys: ParsedKeys = JSON.parse(jsonKeys);
-
-      importKeys(parsedKeys).then(({ skpub, skpriv, ekpub, ekpriv }) => {
-        if (!skpub || !skpriv || !ekpub || !ekpriv) {
-          reject(new Error("Could not import keys"));
-        } else {
-          resolve({
-            signKeys: {
-              publicKey: skpub,
-              privateKey: skpriv,
-            },
-            encryptionKeys: {
-              publicKey: ekpub,
-              privateKey: ekpriv,
-            },
-          });
-        }
-      });
-    } else {
-      reject(new Error("No keys found in localStorage"));
-    }
+    importKeys(parsedKeys).then(({ skpub, skpriv, ekpub, ekpriv }) => {
+      if (!skpub || !skpriv || !ekpub || !ekpriv) {
+        reject(new Error("Could not import keys"));
+      } else {
+        resolve({
+          signKeys: {
+            publicKey: skpub,
+            privateKey: skpriv,
+          },
+          encryptionKeys: {
+            publicKey: ekpub,
+            privateKey: ekpriv,
+          },
+        });
+      }
+    });
   });
 }

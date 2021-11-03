@@ -6,11 +6,12 @@ import catchReturn from "./utils/catchReturn";
 import fromBase64 from "./utils/fromBase64";
 import sha256 from "./utils/sha256";
 
-import { UserRootData } from "./types/graph";
-import ToolDbClient from "./toolDbClient";
+import { UserRootData } from ".";
+
+import ToolDb from "./tooldb";
 
 export default function toolDbSignIn(
-  this: ToolDbClient,
+  this: ToolDb,
   user: string,
   password: string
 ): Promise<
@@ -24,7 +25,7 @@ export default function toolDbSignIn(
     this.getData<UserRootData>(`==${user}`, false, 5000)
       .then((_user) => {
         if (!_user) {
-          reject(Error("Unvalid user data"));
+          reject(Error("Could not find user"));
           return;
         }
 

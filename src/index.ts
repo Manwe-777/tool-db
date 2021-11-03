@@ -28,6 +28,8 @@ export { default as signData } from "./utils/signData";
 export { default as arrayBufferToBase64 } from "./utils/arrayBufferToBase64";
 export { default as arrayBufferToString } from "./utils/arrayBufferToString";
 export { default as base64ToArrayBuffer } from "./utils/base64ToArrayBuffer";
+export { default as base64ToBinaryChange } from "./utils/base64ToBinaryChange";
+export { default as base64ToBinaryDocument } from "./utils/base64ToBinaryDocument";
 export { default as base64ToUint8 } from "./utils/base64ToUint8";
 export { default as fromBase64 } from "./utils/fromBase64";
 export { default as generateIv } from "./utils/generateIv";
@@ -37,6 +39,7 @@ export { default as textRandom } from "./utils/textRandom";
 export { default as toBase64 } from "./utils/toBase64";
 export { default as uint8ToBase64 } from "./utils/uint8ToBase64";
 export { default as verifyMessage } from "./utils/verifyMessage";
+export { default as getIpFromUrl } from "./utils/getIpFromUrl";
 
 export { default as decodeKeyString } from "./utils/crypto/decodeKeyString";
 export { default as decryptData } from "./utils/crypto/decryptData";
@@ -54,6 +57,4 @@ export { default as loadKeysComb } from "./utils/crypto/loadKeysComb";
 export { default as saveKeysComb } from "./utils/crypto/saveKeysComb";
 export { default as verifyData } from "./utils/crypto/verifyData";
 
-export { default as customGun } from "./customGun";
-
-export { default as ToolDbClient } from "./toolDbClient";
+export { default as ToolDb } from "./tooldb";

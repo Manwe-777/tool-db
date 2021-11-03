@@ -1,10 +1,12 @@
-import toolDbClient from "./toolDbClient";
-import { GraphEntryValue, UserRootData } from "./types/graph";
+import { PutMessage, textRandom, UserRootData, VerificationData } from ".";
+
+import ToolDb from "./tooldb";
 
 import encryptWithPass from "./utils/crypto/encryptWithPass";
 import generateKeysComb from "./utils/crypto/generateKeysComb";
 import saveKeysComb from "./utils/crypto/saveKeysComb";
 import generateIv from "./utils/generateIv";
+import getIpFromUrl from "./utils/getIpFromUrl";
 import proofOfWork from "./utils/proofOfWork";
 import sha256 from "./utils/sha256";
 import signData from "./utils/signData";
@@ -12,13 +14,13 @@ import toBase64 from "./utils/toBase64";
 import uint8ToBase64 from "./utils/uint8ToBase64";
 
 export default async function toolDbSignUp(
-  this: toolDbClient,
+  this: ToolDb,
   user: string,
   password: string
 ): Promise<any> {
   const userRoot = `==${user}`;
   return new Promise((resolve, reject) => {
-    this.getData<UserRootData>(userRoot, false, 5000)
+    this.getData<UserRootData>(userRoot, false, 3000)
       .then((data) => {
         if (data === null) {
           generateKeysComb()
@@ -60,29 +62,32 @@ export default async function toolDbSignUp(
                                   hash,
                                   keys.signKeys.privateKey as CryptoKey
                                 ).then((signature) => {
-                                  const signupMessage: GraphEntryValue<UserRootData> =
+                                  const signupMessage: VerificationData<UserRootData> =
                                     {
-                                      key: userRoot,
-                                      pub: savedKeys.skpub,
-                                      nonce,
-                                      timestamp,
-                                      hash: hash,
-                                      sig: toBase64(signature),
-                                      value: userData,
+                                      k: userRoot,
+                                      p: savedKeys.skpub,
+                                      n: nonce,
+                                      t: timestamp,
+                                      h: hash,
+                                      s: toBase64(signature),
+                                      v: userData,
                                     };
 
-                                  this.gun
-                                    .get(signupMessage.key)
-                                    .put(
-                                      { v: JSON.stringify(signupMessage) },
-                                      (ack: any) => {
-                                        if (ack.err) {
-                                          reject(ack.err);
-                                        } else {
-                                          resolve(signupMessage.value);
-                                        }
-                                      }
+                                  if (this.options.debug) {
+                                    console.log(
+                                      "SIGNUP PUT > " + userRoot,
+                                      signupMessage
                                     );
+                                  }
+
+                                  this.websockets.send({
+                                    type: "put",
+                                    id: textRandom(10),
+                                    to: this.websockets.activePeers.map(
+                                      getIpFromUrl
+                                    ),
+                                    ...signupMessage,
+                                  } as PutMessage);
                                 });
                               })
                               .catch(reject);

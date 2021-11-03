@@ -6,7 +6,7 @@ export default function proofOfWork(
 ): Promise<{ nonce: number; hash: string }> {
   return new Promise((resolve) => {
     let nonce = 0;
-    let hash = "";
+    let hash = sha256(`${value}${nonce}`);
     while (hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
       nonce += 1;
       hash = sha256(`${value}${nonce}`);

@@ -1,4 +1,5 @@
-import { PutMessage, textRandom, uint8ToBase64, VerificationData } from ".";
+import { BinaryChange } from "automerge";
+import { CrdtPutMessage, textRandom, uint8ToBase64, VerificationData } from ".";
 import ToolDb from "./tooldb";
 import getIpFromUrl from "./utils/getIpFromUrl";
 
@@ -14,12 +15,12 @@ import toBase64 from "./utils/toBase64";
  * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
  * @returns Promise<Data | null>
  */
-export default function toolDbPut<T = any>(
+export default function toolDbCrdtPut<T = any>(
   this: ToolDb,
   key: string,
-  value: T,
+  value: BinaryChange[],
   userNamespaced = false
-): Promise<PutMessage<T> | null> {
+): Promise<CrdtPutMessage | null> {
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
       // Dots are used as a delimitator character between bublic keys and the key of the user's data
@@ -33,9 +34,10 @@ export default function toolDbPut<T = any>(
     }
 
     const timestamp = new Date().getTime();
-    const dataString = `${JSON.stringify(value)}${
-      this.user.pubKey
-    }${timestamp}`;
+
+    const encodedData = JSON.stringify(value.map(uint8ToBase64));
+
+    const dataString = `${encodedData}${this.user.pubKey}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
@@ -44,36 +46,28 @@ export default function toolDbPut<T = any>(
           // Sign our value
           signData(hash, this.user.keys.signKeys.privateKey as CryptoKey)
             .then(async (signature) => {
-              const finalKey = userNamespaced
-                ? `:${this.user?.pubKey}.${key}`
-                : key;
               // Compose the message
               const data: VerificationData = {
-                k: finalKey,
+                k: userNamespaced ? `:${this.user?.pubKey}.${key}` : key,
                 p: this.user?.pubKey || "",
                 n: nonce,
                 t: timestamp,
                 h: hash,
                 s: toBase64(signature),
-                v: value,
+                v: encodedData,
               };
 
-              this.store.put(finalKey, JSON.stringify(data), (err, data) => {
-                //
-              });
-
               if (this.options.debug) {
-                console.log("PUT > " + key, data);
+                console.log("PUT CRDT > " + key, data);
               }
 
-              const finalMessage: PutMessage = {
-                type: "put",
+              const finalMessage: CrdtPutMessage = {
+                type: "crdtPut",
                 id: textRandom(10),
                 to: this.websockets.activePeers.map(getIpFromUrl),
                 ...data,
               };
               this.websockets.send(finalMessage);
-
               resolve(finalMessage);
             })
             .catch(reject);

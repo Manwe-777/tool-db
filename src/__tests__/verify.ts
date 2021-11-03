@@ -1,19 +1,18 @@
-import { VerifyResult } from "../types/message";
+import { VerificationData, VerifyResult } from "../types/message";
 import verifyMessage from "../utils/verifyMessage";
 
-import { GraphEntryValue } from "../types/graph";
 import catchReturn from "../utils/catchReturn";
 
 jest.mock("../getCrypto.ts");
 
-const putOk: GraphEntryValue = {
-  key: "value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  nonce: 679,
-  timestamp: 1628918110150,
-  hash: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  sig: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  value: "AzB4NzijkW",
+const putOk: VerificationData<string> = {
+  k: "value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+  n: 679,
+  t: 1628918110150,
+  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
+  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+  v: "AzB4NzijkW",
 };
 
 it("Can verify PUT", () => {
@@ -22,14 +21,14 @@ it("Can verify PUT", () => {
   });
 });
 
-const putSig: GraphEntryValue = {
-  key: "value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  nonce: 679,
-  timestamp: 1628918110150,
-  hash: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  sig: "Z2fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  value: "AzB4NzijkW",
+const putSig: VerificationData<string> = {
+  k: "value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+  n: 679,
+  t: 1628918110150,
+  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
+  s: "Z2fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+  v: "AzB4NzijkW",
 };
 
 it("Can catch tampered messages (signature)", () => {
@@ -39,37 +38,37 @@ it("Can catch tampered messages (signature)", () => {
 });
 
 it("Can catch messages with missing data", () => {
-  const delA: any = delete { ...putOk }.hash;
+  const delA: any = delete { ...putOk }.h;
   const pa = verifyMessage(delA).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delB: any = delete { ...putOk }.key;
+  const delB: any = delete { ...putOk }.k;
   const pb = verifyMessage(delB).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delC: any = delete { ...putOk }.nonce;
+  const delC: any = delete { ...putOk }.n;
   const pc = verifyMessage(delC).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delD: any = delete { ...putOk }.pub;
+  const delD: any = delete { ...putOk }.p;
   const pd = verifyMessage(delD).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delE: any = delete { ...putOk }.sig;
+  const delE: any = delete { ...putOk }.s;
   const pe = verifyMessage(delE).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delF: any = delete { ...putOk }.timestamp;
+  const delF: any = delete { ...putOk }.t;
   const pf = verifyMessage(delF).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delG: any = delete { ...putOk }.value;
+  const delG: any = delete { ...putOk }.v;
   const pg = verifyMessage(delG).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
@@ -85,14 +84,14 @@ it("Can print errors", async () => {
   expect(await rejectPromise).toBe(undefined);
 });
 
-const putTime: GraphEntryValue = {
-  key: "value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  nonce: 679,
-  timestamp: 2628918110150,
-  hash: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  sig: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  value: "AzB4NzijkW",
+const putTime: VerificationData<string> = {
+  k: "value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+  n: 679,
+  t: 2628918110150,
+  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
+  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+  v: "AzB4NzijkW",
 };
 
 it("Can catch tampered messages (time)", () => {
@@ -101,14 +100,14 @@ it("Can catch tampered messages (time)", () => {
   });
 });
 
-const putPow: GraphEntryValue = {
-  key: "value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  nonce: 679,
-  timestamp: 1628918110150,
-  hash: "00a6fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  sig: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  value: "AzB4NzijkW",
+const putPow: VerificationData<string> = {
+  k: "value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+  n: 679,
+  t: 1628918110150,
+  h: "00a6fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
+  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+  v: "AzB4NzijkW",
 };
 
 // it("Can catch tampered messages (pow)", () => {
@@ -117,14 +116,14 @@ const putPow: GraphEntryValue = {
 //   });
 // });
 
-const putNonce: GraphEntryValue = {
-  key: "value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  nonce: 111,
-  timestamp: 1628918110150,
-  hash: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  sig: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  value: "AzB4NzijkW",
+const putNonce: VerificationData<string> = {
+  k: "value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+  n: 111,
+  t: 1628918110150,
+  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
+  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+  v: "AzB4NzijkW",
 };
 
 // it("Can catch tampered messages (nonce)", () => {
@@ -133,14 +132,14 @@ const putNonce: GraphEntryValue = {
 //   });
 // });
 
-const putValue: GraphEntryValue = {
-  key: "value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  nonce: 679,
-  timestamp: 1628918110150,
-  hash: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  sig: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  value: "hackerman",
+const putValue: VerificationData<string> = {
+  k: "value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+  n: 679,
+  t: 1628918110150,
+  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
+  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+  v: "hackerman",
 };
 
 // it("Can catch tampered messages (value)", () => {
@@ -149,14 +148,14 @@ const putValue: GraphEntryValue = {
 //   });
 // });
 
-const privatePut: GraphEntryValue = {
-  key: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==.value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
-  nonce: 1268,
-  timestamp: 1628919444909,
-  hash: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
-  sig: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
-  value: { test: "a1AMXh4hZhI2lc5ONBa5" },
+const privatePut: VerificationData<{ test: string }> = {
+  k: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==.value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
+  n: 1268,
+  t: 1628919444909,
+  h: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
+  s: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
+  v: { test: "a1AMXh4hZhI2lc5ONBa5" },
 };
 
 it("Can verify namespaced PUT", () => {
@@ -165,14 +164,14 @@ it("Can verify namespaced PUT", () => {
   });
 });
 
-const privatePutPubkey: GraphEntryValue = {
-  key: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Gw==.value",
-  pub: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
-  nonce: 1268,
-  timestamp: 1628919444909,
-  hash: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
-  sig: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
-  value: { test: "a1AMXh4hZhI2lc5ONBa5" },
+const privatePutPubkey: VerificationData<{ test: string }> = {
+  k: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Gw==.value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
+  n: 1268,
+  t: 1628919444909,
+  h: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
+  s: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
+  v: { test: "a1AMXh4hZhI2lc5ONBa5" },
 };
 
 it("Can catch pubkey replacement", () => {

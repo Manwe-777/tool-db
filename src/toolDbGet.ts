@@ -1,4 +1,6 @@
-import ToolDbClient from "./toolDbClient";
+import { textRandom } from ".";
+import ToolDb from "./tooldb";
+import getIpFromUrl from "./utils/getIpFromUrl";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -8,7 +10,7 @@ import ToolDbClient from "./toolDbClient";
  * @returns Promise<Data>
  */
 export default function toolDbGet<T = any>(
-  this: ToolDbClient,
+  this: ToolDb,
   key: string,
   userNamespaced = false,
   timeoutMs = 1000
@@ -19,35 +21,55 @@ export default function toolDbGet<T = any>(
       return;
     }
     const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
-    if (this.debug) {
+    if (this.options.debug) {
       console.log("GET > " + finalKey);
     }
 
-    let hasData = false;
-    let data: T | null = null;
+    const msgId = textRandom(10);
 
-    const resolveTimeout = () => {
-      resolve(data);
-    };
-
-    let timeout = setTimeout(resolveTimeout, timeoutMs);
-
-    this.gun.get(finalKey, (ack: any) => {
-      if (ack["@"] || ack.put) {
-        // console.log("ACK", ack);
-        if (ack.put && ack.put.v) {
-          try {
-            const recv = JSON.parse(ack.put.v);
-            hasData = true;
-            data = recv.value;
-          } catch (e) {
-            console.error(e);
-          }
+    this.store.get(finalKey, (err, data) => {
+      if (data) {
+        try {
+          const message = JSON.parse(data);
+          this.triggerKeyListener(finalKey, message);
+        } catch (e) {
+          // do nothing
         }
-
-        clearTimeout(timeout);
-        timeout = setTimeout(resolveTimeout, timeoutMs);
       }
+    });
+
+    const cancelTimeout = setTimeout(() => {
+      this.store.get(finalKey, (err, data) => {
+        if (data) {
+          try {
+            const message = JSON.parse(data);
+            resolve(message.v);
+          } catch (e) {
+            resolve(null);
+          }
+        } else {
+          resolve(null);
+        }
+      });
+    }, timeoutMs);
+
+    this.addIdListener(msgId, (msg) => {
+      if (this.options.debug) {
+        console.log("GET RECV  > " + finalKey, msg);
+      }
+
+      clearTimeout(cancelTimeout);
+      if (msg.type === "put") {
+        resolve(msg.v);
+      }
+    });
+
+    // Do get
+    this.websockets.send({
+      type: "get",
+      to: this.websockets.activePeers.map(getIpFromUrl),
+      key: finalKey,
+      id: msgId,
     });
   });
 }
