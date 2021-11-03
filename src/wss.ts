@@ -37,6 +37,13 @@ export default class WSS {
     return this._activePeers;
   }
 
+  private _newPeerId = 1;
+  private _clientSockets: Record<number, WebSocket> = {};
+
+  get clientSockets() {
+    return this._clientSockets;
+  }
+
   constructor(db: ToolDb) {
     this._tooldb = db;
     this.options = db.options;
@@ -50,6 +57,18 @@ export default class WSS {
       this.server = new WebSocket.Server({ port: this.options.port });
 
       this.server.on("connection", (socket) => {
+        const peerId = this._newPeerId;
+        this._clientSockets[peerId] = socket;
+        this._newPeerId += 1;
+
+        socket.on("close", () => {
+          delete this._clientSockets[peerId];
+        });
+
+        socket.on("error", () => {
+          delete this._clientSockets[peerId];
+        });
+
         socket.on("message", (message: string) => {
           this.tooldb.clientOnMessage(message, socket);
         });

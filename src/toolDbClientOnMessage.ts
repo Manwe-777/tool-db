@@ -22,7 +22,7 @@ export default function toolDbClientOnMessage(
 ) {
   if (typeof data === "string") {
     const message: ToolDbMessage = JSON.parse(data);
-    console.log("Got message > ", message.type, (message as any).key || "");
+    // console.log("Got message > ", message.type, (message as any).key || "");
 
     // Check if we are listening for this ID
     if (message.id) {
@@ -89,7 +89,9 @@ export default function toolDbClientOnMessage(
             // do nothing
           }
         } else {
-          // socket.send(data);
+          Object.values(this.websockets.clientSockets).forEach((socket) => {
+            socket.send(data);
+          });
         }
       });
     }
