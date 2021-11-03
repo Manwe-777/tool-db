@@ -18,11 +18,18 @@ import base64ToBinaryChange from "./utils/base64ToBinaryChange";
 export default function toolDbClientOnMessage(
   this: ToolDb,
   data: string,
-  socket: any // Hm browser websocket types??
+  socket: any, // Hm browser websocket types??,
+  peerId: number
 ) {
+  const originalData = data;
   if (typeof data === "string") {
     const message: ToolDbMessage = JSON.parse(data);
-    // console.log("Got message > ", message.type, (message as any).key || "");
+    // console.log(
+    //   "Got message > ",
+    //   data,
+    //   message.type,
+    //   (message as any).key || ""
+    // );
 
     // Check if we are listening for this ID
     if (message.id) {
@@ -82,16 +89,29 @@ export default function toolDbClientOnMessage(
         if (data) {
           try {
             // Use the id of the get so the other client knows we are replying
-            const oldData = { ...JSON.parse(data), id: message.id };
+            const oldData = {
+              type: "put",
+              ...JSON.parse(data),
+              id: message.id,
+            } as PutMessage;
             socket.send(JSON.stringify(oldData));
           } catch (e) {
             // socket.send(data);
             // do nothing
           }
         } else {
-          Object.values(this.websockets.clientSockets).forEach((socket) => {
-            socket.send(data);
-          });
+          if (this.options.debug) {
+            console.log("Local key not found, relay", originalData);
+          }
+          Object.keys(this.websockets.clientSockets).forEach(
+            (socketId: any) => {
+              if (socketId !== peerId) {
+                const socket = this.websockets.clientSockets[socketId];
+                console.log("Sending to", socketId);
+                socket.send(originalData);
+              }
+            }
+          );
         }
       });
     }

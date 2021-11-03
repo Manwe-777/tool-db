@@ -60,17 +60,20 @@ export default class WSS {
         const peerId = this._newPeerId;
         this._clientSockets[peerId] = socket;
         this._newPeerId += 1;
+        // console.log("new connection:", peerId);
 
         socket.on("close", () => {
+          // console.log("closed connection:", peerId);
           delete this._clientSockets[peerId];
         });
 
         socket.on("error", () => {
+          // console.log("errored connection:", peerId);
           delete this._clientSockets[peerId];
         });
 
         socket.on("message", (message: string) => {
-          this.tooldb.clientOnMessage(message, socket);
+          this.tooldb.clientOnMessage(message, socket, peerId);
         });
       });
     }
@@ -127,7 +130,7 @@ export default class WSS {
         if (!msg) {
           return;
         }
-        this.tooldb.clientOnMessage(msg.data.toString(), wss);
+        this.tooldb.clientOnMessage(msg.data.toString(), wss, -1);
       };
 
       return wss;
