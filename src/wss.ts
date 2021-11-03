@@ -143,12 +143,12 @@ export default class WSS {
       .map((url) => this._connections[url])
       .filter((conn) => conn.peer && conn.peer.readyState === conn.peer.OPEN);
 
-    console.log(
-      "Send to ",
-      filteredConns.map((c) => c.peer.url),
-      "but not to",
-      filterUrls
-    );
+    // console.log(
+    //   "Send to ",
+    //   filteredConns.map((c) => c.peer.url),
+    //   "but not to",
+    //   filterUrls
+    // );
 
     filteredConns.forEach((conn) => {
       conn.peer.send(JSON.stringify(msg));
