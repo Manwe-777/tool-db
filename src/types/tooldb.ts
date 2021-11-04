@@ -1,3 +1,6 @@
+import { Server as HTTPServer } from "http";
+import { Server as HTTPSServer } from "https";
+
 export interface ToolDbOptions {
   db: string;
   debug: boolean;
@@ -6,5 +9,6 @@ export interface ToolDbOptions {
   wait: number;
   pow: number;
   server: boolean;
+  httpServer: HTTPServer | HTTPSServer | undefined;
   port: number;
 }

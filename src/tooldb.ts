@@ -163,6 +163,7 @@ export default class ToolDb {
     server: false,
     port: 8080,
     debug: false,
+    httpServer: undefined,
   };
 
   get options() {

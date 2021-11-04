@@ -54,7 +54,10 @@ export default class WSS {
     });
 
     if (this.options.server) {
-      this.server = new WebSocket.Server({ port: this.options.port });
+      this.server = new WebSocket.Server({
+        port: this.options.port,
+        server: this.options.httpServer,
+      });
 
       this.server.on("connection", (socket) => {
         const peerId = this._newPeerId;
