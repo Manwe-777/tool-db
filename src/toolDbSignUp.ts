@@ -80,14 +80,17 @@ export default async function toolDbSignUp(
                                     );
                                   }
 
-                                  this.websockets.send({
+                                  const finalMsg = {
                                     type: "put",
                                     id: textRandom(10),
                                     to: this.websockets.activePeers.map(
                                       getIpFromUrl
                                     ),
                                     ...signupMessage,
-                                  } as PutMessage);
+                                  } as PutMessage;
+
+                                  this.websockets.send(finalMsg);
+                                  resolve(finalMsg);
                                 });
                               })
                               .catch(reject);
