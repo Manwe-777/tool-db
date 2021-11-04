@@ -105,7 +105,7 @@ export default function toolDbClientOnMessage(
           }
           Object.keys(this.websockets.clientSockets).forEach(
             (socketId: any) => {
-              if (socketId !== peerId) {
+              if (`${socketId}` !== `${peerId}`) {
                 const socket = this.websockets.clientSockets[socketId];
                 console.log("Sending to", socketId);
                 socket.send(originalData);
