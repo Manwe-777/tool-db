@@ -1,7 +1,6 @@
 import {
   base64ToBinaryDocument,
   CrdtMessage,
-  getIpFromUrl,
   PongMessage,
   PutMessage,
   textRandom,
@@ -14,12 +13,12 @@ import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 
 import Automerge from "automerge";
 import base64ToBinaryChange from "./utils/base64ToBinaryChange";
+import { ToolDbWebSocket } from "./wss";
 
 export default function toolDbClientOnMessage(
   this: ToolDb,
   data: string,
-  socket: any, // Hm browser websocket types??,
-  peerId: number
+  socket: ToolDbWebSocket
 ) {
   const originalData = data;
   if (typeof data === "string") {
@@ -41,20 +40,39 @@ export default function toolDbClientOnMessage(
     }
 
     if (message.type === "ping") {
+      socket.toolDbId = message.id;
+      this.websockets._clientSockets[message.id] = socket;
       socket.send(
         JSON.stringify({
           type: "pong",
-          id: message.id,
+          id: this.options.id,
         } as PongMessage)
       );
     }
 
+    if (message.type === "pong") {
+      socket.toolDbId = message.id;
+      this.websockets._clientSockets[message.id] = socket;
+    }
+
     if (message.type === "subscribe") {
-      this.addKeyListener(message.key, (msg) => {
-        if (msg.type === "put" || msg.type === "crdt") {
-          socket.send(JSON.stringify(msg));
+      if (socket.toolDbId) {
+        const subId = socket.toolDbId + "-" + message.key;
+        if (!this.subscriptions.includes(subId)) {
+          this.subscriptions.push(subId);
+
+          this.addKeyListener(message.key, (msg) => {
+            if (
+              (msg.type === "put" || msg.type === "crdt") &&
+              socket.toolDbId
+            ) {
+              // We do not reply to the socket directly
+              // instead we use the client id, in case the socket reconnects
+              this.websockets.sendToClientId(socket.toolDbId, msg);
+            }
+          });
         }
-      });
+      }
 
       // basically the exact same as GET, below
       this.store.get(message.key, (err, data) => {
@@ -103,15 +121,13 @@ export default function toolDbClientOnMessage(
           if (this.options.debug) {
             console.log("Local key not found, relay", originalData);
           }
-          Object.keys(this.websockets.clientSockets).forEach(
-            (socketId: any) => {
-              if (`${socketId}` !== `${peerId}`) {
-                const socket = this.websockets.clientSockets[socketId];
-                console.log("Sending to", socketId);
-                socket.send(originalData);
-              }
+          Object.keys(this.websockets.clientSockets).forEach((socketId) => {
+            if (`${socketId}` !== `${socket.toolDbId}`) {
+              const socket = this.websockets.clientSockets[socketId];
+              console.log("Sending to", socketId);
+              socket.send(originalData);
             }
-          );
+          });
         }
       });
     }
@@ -165,9 +181,6 @@ export default function toolDbClientOnMessage(
       const writeStart = new Date().getTime();
       toolDbVerificationWrapper.call(this, message).then((value) => {
         if (value === VerifyResult.Verified) {
-          // relay to other servers
-          this.websockets.send(message, message.to);
-
           const key = message.k;
           let data: string[] = [];
           try {
@@ -207,12 +220,16 @@ export default function toolDbClientOnMessage(
               console.log("CRDT write: ", (writeEnd - writeStart) / 1000);
             });
 
-            this.triggerKeyListener(key, {
+            const crdtMessage: CrdtMessage = {
               type: "crdt",
               key: key,
               id: message.id,
               doc: uint8ToBase64(savedDoc),
-            });
+            };
+            this.triggerKeyListener(key, crdtMessage);
+
+            // relay to other servers
+            this.websockets.send(crdtMessage, message.to);
           });
         } else {
           console.log("unverified message", value, message);

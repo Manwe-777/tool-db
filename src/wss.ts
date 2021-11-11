@@ -3,6 +3,8 @@ import { getIpFromUrl, PingMessage, textRandom, ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
 import { ToolDbOptions } from "./types/tooldb";
 
+export type ToolDbWebSocket = WebSocket & { toolDbId?: string };
+
 export default class WSS {
   // eslint-disable-next-line no-undef
   private wnd =
@@ -23,7 +25,7 @@ export default class WSS {
     {
       tries: number;
       defer: number | null;
-      peer: any;
+      peer: ToolDbWebSocket;
     }
   > = {};
 
@@ -37,8 +39,7 @@ export default class WSS {
     return this._activePeers;
   }
 
-  private _newPeerId = 1;
-  private _clientSockets: Record<number, WebSocket> = {};
+  public _clientSockets: Record<string, ToolDbWebSocket> = {};
 
   get clientSockets() {
     return this._clientSockets;
@@ -49,8 +50,10 @@ export default class WSS {
     this.options = db.options;
 
     this.options.peers.forEach((url) => {
-      const conn = this.open(url);
-      this._connections[url] = { tries: 0, peer: conn, defer: null };
+      const newSocket = this.open(url);
+      if (newSocket) {
+        this._connections[url] = { tries: 0, peer: newSocket, defer: null };
+      }
     });
 
     if (this.options.server) {
@@ -59,24 +62,25 @@ export default class WSS {
         server: this.options.httpServer,
       });
 
-      this.server.on("connection", (socket) => {
-        const peerId = this._newPeerId;
-        this._clientSockets[peerId] = socket;
-        this._newPeerId += 1;
+      this.server.on("connection", (socket: ToolDbWebSocket) => {
         // console.log("new connection:", peerId);
 
         socket.on("close", () => {
           // console.log("closed connection:", peerId);
-          delete this._clientSockets[peerId];
+          if (socket.toolDbId) {
+            delete this._clientSockets[socket.toolDbId];
+          }
         });
 
         socket.on("error", () => {
           // console.log("errored connection:", peerId);
-          delete this._clientSockets[peerId];
+          if (socket.toolDbId) {
+            delete this._clientSockets[socket.toolDbId];
+          }
         });
 
         socket.on("message", (message: string) => {
-          this.tooldb.clientOnMessage(message, socket, peerId);
+          this.tooldb.clientOnMessage(message, socket);
         });
       });
     }
@@ -91,7 +95,7 @@ export default class WSS {
    * @param url URL of the server (including port)
    * @returns websocket
    */
-  public open = (url: string): any | undefined => {
+  public open = (url: string): ToolDbWebSocket | undefined => {
     try {
       const wsUrl = url.replace(/^http/, "ws");
       const wss = new this._wss(wsUrl);
@@ -99,9 +103,12 @@ export default class WSS {
         this._connections[url] = { tries: 0, peer: wss, defer: null };
       }
 
-      wss.onclose = (e: any) => {
+      wss.onclose = (_error: any) => {
         if (this._activePeers.includes(url)) {
           this._activePeers.splice(this._activePeers.indexOf(url), 1);
+        }
+        if (this.options.debug) {
+          console.log(_error);
         }
         this.reconnect(url);
       };
@@ -109,6 +116,9 @@ export default class WSS {
       wss.onerror = (_error: any) => {
         if (this._activePeers.includes(url)) {
           this._activePeers.splice(this._activePeers.indexOf(url), 1);
+        }
+        if (this.options.debug) {
+          console.log(_error);
         }
         if (_error?.error?.code !== "ETIMEDOUT") {
           this.reconnect(url);
@@ -119,12 +129,15 @@ export default class WSS {
         if (!this._activePeers.includes(url)) {
           this._activePeers.push(url);
         }
+        console.warn("Connected to " + url + " sucessfully.");
+
+        this._connections[url].peer = wss;
 
         // hi peer
         wss.send(
           JSON.stringify({
             type: "ping",
-            id: textRandom(10),
+            id: this.options.id,
           } as PingMessage)
         );
       };
@@ -133,7 +146,7 @@ export default class WSS {
         if (!msg) {
           return;
         }
-        this.tooldb.clientOnMessage(msg.data.toString(), wss, -1);
+        this.tooldb.clientOnMessage(msg.data.toString(), wss);
       };
 
       return wss;
@@ -159,6 +172,13 @@ export default class WSS {
     filteredConns.forEach((conn) => {
       conn.peer.send(JSON.stringify(msg));
     });
+  }
+
+  public sendToClientId(clientId: string, msg: ToolDbMessage) {
+    const socket = this._clientSockets[clientId];
+    if (socket) {
+      socket.send(JSON.stringify(msg));
+    }
   }
 
   private reconnect = (url: string) => {

@@ -1,4 +1,3 @@
-import Deduplicator from "./deduplicator";
 import WSS from "./wss";
 
 import { ToolDbOptions } from "./types/tooldb";
@@ -14,7 +13,14 @@ import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import indexedb from "./utils/indexedb";
 import leveldb from "./utils/leveldb";
-import { CrdtMessage, PutMessage, ToolDbMessage, VerificationData } from ".";
+import {
+  CrdtMessage,
+  PutMessage,
+  sha1,
+  textRandom,
+  ToolDbMessage,
+  VerificationData,
+} from ".";
 import toolDbSubscribe from "./toolDbSubscribe";
 import toolDbCrdtPut from "./toolDbCrdtPut";
 import { FreezeObject } from "automerge";
@@ -33,13 +39,18 @@ interface Verificator<T> {
 }
 
 export default class ToolDb {
-  private _deduplicator;
   private _websockets;
   private _store;
 
   private _documents: Record<string, FreezeObject<any>> = {};
 
   public clientOnMessage = toolDbClientOnMessage;
+
+  private _subscriptions: string[] = [];
+
+  get subscriptions() {
+    return this._subscriptions;
+  }
 
   public subscribeData = toolDbSubscribe;
 
@@ -164,14 +175,11 @@ export default class ToolDb {
     port: 8080,
     debug: false,
     httpServer: undefined,
+    id: sha1(`${textRandom(100)}-${new Date().getTime()}`),
   };
 
   get options() {
     return this._options;
-  }
-
-  get deduplicator() {
-    return this._deduplicator;
   }
 
   get websockets() {
@@ -190,7 +198,6 @@ export default class ToolDb {
     this._options = { ...this._options, ...options };
 
     // These could be made to be customizable by setting the variables as public
-    this._deduplicator = new Deduplicator();
     this._websockets = new WSS(this);
     this._store = typeof window === "undefined" ? leveldb() : indexedb();
   }

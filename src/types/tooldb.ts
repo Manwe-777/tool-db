@@ -11,4 +11,5 @@ export interface ToolDbOptions {
   server: boolean;
   httpServer: HTTPServer | HTTPSServer | undefined;
   port: number;
+  id: string;
 }
