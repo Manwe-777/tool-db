@@ -200,36 +200,42 @@ export default function toolDbClientOnMessage(
             //   );
             // }
 
-            const [newDoc, patch] = Automerge.applyChanges(
-              currentDoc || Automerge.init(),
-              changes
-            );
+            try {
+              const [newDoc, patch] = Automerge.applyChanges(
+                currentDoc || Automerge.init(),
+                changes
+              );
 
-            // if (newDoc) {
-            //   console.log(
-            //     "new document changes:",
-            //     Automerge.getHistory(newDoc)
-            //   );
-            // }
+              // if (newDoc) {
+              //   console.log(
+              //     "new document changes:",
+              //     Automerge.getHistory(newDoc)
+              //   );
+              // }
 
-            // persist
-            this.documents[key] = newDoc;
-            const savedDoc = Automerge.save(newDoc);
-            this.store.put(`${key}.crdt`, savedDoc, (err, data) => {
-              const writeEnd = new Date().getTime();
-              console.log("CRDT write: ", (writeEnd - writeStart) / 1000);
-            });
+              // persist
+              this.documents[key] = newDoc;
+              const savedDoc = Automerge.save(newDoc);
+              this.store.put(`${key}.crdt`, savedDoc, (err, data) => {
+                const writeEnd = new Date().getTime();
+                console.log("CRDT write: ", (writeEnd - writeStart) / 1000);
+              });
 
-            const crdtMessage: CrdtMessage = {
-              type: "crdt",
-              key: key,
-              id: message.id,
-              doc: uint8ToBase64(savedDoc),
-            };
-            this.triggerKeyListener(key, crdtMessage);
+              const crdtMessage: CrdtMessage = {
+                type: "crdt",
+                key: key,
+                id: message.id,
+                doc: uint8ToBase64(savedDoc),
+              };
+              this.triggerKeyListener(key, crdtMessage);
 
-            // relay to other servers
-            this.websockets.send(crdtMessage, message.to);
+              // relay to other servers
+              this.websockets.send(crdtMessage, message.to);
+            } catch (e) {
+              if (this.options.debug) {
+                console.log(e);
+              }
+            }
           });
         } else {
           console.log("unverified message", value, message);
