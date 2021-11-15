@@ -156,6 +156,12 @@ export default class WSS {
     return undefined;
   };
 
+  public close(url: string): void {
+    const peer = this._connections[url];
+    peer.tries = this.options.maxRetries;
+    peer.peer.close();
+  }
+
   public send(msg: ToolDbMessage, filterUrls: string[] = []) {
     const filteredConns = Object.keys(this._connections)
       .filter((url) => !filterUrls.includes(getIpFromUrl(url)))
