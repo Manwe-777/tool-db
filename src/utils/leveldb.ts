@@ -46,16 +46,19 @@ export default function leveldb(dbName = "tooldb"): {
     });
   };
 
-  store.query = function (key, cb) {
+  store.query = function (key) {
+    console.log("QUERY", key);
     return new Promise((resolve, reject) => {
       try {
         const array = [];
         db.createKeyStream({
           gte: key,
-          lte: String.fromCharCode(key.charCodeAt(0) + 1),
+          lte: key + "\uffff",
         })
-          .on("data", function (data) {
+          .on("data", function (data: string) {
+            // if (data.startsWith(key)) {
             array.push(data);
+            // }
           })
           .on("error", function (err) {
             reject(err);
