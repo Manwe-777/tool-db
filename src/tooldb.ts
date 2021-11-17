@@ -26,6 +26,7 @@ import toolDbCrdtPut from "./toolDbCrdtPut";
 import { FreezeObject } from "automerge";
 import loadCrdtDocument from "./loadCrdtDocument";
 import toolDbKeysSignIn from "./toolDbKeysSignIn";
+import toolDbQueryKeys from "./toolDbQueryKeys";
 
 export interface Listener {
   key: string;
@@ -65,6 +66,8 @@ export default class ToolDb {
   public putData = toolDbPut;
 
   public putCrdt = toolDbCrdtPut;
+
+  public queryKeys = toolDbQueryKeys;
 
   public getPubKey = toolDbGetPubKey;
 
