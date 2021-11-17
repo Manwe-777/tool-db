@@ -3,6 +3,7 @@ import {
   CrdtMessage,
   PongMessage,
   PutMessage,
+  QueryAckMessage,
   textRandom,
   ToolDbMessage,
   uint8ToBase64,
@@ -258,6 +259,18 @@ export default function toolDbClientOnMessage(
             key: message.key,
             doc: uint8ToBase64(saved),
           } as CrdtMessage)
+        );
+      });
+    }
+
+    if (message.type === "query") {
+      this.store.query(message.key).then((keys) => {
+        socket.send(
+          JSON.stringify({
+            type: "queryAck",
+            id: message.id,
+            keys,
+          } as QueryAckMessage)
         );
       });
     }
