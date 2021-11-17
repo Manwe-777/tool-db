@@ -178,7 +178,7 @@ export default function toolDbClientOnMessage(
     if (message.type === "crdtPut") {
       // key = aggregated, final value
       // key.crdt = automerge doc with changes
-      const writeStart = new Date().getTime();
+      // const writeStart = new Date().getTime();
       toolDbVerificationWrapper.call(this, message).then((value) => {
         if (value === VerifyResult.Verified) {
           const key = message.k;
@@ -200,42 +200,47 @@ export default function toolDbClientOnMessage(
             //   );
             // }
 
+            let newDoc = Automerge.init();
             try {
-              const [newDoc, patch] = Automerge.applyChanges(
+              [newDoc] = Automerge.applyChanges(
                 currentDoc || Automerge.init(),
                 changes
               );
-
-              // if (newDoc) {
-              //   console.log(
-              //     "new document changes:",
-              //     Automerge.getHistory(newDoc)
-              //   );
-              // }
-
-              // persist
-              this.documents[key] = newDoc;
-              const savedDoc = Automerge.save(newDoc);
-              this.store.put(`${key}.crdt`, savedDoc, (err, data) => {
-                const writeEnd = new Date().getTime();
-                console.log("CRDT write: ", (writeEnd - writeStart) / 1000);
-              });
-
-              const crdtMessage: CrdtMessage = {
-                type: "crdt",
-                key: key,
-                id: message.id,
-                doc: uint8ToBase64(savedDoc),
-              };
-              this.triggerKeyListener(key, crdtMessage);
-
-              // relay to other servers
-              this.websockets.send(crdtMessage, message.to);
             } catch (e) {
-              if (this.options.debug) {
-                console.log(e);
+              try {
+                [newDoc] = Automerge.applyChanges(Automerge.init(), changes);
+              } catch (ee) {
+                if (this.options.debug) {
+                  console.log(ee);
+                }
               }
             }
+
+            // if (newDoc) {
+            //   console.log(
+            //     "new document changes:",
+            //     Automerge.getHistory(newDoc)
+            //   );
+            // }
+
+            // persist
+            this.documents[key] = newDoc;
+            const savedDoc = Automerge.save(newDoc);
+            this.store.put(`${key}.crdt`, savedDoc, (err, data) => {
+              // const writeEnd = new Date().getTime();
+              // console.log("CRDT write: ", (writeEnd - writeStart) / 1000);
+            });
+
+            const crdtMessage: CrdtMessage = {
+              type: "crdt",
+              key: key,
+              id: message.id,
+              doc: uint8ToBase64(savedDoc),
+            };
+            this.triggerKeyListener(key, crdtMessage);
+
+            // relay to other servers
+            this.websockets.send(crdtMessage, message.to);
           });
         } else {
           console.log("unverified message", value, message);
