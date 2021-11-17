@@ -7,6 +7,7 @@ export default function leveldb(dbName = "tooldb"): {
     cb: (err: any | null, data?: any) => void
   ) => void;
   get: (key: string, cb: (err: any | null, data?: any) => void) => void;
+  query: (key: string) => Promise<string[]>;
 } {
   const level = require("level");
   let db = null;
@@ -41,6 +42,29 @@ export default function leveldb(dbName = "tooldb"): {
         if (cb) cb(err);
       } else {
         if (cb) cb(false, value);
+      }
+    });
+  };
+
+  store.query = function (key, cb) {
+    return new Promise((resolve, reject) => {
+      try {
+        const array = [];
+        db.createKeyStream({
+          gte: key,
+          lte: String.fromCharCode(key.charCodeAt(0) + 1),
+        })
+          .on("data", function (data) {
+            array.push(data);
+          })
+          .on("error", function (err) {
+            reject(err);
+          })
+          .on("close", function () {
+            resolve(array);
+          });
+      } catch (error) {
+        reject(error);
       }
     });
   };

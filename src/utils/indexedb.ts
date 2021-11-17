@@ -8,6 +8,7 @@ export default function indexedb(dbName = "tooldb"): {
     cb: (err: any | null, data?: any) => void
   ) => void;
   get: (key: string, cb: (err: any | null, data?: any) => void) => void;
+  query: (key: string) => Promise<string[]>;
 } {
   let db = null;
 
@@ -81,6 +82,30 @@ export default function indexedb(dbName = "tooldb"): {
     req.onerror = function (eve) {
       cb(eve || 5);
     };
+  };
+
+  store.query = function (key, cb) {
+    return new Promise((resolve, reject) => {
+      try {
+        const keyRange = IDBKeyRange.bound(key, key + "|", true, true);
+
+        const tx = db.transaction([dbName], "readonly");
+        const obj = tx.objectStore(dbName);
+
+        const keysArray = [];
+        obj.openCursor(keyRange).onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (cursor) {
+            keysArray.push(event.target.result.key);
+            cursor.continue();
+          } else {
+            resolve(keysArray);
+          }
+        };
+      } catch (error) {
+        reject(error);
+      }
+    });
   };
 
   setInterval(function () {

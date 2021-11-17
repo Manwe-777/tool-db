@@ -108,7 +108,7 @@ export default class WSS {
           this._activePeers.splice(this._activePeers.indexOf(url), 1);
         }
         if (this.options.debug) {
-          console.log(_error);
+          console.log(_error.error);
         }
         this.reconnect(url);
       };
@@ -118,7 +118,7 @@ export default class WSS {
           this._activePeers.splice(this._activePeers.indexOf(url), 1);
         }
         if (this.options.debug) {
-          console.log(_error);
+          console.log(_error.error);
         }
         if (_error?.error?.code !== "ETIMEDOUT") {
           this.reconnect(url);
