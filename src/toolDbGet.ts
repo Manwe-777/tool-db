@@ -27,17 +27,6 @@ export default function toolDbGet<T = any>(
 
     const msgId = textRandom(10);
 
-    this.store.get(finalKey, (err, data) => {
-      if (data) {
-        try {
-          const message = JSON.parse(data);
-          this.triggerKeyListener(finalKey, message);
-        } catch (e) {
-          // do nothing
-        }
-      }
-    });
-
     const cancelTimeout = setTimeout(() => {
       this.store.get(finalKey, (err, data) => {
         if (data) {
@@ -61,6 +50,19 @@ export default function toolDbGet<T = any>(
       clearTimeout(cancelTimeout);
       if (msg.type === "put") {
         resolve(msg.v);
+      }
+    });
+
+    this.store.get(finalKey, (err, data) => {
+      if (data) {
+        try {
+          const val = JSON.parse(data).v;
+          clearTimeout(cancelTimeout);
+          this.removeIdListener(msgId);
+          resolve(val);
+        } catch (e) {
+          // do nothing
+        }
       }
     });
 
