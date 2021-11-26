@@ -54,6 +54,7 @@ export default function toolDbClientOnMessage(
     if (message.type === "pong") {
       socket.toolDbId = message.id;
       this.websockets._clientSockets[message.id] = socket;
+      this.onConnect();
     }
 
     if (message.type === "subscribe") {

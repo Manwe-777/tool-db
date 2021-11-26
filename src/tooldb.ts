@@ -55,7 +55,13 @@ export default class ToolDb {
 
   public subscribeData = toolDbSubscribe;
 
+  // Emitted when there are no more server peers connected to
   public onDisconnect = () => {
+    //
+  };
+
+  // Emitted when a server peer responds with "pong"
+  public onConnect = () => {
     //
   };
 
