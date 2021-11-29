@@ -15,9 +15,9 @@ Please check the [chain-swarm](https://github.com/Manuel-777/chain-swarm) reposi
 We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT solution you want! Theoretically, even WebRTC between browsers would work.
 
 ## Base usage
-Connect to the selected gun db peers;
+Connect to the selected toolDb peers;
 ```
-const client = new ToolChainClient({ peers: [gunPeers] });
+const client = new ToolDb(options);
 ```
 
 These are the options you can pass to the constructor:
@@ -63,7 +63,9 @@ if (client.user) {
 }
 ```
 
-To PUT and GET:
+## Putting and getting data
+
+Core methods are very straighforward:
 ```
 client.getData("key", userNamespaced?, timeout?).then();
 client.putData("key", value, userNamespaced?).then();
@@ -83,9 +85,9 @@ client.removeKeyListener(listenerId);
 
 Similarly, for using a custom verification on a key (or subset of keys) you can create a new function that returns a Promise boolean;
 ```
-const validateDn = (msg) => {
+const validateFn = (msg) => {
   return new Promise((resolve) => {
-    console.log("Custom verif", msg);
+    console.log("Custom verification: ", msg);
     if (typeof msg.value === "string") resolve(true);
     else resolve(false);
   });
@@ -93,11 +95,26 @@ const validateDn = (msg) => {
 
 const validatorId = client.addCustomVerification("value", validateFn);
 
-// You will not usually need to remove validators, but we provide a function anyway.
 client.removeCustomVerification(validatorId);
 ```
 
 Keep in mind custom validators should run on all client and server nodes, and even though the nodes not running your validator will be able to store and relay invalid messages its up to each peer to check these messages on arrival. ToolDb does this automatically when using the custom validation, but its important to make sure every peer runs the same code to avoid tampered messages flowing in the network.
+
+## Query
+
+To make queries or just create indexes you can make a query, it simply asks all server or peers connected a list of all keys starting with a prefix. You can later use these keys to get the data itself.
+
+```
+client.queryKeys(keyPrefix, userNamespaced?, timeout?).then()
+```
+
+Just like previous methods you can configure the namespace and timeout and returns a promise, but in this case the value is always an array with the found keys.
+Using for example ":" + publicKey as our prefix would return all keys stored for that specific user namespace; you can also create keys for very specific use cases like "post-1" and query again "post-" to get a list of all available posts.
+
+Keep in mind this can be an intensive thing to do if your indexes are too big, and not recommended to be used very frequently.
+
+
+## Listen for changes
 
 Some times you want to subscribe to the changes made on a certain key, this is possible via subscribeData;
 ```
@@ -125,4 +142,12 @@ function handleDocumentKeyCrdt(msg) {
     }
   }
 }
+```
+
+## Events
+
+If you need to check when you are connected to a server peer or not you can use the following method replacements;
+```
+client.onConnect = () => { /* Your code here */ };
+client.onDisconnect = () => { /* Your code here */ };
 ```
