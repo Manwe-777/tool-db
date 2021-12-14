@@ -24,12 +24,7 @@ export default function toolDbClientOnMessage(
   const originalData = data;
   if (typeof data === "string") {
     const message: ToolDbMessage = JSON.parse(data);
-    // console.log(
-    //   "Got message > ",
-    //   data,
-    //   message.type,
-    //   (message as any).key || ""
-    // );
+    // console.log("Got message > ", message.type, (message as any).k || "");
 
     // Check if we are listening for this ID
     if (message.id) {
@@ -136,13 +131,17 @@ export default function toolDbClientOnMessage(
 
     if (message.type === "put") {
       toolDbVerificationWrapper.call(this, message).then((value) => {
+        // console.log("Verification wrapper result: ", value, message.k);
         if (value === VerifyResult.Verified) {
           // relay to other servers
           this.websockets.send(message, message.to);
 
           this.store.get(message.k, (err, oldData: string) => {
             if (oldData) {
-              const parsedOldData: PutMessage = JSON.parse(oldData);
+              const parsedOldData: PutMessage = {
+                type: "put",
+                ...JSON.parse(oldData),
+              };
               if (parsedOldData.t < message.t) {
                 const key = message.k;
                 this.triggerKeyListener(key, message);
@@ -153,6 +152,9 @@ export default function toolDbClientOnMessage(
                     //
                   }
                 );
+              } else {
+                const key = message.k;
+                this.triggerKeyListener(key, parsedOldData);
               }
               // } else if (this.options.debug) {
               //   console.log(
@@ -172,7 +174,7 @@ export default function toolDbClientOnMessage(
             }
           });
         } else {
-          console.log("unverified message", value, message);
+          console.warn("unverified message: ", value, message);
         }
       });
     }
@@ -182,6 +184,7 @@ export default function toolDbClientOnMessage(
       // key.crdt = automerge doc with changes
       // const writeStart = new Date().getTime();
       toolDbVerificationWrapper.call(this, message).then((value) => {
+        // console.log("CRDT Verification wrapper result: ", value);
         if (value === VerifyResult.Verified) {
           const key = message.k;
           let data: string[] = [];

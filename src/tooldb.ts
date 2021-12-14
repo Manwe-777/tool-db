@@ -134,9 +134,17 @@ export default class ToolDb {
     key: string,
     message: PutMessage | CrdtMessage
   ) => {
+    // console.warn(`triggerKeyListener ${key}`);
     this._keyListeners.forEach((listener) => {
       if (listener?.key === key) {
-        listener.timeout = setTimeout(() => listener.fn(message), 100) as any;
+        // console.log(`TRIGGER OK`, message);
+        if (listener.timeout) {
+          clearTimeout(listener.timeout);
+        }
+        listener.timeout = setTimeout(
+          () => listener.fn(message),
+          this._options.triggerDebouce
+        ) as any;
       }
     });
   };
@@ -178,6 +186,7 @@ export default class ToolDb {
     db: "tooldb",
     peers: [],
     maxRetries: 5,
+    triggerDebouce: 100,
     wait: 2000,
     pow: 0,
     server: false,

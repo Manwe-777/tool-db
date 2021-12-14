@@ -6,6 +6,7 @@ export interface ToolDbOptions {
   debug: boolean;
   peers: string[];
   maxRetries: number;
+  triggerDebouce: number;
   wait: number;
   pow: number;
   server: boolean;

@@ -1,13 +1,13 @@
 export enum VerifyResult {
-  CustomVerificationFailed = -8,
-  InvalidData = -7,
-  InvalidVerification = -6,
-  InvalidTimestamp = -5,
-  PubKeyMismatch = -4,
-  NoProofOfWork = -3,
-  InvalidHashNonce = -2,
-  InvalidSignature = -1,
-  Verified = 1,
+  CustomVerificationFailed = "CustomVerificationFailed",
+  InvalidData = "InvalidData",
+  InvalidVerification = "InvalidVerification",
+  InvalidTimestamp = "InvalidTimestamp",
+  PubKeyMismatch = "PubKeyMismatch",
+  NoProofOfWork = "NoProofOfWork",
+  InvalidHashNonce = "InvalidHashNonce",
+  InvalidSignature = "InvalidSignature",
+  Verified = "Verified",
 }
 
 export interface VerificationData<T = any> {
