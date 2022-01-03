@@ -25,12 +25,12 @@ export default function toolDbClientOnMessage(
   if (typeof data === "string") {
     try {
       const message: ToolDbMessage = JSON.parse(data);
-      console.warn(
-        "Got message > ",
-        message.type,
-        (message as any).k || "",
-        message
-      );
+      // console.warn(
+      //   "Got message > ",
+      //   message.type,
+      //   (message as any).k || "",
+      //   message
+      // );
 
       // Check if we are listening for this ID
       if (message.id) {
