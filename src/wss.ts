@@ -181,23 +181,24 @@ export default class WSS {
   public send(msg: ToolDbMessage, crossServer = false) {
     const to = _.uniq([...msg.to, this.options.id]);
 
-    const filteredConns = to
-      .filter(
-        (clientId) => !to.includes(clientId) && clientId !== this.options.id
-      )
+    const filteredConns = Object.keys(this.clientSockets)
+      .filter((id) => !to.includes(id))
       .map((clientId) => this._clientSockets[clientId])
       .filter((conn) => conn && conn.readyState === conn.OPEN);
 
+    // console.log(">> Send message: ", msg, "to: ", to);
+
     // console.log(
-    //   "Send to ",
-    //   filteredConns.map((c) => c.peer.url),
-    //   "but not to",
-    //   filterUrls
+    //   "filteredConns ",
+    //   filteredConns.map((c) => c.toolDbId)
     // );
 
     filteredConns.forEach((conn) => {
       if ((crossServer && conn.isServer) || !crossServer) {
+        // console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
         conn.send(JSON.stringify({ ...msg, to }));
+      } else {
+        // console.log("Fitlered out!", conn.toolDbId, conn.origUrl);
       }
     });
   }
