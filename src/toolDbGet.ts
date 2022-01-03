@@ -69,7 +69,7 @@ export default function toolDbGet<T = any>(
     // Do get
     this.websockets.send({
       type: "get",
-      to: this.websockets.activePeers.map(getIpFromUrl),
+      to: [],
       key: finalKey,
       id: msgId,
     });

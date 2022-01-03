@@ -35,20 +35,24 @@ export type MessageType =
 export interface BaseMessage {
   type: MessageType;
   id: string; // unique random id for the message, to ack back
+  to: string[]; // who was this message sent to already
 }
 
 export interface PingMessage extends BaseMessage {
   type: "ping";
+  isServer: boolean;
+  clientId: string;
 }
 
 export interface PongMessage extends BaseMessage {
   type: "pong";
+  isServer: boolean;
+  clientId: string;
 }
 
 export interface QueryMessage extends BaseMessage {
   type: "query";
   key: string; // key we want to get
-  to: string[]; // who was this message sent to already
 }
 
 export interface QueryAckMessage extends BaseMessage {
@@ -64,17 +68,14 @@ export interface SubscribeMessage extends BaseMessage {
 export interface GetMessage extends BaseMessage {
   type: "get";
   key: string; // key we want to get
-  to: string[]; // who was this message sent to already
 }
 
 export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {
   type: "put";
-  to: string[]; // who was this message sent to already
 }
 
 export interface CrdtPutMessage extends BaseMessage, VerificationData<string> {
   type: "crdtPut";
-  to: string[]; // who was this message sent to already
 }
 
 export interface CrdtGetMessage extends BaseMessage {

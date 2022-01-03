@@ -1,9 +1,14 @@
+import _ from "lodash";
 import WebSocket from "ws";
 import { getIpFromUrl, PingMessage, textRandom, ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
 import { ToolDbOptions } from "./types/tooldb";
 
-export type ToolDbWebSocket = WebSocket & { toolDbId?: string };
+export type ToolDbWebSocket = WebSocket & {
+  toolDbId?: string;
+  isServer: boolean;
+  origUrl: string;
+};
 
 export default class WSS {
   // eslint-disable-next-line no-undef
@@ -103,6 +108,8 @@ export default class WSS {
         this._connections[url] = { tries: 0, peer: wss, defer: null };
       }
 
+      wss.origUrl = url;
+
       wss.onclose = (_error: any) => {
         if (this._activePeers.includes(url)) {
           this._activePeers.splice(this._activePeers.indexOf(url), 1);
@@ -137,7 +144,10 @@ export default class WSS {
         wss.send(
           JSON.stringify({
             type: "ping",
-            id: this.options.id,
+            clientId: this.options.id,
+            to: [this.options.id],
+            isServer: this.options.server,
+            id: textRandom(10),
           } as PingMessage)
         );
       };
@@ -156,17 +166,27 @@ export default class WSS {
     return undefined;
   };
 
-  public close(url: string): void {
-    const peer = this._connections[url];
-    peer.tries = this.options.maxRetries;
-    peer.peer.close();
+  public close(clientId: string): void {
+    const sock = this._clientSockets[clientId];
+    if (sock) {
+      if (sock.origUrl) {
+        const peer = this._connections[sock.origUrl];
+        peer.tries = this.options.maxRetries;
+      }
+      sock.close();
+      delete this._clientSockets[clientId];
+    }
   }
 
-  public send(msg: ToolDbMessage, filterUrls: string[] = []) {
-    const filteredConns = Object.keys(this._connections)
-      .filter((url) => !filterUrls.includes(getIpFromUrl(url)))
-      .map((url) => this._connections[url])
-      .filter((conn) => conn.peer && conn.peer.readyState === conn.peer.OPEN);
+  public send(msg: ToolDbMessage, crossServer = false) {
+    const to = _.uniq([...msg.to, this.options.id]);
+
+    const filteredConns = to
+      .filter(
+        (clientId) => !to.includes(clientId) && clientId !== this.options.id
+      )
+      .map((clientId) => this._clientSockets[clientId])
+      .filter((conn) => conn && conn.readyState === conn.OPEN);
 
     // console.log(
     //   "Send to ",
@@ -176,14 +196,17 @@ export default class WSS {
     // );
 
     filteredConns.forEach((conn) => {
-      conn.peer.send(JSON.stringify(msg));
+      if ((crossServer && conn.isServer) || !crossServer) {
+        conn.send(JSON.stringify({ ...msg, to }));
+      }
     });
   }
 
   public sendToClientId(clientId: string, msg: ToolDbMessage) {
     const socket = this._clientSockets[clientId];
     if (socket) {
-      socket.send(JSON.stringify(msg));
+      const to = _.uniq([...msg.to, this.options.id]);
+      socket.send(JSON.stringify({ ...msg, to }));
     }
   }
 

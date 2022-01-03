@@ -55,7 +55,7 @@ export default function toolDbQueryKeys(
     // Do get
     this.websockets.send({
       type: "query",
-      to: this.websockets.activePeers.map(getIpFromUrl),
+      to: [],
       key: finalKey,
       id: msgId,
     });

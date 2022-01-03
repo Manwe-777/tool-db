@@ -44,6 +44,7 @@ export default function toolDbSubscribe(
           type: "crdt",
           key: finalKey,
           id: textRandom(10),
+          to: [],
           doc: uint8ToBase64(savedDoc),
         };
         this.triggerKeyListener(finalKey, msg);
@@ -53,6 +54,7 @@ export default function toolDbSubscribe(
     this.websockets.send({
       type: "subscribe",
       key: finalKey,
+      to: [],
       id: msgId,
     });
 

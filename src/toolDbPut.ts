@@ -69,7 +69,7 @@ export default function toolDbPut<T = any>(
               const finalMessage: PutMessage = {
                 type: "put",
                 id: textRandom(10),
-                to: this.websockets.activePeers.map(getIpFromUrl),
+                to: [],
                 ...data,
               };
               this.websockets.send(finalMessage);

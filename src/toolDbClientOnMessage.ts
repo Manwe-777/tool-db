@@ -36,19 +36,22 @@ export default function toolDbClientOnMessage(
     }
 
     if (message.type === "ping") {
-      socket.toolDbId = message.id;
-      this.websockets._clientSockets[message.id] = socket;
-      socket.send(
-        JSON.stringify({
-          type: "pong",
-          id: this.options.id,
-        } as PongMessage)
-      );
+      socket.toolDbId = message.clientId;
+      this.websockets._clientSockets[message.clientId] = socket;
+      socket.isServer = message.isServer;
+      this.websockets.sendToClientId(socket.toolDbId || "", {
+        type: "pong",
+        isServer: this.options.server,
+        clientId: this.options.id,
+        to: [],
+        id: textRandom(10),
+      } as PongMessage);
     }
 
     if (message.type === "pong") {
-      socket.toolDbId = message.id;
-      this.websockets._clientSockets[message.id] = socket;
+      socket.toolDbId = message.clientId;
+      socket.isServer = message.isServer;
+      this.websockets._clientSockets[message.clientId] = socket;
       this.onConnect();
     }
 
@@ -76,7 +79,7 @@ export default function toolDbClientOnMessage(
         if (data) {
           try {
             const oldData = { ...JSON.parse(data), id: message.id };
-            socket.send(JSON.stringify(oldData));
+            this.websockets.sendToClientId(socket.toolDbId || "", oldData);
           } catch (e) {
             // do nothing
           }
@@ -91,10 +94,11 @@ export default function toolDbClientOnMessage(
           const msg: CrdtMessage = {
             type: "crdt",
             key: message.key,
+            to: [],
             id: textRandom(10),
             doc: uint8ToBase64(savedDoc),
           };
-          socket.send(JSON.stringify(msg));
+          this.websockets.sendToClientId(socket.toolDbId || "", msg);
         }
       });
     }
@@ -109,7 +113,7 @@ export default function toolDbClientOnMessage(
               ...JSON.parse(data),
               id: message.id,
             } as PutMessage;
-            socket.send(JSON.stringify(oldData));
+            this.websockets.sendToClientId(socket.toolDbId || "", oldData);
           } catch (e) {
             // socket.send(data);
             // do nothing
@@ -118,13 +122,7 @@ export default function toolDbClientOnMessage(
           if (this.options.debug) {
             console.log("Local key not found, relay", originalData);
           }
-          Object.keys(this.websockets.clientSockets).forEach((socketId) => {
-            if (`${socketId}` !== `${socket.toolDbId}`) {
-              const socket = this.websockets.clientSockets[socketId];
-              console.log("Sending to", socketId);
-              socket.send(originalData);
-            }
-          });
+          this.websockets.send(message);
         }
       });
     }
@@ -133,8 +131,8 @@ export default function toolDbClientOnMessage(
       toolDbVerificationWrapper.call(this, message).then((value) => {
         // console.log("Verification wrapper result: ", value, message.k);
         if (value === VerifyResult.Verified) {
-          // relay to other servers
-          this.websockets.send(message, message.to);
+          // relay to other servers !!!
+          this.websockets.send(message);
 
           this.store.get(message.k, (err, oldData: string) => {
             if (oldData) {
@@ -240,12 +238,14 @@ export default function toolDbClientOnMessage(
               type: "crdt",
               key: key,
               id: message.id,
+              to: [],
               doc: uint8ToBase64(savedDoc),
             };
             this.triggerKeyListener(key, crdtMessage);
 
             // relay to other servers
-            this.websockets.send(crdtMessage, message.to);
+            // !!!
+            this.websockets.send(crdtMessage);
           });
         } else {
           console.log("unverified message", value, message);
@@ -256,26 +256,24 @@ export default function toolDbClientOnMessage(
     if (message.type === "crdtGet") {
       this.loadCrdtDocument(message.key).then((currentDoc) => {
         const saved = Automerge.save(currentDoc || Automerge.init());
-        socket.send(
-          JSON.stringify({
-            type: "crdt",
-            id: message.id,
-            key: message.key,
-            doc: uint8ToBase64(saved),
-          } as CrdtMessage)
-        );
+        this.websockets.sendToClientId(socket.toolDbId || "", {
+          type: "crdt",
+          id: message.id,
+          key: message.key,
+          to: [],
+          doc: uint8ToBase64(saved),
+        } as CrdtMessage);
       });
     }
 
     if (message.type === "query") {
       this.store.query(message.key).then((keys) => {
-        socket.send(
-          JSON.stringify({
-            type: "queryAck",
-            id: message.id,
-            keys,
-          } as QueryAckMessage)
-        );
+        this.websockets.sendToClientId(socket.toolDbId || "", {
+          type: "queryAck",
+          id: message.id,
+          to: [],
+          keys,
+        } as QueryAckMessage);
       });
     }
 

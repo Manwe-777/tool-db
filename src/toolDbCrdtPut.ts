@@ -1,7 +1,6 @@
 import { BinaryChange } from "automerge";
 import { CrdtPutMessage, textRandom, uint8ToBase64, VerificationData } from ".";
 import ToolDb from "./tooldb";
-import getIpFromUrl from "./utils/getIpFromUrl";
 
 import proofOfWork from "./utils/proofOfWork";
 
@@ -64,7 +63,7 @@ export default function toolDbCrdtPut<T = any>(
               const finalMessage: CrdtPutMessage = {
                 type: "crdtPut",
                 id: textRandom(10),
-                to: this.websockets.activePeers.map(getIpFromUrl),
+                to: [],
                 ...data,
               };
               this.websockets.send(finalMessage);
