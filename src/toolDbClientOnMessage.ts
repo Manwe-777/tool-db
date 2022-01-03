@@ -138,7 +138,7 @@ export default function toolDbClientOnMessage(
           // console.log("Verification wrapper result: ", value, message.k);
           if (value === VerifyResult.Verified) {
             // relay to other servers !!!
-            this.websockets.send(message);
+            this.websockets.send(message, true);
 
             this.store.get(message.k, (err, oldData: string) => {
               if (oldData) {
@@ -251,7 +251,7 @@ export default function toolDbClientOnMessage(
 
               // relay to other servers
               // !!!
-              this.websockets.send(crdtMessage);
+              this.websockets.send(crdtMessage, true);
             });
           } else {
             console.log("unverified message", value, message);

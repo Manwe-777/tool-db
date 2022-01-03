@@ -178,7 +178,7 @@ export default class WSS {
     }
   }
 
-  public send(msg: ToolDbMessage, crossServer = false) {
+  public send(msg: ToolDbMessage, crossServerOnly = false) {
     const to = _.uniq([...msg.to, this.options.id]);
 
     const filteredConns = Object.keys(this.clientSockets)
@@ -194,7 +194,7 @@ export default class WSS {
     // );
 
     filteredConns.forEach((conn) => {
-      if ((crossServer && conn.isServer) || !crossServer) {
+      if ((crossServerOnly && conn.isServer) || !crossServerOnly) {
         // console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
         conn.send(JSON.stringify({ ...msg, to }));
       } else {
