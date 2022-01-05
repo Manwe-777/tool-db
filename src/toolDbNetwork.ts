@@ -10,7 +10,7 @@ export type ToolDbWebSocket = WebSocket & {
   origUrl: string;
 };
 
-export default class WSS {
+export default class toolDbNetwork {
   // eslint-disable-next-line no-undef
   private wnd =
     typeof window === "undefined" ? undefined : (window as any | undefined);
@@ -85,7 +85,7 @@ export default class WSS {
         });
 
         socket.on("message", (message: string) => {
-          this.tooldb.clientOnMessage(message, socket);
+          this.tooldb.clientOnMessage(message, socket.toolDbId || "");
         });
       });
     }
@@ -156,7 +156,7 @@ export default class WSS {
         if (!msg) {
           return;
         }
-        this.tooldb.clientOnMessage(msg.data.toString(), wss);
+        this.tooldb.clientOnMessage(msg.data.toString(), wss.tooldb || "");
       };
 
       return wss;

@@ -14,12 +14,11 @@ import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 
 import Automerge from "automerge";
 import base64ToBinaryChange from "./utils/base64ToBinaryChange";
-import { ToolDbWebSocket } from "./wss";
 
 export default function toolDbClientOnMessage(
   this: ToolDb,
   data: string,
-  socket: ToolDbWebSocket
+  remotePeerId: string
 ) {
   const originalData = data;
   if (typeof data === "string") {
@@ -42,10 +41,7 @@ export default function toolDbClientOnMessage(
       }
 
       if (message.type === "ping") {
-        socket.toolDbId = message.clientId;
-        this.websockets._clientSockets[message.clientId] = socket;
-        socket.isServer = message.isServer;
-        this.websockets.sendToClientId(socket.toolDbId || "", {
+        this.websockets.sendToClientId(remotePeerId || "", {
           type: "pong",
           isServer: this.options.server,
           clientId: this.options.id,
@@ -55,26 +51,20 @@ export default function toolDbClientOnMessage(
       }
 
       if (message.type === "pong") {
-        socket.toolDbId = message.clientId;
-        socket.isServer = message.isServer;
-        this.websockets._clientSockets[message.clientId] = socket;
         this.onConnect();
       }
 
       if (message.type === "subscribe") {
-        if (socket.toolDbId) {
-          const subId = socket.toolDbId + "-" + message.key;
+        if (remotePeerId) {
+          const subId = remotePeerId + "-" + message.key;
           if (!this.subscriptions.includes(subId)) {
             this.subscriptions.push(subId);
 
             this.addKeyListener(message.key, (msg) => {
-              if (
-                (msg.type === "put" || msg.type === "crdt") &&
-                socket.toolDbId
-              ) {
+              if ((msg.type === "put" || msg.type === "crdt") && remotePeerId) {
                 // We do not reply to the socket directly
                 // instead we use the client id, in case the socket reconnects
-                this.websockets.sendToClientId(socket.toolDbId, msg);
+                this.websockets.sendToClientId(remotePeerId, msg);
               }
             });
           }
@@ -85,7 +75,7 @@ export default function toolDbClientOnMessage(
           if (data) {
             try {
               const oldData = { ...JSON.parse(data), id: message.id };
-              this.websockets.sendToClientId(socket.toolDbId || "", oldData);
+              this.websockets.sendToClientId(remotePeerId || "", oldData);
             } catch (e) {
               // do nothing
             }
@@ -104,7 +94,7 @@ export default function toolDbClientOnMessage(
               id: textRandom(10),
               doc: uint8ToBase64(savedDoc),
             };
-            this.websockets.sendToClientId(socket.toolDbId || "", msg);
+            this.websockets.sendToClientId(remotePeerId || "", msg);
           }
         });
       }
@@ -119,7 +109,7 @@ export default function toolDbClientOnMessage(
                 ...JSON.parse(data),
                 id: message.id,
               } as PutMessage;
-              this.websockets.sendToClientId(socket.toolDbId || "", oldData);
+              this.websockets.sendToClientId(remotePeerId || "", oldData);
             } catch (e) {
               // socket.send(data);
               // do nothing
@@ -262,7 +252,7 @@ export default function toolDbClientOnMessage(
       if (message.type === "crdtGet") {
         this.loadCrdtDocument(message.key).then((currentDoc) => {
           const saved = Automerge.save(currentDoc || Automerge.init());
-          this.websockets.sendToClientId(socket.toolDbId || "", {
+          this.websockets.sendToClientId(remotePeerId || "", {
             type: "crdt",
             id: message.id,
             key: message.key,
@@ -274,7 +264,7 @@ export default function toolDbClientOnMessage(
 
       if (message.type === "query") {
         this.store.query(message.key).then((keys) => {
-          this.websockets.sendToClientId(socket.toolDbId || "", {
+          this.websockets.sendToClientId(remotePeerId || "", {
             type: "queryAck",
             id: message.id,
             to: [],

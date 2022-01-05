@@ -1,4 +1,4 @@
-import WSS from "./wss";
+import toolDbNetwork from "./toolDbNetwork";
 
 import { ToolDbOptions } from "./types/tooldb";
 
@@ -216,7 +216,7 @@ export default class ToolDb {
     this._options = { ...this._options, ...options };
 
     // These could be made to be customizable by setting the variables as public
-    this._websockets = new WSS(this);
+    this._websockets = new toolDbNetwork(this);
     this._store = typeof window === "undefined" ? leveldb() : indexedb();
   }
 }
