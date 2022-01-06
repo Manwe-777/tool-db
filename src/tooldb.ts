@@ -27,6 +27,15 @@ import { FreezeObject } from "automerge";
 import loadCrdtDocument from "./loadCrdtDocument";
 import toolDbKeysSignIn from "./toolDbKeysSignIn";
 import toolDbQueryKeys from "./toolDbQueryKeys";
+import handlePing from "./messageHandlers/handlePing";
+import handlePong from "./messageHandlers/handlePong";
+import handleCrdt from "./messageHandlers/handleCrdt";
+import handleCrdtGet from "./messageHandlers/handleCrdtGet";
+import handleCrdtPut from "./messageHandlers/handleCrdtPut";
+import handleGet from "./messageHandlers/handleGet";
+import handlePut from "./messageHandlers/handlePut";
+import handleQuery from "./messageHandlers/handleQuery";
+import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 export interface Listener {
   key: string;
@@ -86,6 +95,17 @@ export default class ToolDb {
   public signUp = toolDbSignUp;
 
   public verify = toolDbVerificationWrapper;
+
+  // All message handlers go here
+  public handlePing = handlePing;
+  public handlePong = handlePong;
+  public handleCrdt = handleCrdt;
+  public handleCrdtGet = handleCrdtGet;
+  public handleCrdtPut = handleCrdtPut;
+  public handleGet = handleGet;
+  public handlePut = handlePut;
+  public handleQuery = handleQuery;
+  public handleSubscribe = handleSubscribe;
 
   /**
    * id listeners listen for a specific message ID just once

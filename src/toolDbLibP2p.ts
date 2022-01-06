@@ -136,10 +136,16 @@ export default class toolDbLibP2p {
       await pipe(stream, async (source) => {
         for await (const message of source) {
           console.info(`${connection.remotePeer.toB58String()}: ${message}`);
-          this._tooldb.clientOnMessage(
-            `${message}`,
-            connection.remotePeer.toB58String()
-          );
+          try {
+            const msg = JSON.parse(`${message}`) as ToolDbMessage;
+            this._tooldb.clientOnMessage(
+              msg,
+              connection.remotePeer.toB58String()
+            );
+          } catch (e) {
+            console.log("Got message ERR > ", message);
+            console.log(e);
+          }
         }
       });
       // Replies are done on new streams, so let's close this stream so we don't leak it

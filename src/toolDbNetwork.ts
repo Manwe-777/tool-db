@@ -85,7 +85,24 @@ export default class toolDbNetwork {
         });
 
         socket.on("message", (message: string) => {
-          this.tooldb.clientOnMessage(message, socket.toolDbId || "");
+          try {
+            const parsedMessage = JSON.parse(message) as ToolDbMessage;
+            if (parsedMessage.type === "ping") {
+              socket.toolDbId = parsedMessage.clientId;
+              socket.isServer = parsedMessage.isServer;
+              this._clientSockets[parsedMessage.clientId] = socket;
+            }
+            if (parsedMessage.type === "pong") {
+              socket.toolDbId = parsedMessage.clientId;
+              socket.isServer = parsedMessage.isServer;
+              this._clientSockets[parsedMessage.clientId] = socket;
+            }
+
+            this.tooldb.clientOnMessage(parsedMessage, socket.toolDbId || "");
+          } catch (e) {
+            console.log("Got message ERR > ", message);
+            console.log(e);
+          }
         });
       });
     }
@@ -156,7 +173,7 @@ export default class toolDbNetwork {
         if (!msg) {
           return;
         }
-        this.tooldb.clientOnMessage(msg.data.toString(), wss.tooldb || "");
+        this.tooldb.clientOnMessage(msg.data as any, wss.tooldb || "");
       };
 
       return wss;

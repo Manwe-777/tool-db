@@ -10,12 +10,12 @@ export default function leveldb(dbName = "tooldb"): ToolDbStore {
     },
     put: (
       key: string,
-      data: any,
-      callback: (err: any | null, data?: any) => void
+      data: string,
+      callback: (err: any | null, data?: string) => void
     ) => {
       //
     },
-    get: (key: string, callback: (err: any | null, data?: any) => void) => {
+    get: (key: string, callback: (err: any | null, data?: string) => void) => {
       //
     },
     query: (key: string) => Promise.resolve<string[]>([]),

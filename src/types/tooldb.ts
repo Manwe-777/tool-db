@@ -24,14 +24,23 @@ export interface ToolDbStore {
   start: () => void;
   put: (
     key: string,
-    data: any,
-    callback: (err: any | null, data?: any) => void
+    data: string,
+    callback: (err: any | null, data?: string) => void
   ) => void;
-  get: (key: string, callback: (err: any | null, data?: any) => void) => void;
+  get: (
+    key: string,
+    callback: (err: any | null, data?: string) => void
+  ) => void;
   query: (key: string) => Promise<string[]>;
 }
 
 export type ToolDbStorageAdapter = (dbName?: string) => ToolDbStore;
+
+export type ToolDbMessageHandler = (
+  this: ToolDb,
+  message: ToolDbMessage,
+  remotePeerId: string
+) => void;
 
 export interface ToolDbOptions {
   db: string;
