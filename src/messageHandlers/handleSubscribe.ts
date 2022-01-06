@@ -21,7 +21,7 @@ export default function handleSubscribe(
         if ((msg.type === "put" || msg.type === "crdt") && remotePeerId) {
           // We do not reply to the socket directly
           // instead we use the client id, in case the socket reconnects
-          this.websockets.sendToClientId(remotePeerId, msg);
+          this.network.sendToClientId(remotePeerId, msg);
         }
       });
     }
@@ -32,7 +32,7 @@ export default function handleSubscribe(
     if (data) {
       try {
         const oldData = { ...JSON.parse(data), id: message.id };
-        this.websockets.sendToClientId(remotePeerId, oldData);
+        this.network.sendToClientId(remotePeerId, oldData);
       } catch (e) {
         // do nothing
       }
@@ -50,7 +50,7 @@ export default function handleSubscribe(
         id: textRandom(10),
         doc: uint8ToBase64(savedDoc),
       };
-      this.websockets.sendToClientId(remotePeerId, msg);
+      this.network.sendToClientId(remotePeerId, msg);
     }
   });
 }

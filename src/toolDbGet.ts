@@ -67,7 +67,7 @@ export default function toolDbGet<T = any>(
     });
 
     // Do get
-    this.websockets.sendToAll({
+    this.network.sendToAll({
       type: "get",
       to: [],
       key: finalKey,

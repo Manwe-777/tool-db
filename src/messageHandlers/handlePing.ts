@@ -5,7 +5,7 @@ export default function handlePing(
   message: PingMessage,
   remotePeerId: string
 ) {
-  this.websockets.sendToClientId(remotePeerId, {
+  this.network.sendToClientId(remotePeerId, {
     type: "pong",
     isServer: this.options.server,
     clientId: this.options.id,

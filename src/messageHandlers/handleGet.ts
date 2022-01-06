@@ -14,7 +14,7 @@ export default function handleGet(
           ...JSON.parse(data),
           id: message.id,
         } as PutMessage;
-        this.websockets.sendToClientId(remotePeerId, oldData);
+        this.network.sendToClientId(remotePeerId, oldData);
       } catch (e) {
         // socket.send(data);
         // do nothing
@@ -23,7 +23,7 @@ export default function handleGet(
       if (this.options.debug) {
         console.log("Local key not found, relay", JSON.stringify(message));
       }
-      this.websockets.sendToAll(message);
+      this.network.sendToAll(message);
     }
   });
 }

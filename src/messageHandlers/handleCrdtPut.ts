@@ -84,7 +84,7 @@ export default function handleCrdtPut(
 
         // relay to other servers
         // !!!
-        this.websockets.sendToAll(crdtMessage, true);
+        this.network.sendToAll(crdtMessage, true);
       });
     } else {
       console.log("unverified message", value, message);

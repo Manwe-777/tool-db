@@ -8,7 +8,7 @@ export default function handleCrdtGet(
 ) {
   this.loadCrdtDocument(message.key).then((currentDoc) => {
     const saved = Automerge.save(currentDoc || Automerge.init());
-    this.websockets.sendToClientId(remotePeerId, {
+    this.network.sendToClientId(remotePeerId, {
       type: "crdt",
       id: message.id,
       key: message.key,

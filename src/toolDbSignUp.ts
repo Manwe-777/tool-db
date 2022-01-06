@@ -87,7 +87,7 @@ export default async function toolDbSignUp(
                                     ...signupMessage,
                                   } as PutMessage;
 
-                                  this.websockets.sendToAll(finalMsg);
+                                  this.network.sendToAll(finalMsg);
                                   resolve(finalMsg);
                                 });
                               })

@@ -57,4 +57,16 @@ export { default as loadKeysComb } from "./utils/crypto/loadKeysComb";
 export { default as saveKeysComb } from "./utils/crypto/saveKeysComb";
 export { default as verifyData } from "./utils/crypto/verifyData";
 
+export { default as ToolDbLibP2p } from "./toolDbLibP2p";
+export { default as toolDbNetwork } from "./toolDbNetwork";
+export { default as handleCrdt } from "./messageHandlers/handleCrdt";
+export { default as handleCrdtGet } from "./messageHandlers/handleCrdtGet";
+export { default as handleCrdtPut } from "./messageHandlers/handleCrdtPut";
+export { default as handleGet } from "./messageHandlers/handleGet";
+export { default as handlePing } from "./messageHandlers/handlePing";
+export { default as handlePong } from "./messageHandlers/handlePong";
+export { default as handlePut } from "./messageHandlers/handlePut";
+export { default as handleQuery } from "./messageHandlers/handleQuery";
+export { default as handleSubscribe } from "./messageHandlers/handleSubscribe";
+
 export { default as ToolDb } from "./tooldb";

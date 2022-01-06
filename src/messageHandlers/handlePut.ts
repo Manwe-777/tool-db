@@ -10,7 +10,7 @@ export default function handlePut(
     // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
       // relay to other servers !!!
-      this.websockets.sendToAll(message, true);
+      this.network.sendToAll(message, true);
 
       this.store.get(message.k, (err, oldData?: string) => {
         if (oldData) {

@@ -49,7 +49,7 @@ interface Verificator<T> {
 }
 
 export default class ToolDb {
-  private _websockets;
+  private _network;
   private _store;
 
   private _documents: Record<string, FreezeObject<any>> = {};
@@ -222,8 +222,8 @@ export default class ToolDb {
     return this._options;
   }
 
-  get websockets() {
-    return this._websockets;
+  get network() {
+    return this._network;
   }
 
   get store() {
@@ -238,7 +238,7 @@ export default class ToolDb {
     this._options = { ...this._options, ...options };
 
     // These could be made to be customizable by setting the variables as public
-    this._websockets = new this._options.networkAdapter(this);
+    this._network = new this._options.networkAdapter(this);
     this._store = this._options.storageAdapter();
   }
 }

@@ -6,7 +6,7 @@ export default function handleQuery(
   remotePeerId: string
 ) {
   this.store.query(message.key).then((keys) => {
-    this.websockets.sendToClientId(remotePeerId, {
+    this.network.sendToClientId(remotePeerId, {
       type: "queryAck",
       id: message.id,
       to: [],
