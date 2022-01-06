@@ -51,7 +51,7 @@ export default function toolDbSubscribe(
       }
     });
 
-    this.websockets.send({
+    this.websockets.sendToAll({
       type: "subscribe",
       key: finalKey,
       to: [],

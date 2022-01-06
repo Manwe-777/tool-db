@@ -72,7 +72,7 @@ export default function toolDbPut<T = any>(
                 to: [],
                 ...data,
               };
-              this.websockets.send(finalMessage);
+              this.websockets.sendToAll(finalMessage);
 
               resolve(finalMessage);
             })

@@ -1,23 +1,29 @@
-// @ts-nocheck
+import { ToolDbStore } from "../types/tooldb";
 
-export default function indexedb(dbName = "tooldb"): {
-  start: () => void;
-  put: (
-    key: string,
-    data: any,
-    cb: (err: any | null, data?: any) => void
-  ) => void;
-  get: (key: string, cb: (err: any | null, data?: any) => void) => void;
-  query: (key: string) => Promise<string[]>;
-} {
-  let db = null;
+export default function indexedb(dbName = "tooldb"): ToolDbStore {
+  let db: any = null;
 
-  const store = {};
+  const store = {
+    start: () => {
+      //
+    },
+    put: (
+      key: string,
+      data: any,
+      callback: (err: any | null, data?: any) => void
+    ) => {
+      //
+    },
+    get: (key: string, callback: (err: any | null, data?: any) => void) => {
+      //
+    },
+    query: (key: string) => Promise.resolve<string[]>([]),
+  };
 
   store.start = function () {
     // console.warn("store start");
     const open = indexedDB.open(dbName, 1);
-    open.onupgradeneeded = function (eve) {
+    open.onupgradeneeded = function (eve: any) {
       eve.target.result.createObjectStore(dbName);
     };
     open.onsuccess = function () {
@@ -50,13 +56,13 @@ export default function indexedb(dbName = "tooldb"): {
       req.onabort =
         obj.onabort =
         tx.onabort =
-          (eve) => {
+          (eve: any) => {
             cb(eve || "put.tx.abort");
           };
       req.onerror =
         obj.onerror =
         tx.onerror =
-          (eve) => {
+          (eve: any) => {
             cb(eve || "put.tx.error");
           };
     }
@@ -76,15 +82,15 @@ export default function indexedb(dbName = "tooldb"): {
     req.onsuccess = function () {
       cb(false, req.result);
     };
-    req.onabort = function (eve) {
+    req.onabort = function (eve: any) {
       cb(eve || 4);
     };
-    req.onerror = function (eve) {
+    req.onerror = function (eve: any) {
       cb(eve || 5);
     };
   };
 
-  store.query = function (key, cb) {
+  store.query = function (key: string) {
     return new Promise((resolve, reject) => {
       try {
         const keyRange = IDBKeyRange.bound(key, key + "|", true, true);
@@ -92,8 +98,8 @@ export default function indexedb(dbName = "tooldb"): {
         const tx = db.transaction([dbName], "readonly");
         const obj = tx.objectStore(dbName);
 
-        const keysArray = [];
-        obj.openCursor(keyRange).onsuccess = function (event) {
+        const keysArray: string[] = [];
+        obj.openCursor(keyRange).onsuccess = function (event: any) {
           const cursor = event.target.result;
           if (cursor) {
             keysArray.push(event.target.result.key);

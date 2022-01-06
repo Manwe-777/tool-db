@@ -193,6 +193,8 @@ export default class ToolDb {
     port: 8080,
     debug: false,
     httpServer: undefined,
+    networkAdapter: toolDbNetwork,
+    storageAdapter: typeof window === "undefined" ? leveldb : indexedb,
     id: sha1(`${textRandom(100)}-${new Date().getTime()}`),
   };
 
@@ -216,7 +218,7 @@ export default class ToolDb {
     this._options = { ...this._options, ...options };
 
     // These could be made to be customizable by setting the variables as public
-    this._websockets = new toolDbNetwork(this);
-    this._store = typeof window === "undefined" ? leveldb() : indexedb();
+    this._websockets = new this._options.networkAdapter(this);
+    this._store = this._options.storageAdapter();
   }
 }

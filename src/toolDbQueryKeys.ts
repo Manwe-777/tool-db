@@ -53,7 +53,7 @@ export default function toolDbQueryKeys(
     });
 
     // Do get
-    this.websockets.send({
+    this.websockets.sendToAll({
       type: "query",
       to: [],
       key: finalKey,

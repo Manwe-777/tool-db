@@ -1,18 +1,25 @@
-// @ts-nocheck
-export default function leveldb(dbName = "tooldb"): {
-  start: () => void;
-  put: (
-    key: string,
-    data: any,
-    cb: (err: any | null, data?: any) => void
-  ) => void;
-  get: (key: string, cb: (err: any | null, data?: any) => void) => void;
-  query: (key: string) => Promise<string[]>;
-} {
-  const level = require("level");
-  let db = null;
+import { ToolDbStore } from "../types/tooldb";
 
-  const store = {};
+export default function leveldb(dbName = "tooldb"): ToolDbStore {
+  const level = require("level");
+  let db: any = null;
+
+  const store = {
+    start: () => {
+      //
+    },
+    put: (
+      key: string,
+      data: any,
+      callback: (err: any | null, data?: any) => void
+    ) => {
+      //
+    },
+    get: (key: string, callback: (err: any | null, data?: any) => void) => {
+      //
+    },
+    query: (key: string) => Promise.resolve<string[]>([]),
+  };
 
   store.start = function () {
     db = level(dbName);
@@ -20,7 +27,7 @@ export default function leveldb(dbName = "tooldb"): {
   store.start();
 
   store.put = function (key, data, cb) {
-    db.put(key, data, function (err) {
+    db.put(key, data, function (err: any) {
       if (err) {
         if (cb) cb(err);
       } else {
@@ -37,7 +44,7 @@ export default function leveldb(dbName = "tooldb"): {
       }, 9);
       return;
     }
-    db.get(key, function (err, value) {
+    db.get(key, function (err: any, value: any) {
       if (err) {
         if (cb) cb(err);
       } else {
@@ -50,7 +57,7 @@ export default function leveldb(dbName = "tooldb"): {
     console.log("QUERY", key);
     return new Promise((resolve, reject) => {
       try {
-        const array = [];
+        const array: string[] = [];
         db.createKeyStream({
           gte: key,
           lte: key + "\uffff",
@@ -60,7 +67,7 @@ export default function leveldb(dbName = "tooldb"): {
             array.push(data);
             // }
           })
-          .on("error", function (err) {
+          .on("error", function (err: any) {
             reject(err);
           })
           .on("close", function () {

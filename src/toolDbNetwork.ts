@@ -178,7 +178,7 @@ export default class toolDbNetwork {
     }
   }
 
-  public send(msg: ToolDbMessage, crossServerOnly = false) {
+  public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
     const to = _.uniq([...msg.to, this.options.id]);
 
     const filteredConns = Object.keys(this.clientSockets)

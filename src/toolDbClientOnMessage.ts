@@ -24,12 +24,12 @@ export default function toolDbClientOnMessage(
   if (typeof data === "string") {
     try {
       const message: ToolDbMessage = JSON.parse(data);
-      // console.warn(
-      //   "Got message > ",
-      //   message.type,
-      //   (message as any).k || "",
-      //   message
-      // );
+      console.warn(
+        `Got message > ${remotePeerId}`,
+        message.type,
+        (message as any).k || "",
+        message
+      );
 
       // Check if we are listening for this ID
       if (message.id) {
@@ -46,7 +46,7 @@ export default function toolDbClientOnMessage(
           isServer: this.options.server,
           clientId: this.options.id,
           to: [],
-          id: textRandom(10),
+          id: message.id,
         } as PongMessage);
       }
 
@@ -118,7 +118,7 @@ export default function toolDbClientOnMessage(
             if (this.options.debug) {
               console.log("Local key not found, relay", originalData);
             }
-            this.websockets.send(message);
+            this.websockets.sendToAll(message);
           }
         });
       }
@@ -128,7 +128,7 @@ export default function toolDbClientOnMessage(
           // console.log("Verification wrapper result: ", value, message.k);
           if (value === VerifyResult.Verified) {
             // relay to other servers !!!
-            this.websockets.send(message, true);
+            this.websockets.sendToAll(message, true);
 
             this.store.get(message.k, (err, oldData: string) => {
               if (oldData) {
@@ -241,7 +241,7 @@ export default function toolDbClientOnMessage(
 
               // relay to other servers
               // !!!
-              this.websockets.send(crdtMessage, true);
+              this.websockets.sendToAll(crdtMessage, true);
             });
           } else {
             console.log("unverified message", value, message);

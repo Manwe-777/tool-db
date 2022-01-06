@@ -66,7 +66,7 @@ export default function toolDbCrdtPut<T = any>(
                 to: [],
                 ...data,
               };
-              this.websockets.send(finalMessage);
+              this.websockets.sendToAll(finalMessage);
               resolve(finalMessage);
             })
             .catch(reject);
