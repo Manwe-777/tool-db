@@ -20,6 +20,15 @@ export class ToolDbNetworkAdapter {
   }
 }
 
+export interface Peer {
+  topic: string;
+  timestamp: number;
+  host: string;
+  port: number;
+  pubkey: string;
+  sig: string;
+}
+
 export interface ToolDbStore {
   start: () => void;
   put: (
@@ -45,15 +54,19 @@ export type ToolDbMessageHandler = (
 export interface ToolDbOptions {
   db: string;
   debug: boolean;
-  peers: string[];
+  peers: { host: string; port: number }[];
   maxRetries: number;
   triggerDebouce: number;
   wait: number;
   pow: number;
   server: boolean;
   httpServer: HTTPServer | HTTPSServer | undefined;
+  host: string;
   port: number;
   networkAdapter: typeof ToolDbNetworkAdapter;
   storageAdapter: ToolDbStorageAdapter;
   id: string;
+  topic: string;
+  publicKey: CryptoKey | undefined;
+  privateKey: CryptoKey | undefined;
 }

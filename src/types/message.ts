@@ -1,3 +1,5 @@
+import { Peer } from "./tooldb";
+
 export enum VerifyResult {
   CustomVerificationFailed = "CustomVerificationFailed",
   InvalidData = "InvalidData",
@@ -30,12 +32,24 @@ export type MessageType =
   | "put"
   | "crdtPut"
   | "crdtGet"
-  | "crdt";
+  | "crdt"
+  | "join"
+  | "servers";
 
 export interface BaseMessage {
   type: MessageType;
   id: string; // unique random id for the message, to ack back
   to: string[]; // who was this message sent to already
+}
+
+export interface JoinMessage extends BaseMessage {
+  type: "join";
+  peer: Peer;
+}
+
+export interface ServersMessage extends BaseMessage {
+  type: "servers";
+  servers: Peer[];
 }
 
 export interface PingMessage extends BaseMessage {
@@ -90,6 +104,8 @@ export interface CrdtMessage extends BaseMessage {
 }
 
 export type ToolDbMessage =
+  | JoinMessage
+  | ServersMessage
   | PingMessage
   | PongMessage
   | QueryMessage

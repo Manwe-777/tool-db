@@ -22,8 +22,8 @@ export default function toolDbClientOnMessage(
     }
   }
 
-  if (!message || !message.type) {
-    console.warn("Message is invalid!", message);
+  if (message === undefined || message.type === undefined) {
+    console.warn("Message is invalid!", message, typeof message);
     return;
   }
 

@@ -1,6 +1,6 @@
 import toolDbNetwork from "./toolDbNetwork";
 
-import { ToolDbOptions } from "./types/tooldb";
+import { Peer, ToolDbOptions } from "./types/tooldb";
 
 import toolDbGet from "./toolDbGet";
 import toolDbPut from "./toolDbPut";
@@ -15,6 +15,9 @@ import indexedb from "./utils/indexedb";
 import leveldb from "./utils/leveldb";
 import {
   CrdtMessage,
+  encodeKeyString,
+  exportKey,
+  generateKeyPair,
   PutMessage,
   sha1,
   textRandom,
@@ -51,6 +54,7 @@ interface Verificator<T> {
 export default class ToolDb {
   private _network;
   private _store;
+  private _peers: Peer[] = [];
 
   private _documents: Record<string, FreezeObject<any>> = {};
 
@@ -163,7 +167,7 @@ export default class ToolDb {
         }
         listener.timeout = setTimeout(
           () => listener.fn(message),
-          this._options.triggerDebouce
+          this.options.triggerDebouce
         ) as any;
       }
     });
@@ -210,12 +214,16 @@ export default class ToolDb {
     wait: 2000,
     pow: 0,
     server: false,
+    host: "127.0.0.1",
     port: 8080,
     debug: false,
     httpServer: undefined,
     networkAdapter: toolDbNetwork,
     storageAdapter: typeof window === "undefined" ? leveldb : indexedb,
     id: sha1(`${textRandom(100)}-${new Date().getTime()}`),
+    topic: "tool-db-default",
+    publicKey: undefined,
+    privateKey: undefined,
   };
 
   get options() {
@@ -224,6 +232,10 @@ export default class ToolDb {
 
   get network() {
     return this._network;
+  }
+
+  get peers() {
+    return this._peers;
   }
 
   get store() {
@@ -235,10 +247,23 @@ export default class ToolDb {
   }
 
   constructor(options: Partial<ToolDbOptions> = {}) {
-    this._options = { ...this._options, ...options };
+    this._options = { ...this.options, ...options };
+
+    generateKeyPair("ECDSA", false)
+      .then((key) => {
+        if (key.publicKey && key.privateKey) {
+          this._options.publicKey = key.publicKey;
+          this._options.privateKey = key.privateKey;
+
+          exportKey("spki", key.publicKey).then((skpub) => {
+            this._options.id = encodeKeyString(skpub as ArrayBuffer);
+          });
+        }
+      })
+      .catch(console.warn);
 
     // These could be made to be customizable by setting the variables as public
-    this._network = new this._options.networkAdapter(this);
-    this._store = this._options.storageAdapter();
+    this._network = new this.options.networkAdapter(this);
+    this._store = this.options.storageAdapter();
   }
 }

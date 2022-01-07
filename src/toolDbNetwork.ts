@@ -2,13 +2,22 @@ import _ from "lodash";
 import WebSocket from "ws";
 import { getIpFromUrl, PingMessage, textRandom, ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
-import { ToolDbOptions } from "./types/tooldb";
+import { Peer, ToolDbOptions } from "./types/tooldb";
 
 export type ToolDbWebSocket = WebSocket & {
   toolDbId?: string;
   isServer: boolean;
   origUrl: string;
 };
+
+interface ConnectionAwaiting {
+  socket: WebSocket;
+  tries: number;
+  defer: null | number;
+  host: string;
+  port: number;
+  id: string;
+}
 
 export default class toolDbNetwork {
   // eslint-disable-next-line no-undef
@@ -38,11 +47,14 @@ export default class toolDbNetwork {
     return Object.keys(this._connections).map(getIpFromUrl);
   }
 
-  private _activePeers: string[] = [];
+  private _awaitingConnections: ConnectionAwaiting[] = [];
 
-  get activePeers() {
-    return this._activePeers;
-  }
+  private removeFromAwaiting = (id: string) => {
+    const index = this._awaitingConnections.findIndex((c) => c.id === id);
+    if (index !== -1) {
+      this._awaitingConnections.slice(index, 1);
+    }
+  };
 
   public _clientSockets: Record<string, ToolDbWebSocket> = {};
 
@@ -54,11 +66,8 @@ export default class toolDbNetwork {
     this._tooldb = db;
     this.options = db.options;
 
-    this.options.peers.forEach((url) => {
-      const newSocket = this.open(url);
-      if (newSocket) {
-        this._connections[url] = { tries: 0, peer: newSocket, defer: null };
-      }
+    this.options.peers.forEach((p) => {
+      this.connectTo(p.host, p.port);
     });
 
     if (this.options.server) {
@@ -108,54 +117,58 @@ export default class toolDbNetwork {
     }
   }
 
-  public connectTo(url: string) {
-    this.open(url);
-  }
-
   /**
    * Open a connection to a federated server
    * @param url URL of the server (including port)
    * @returns websocket
    */
-  public open = (url: string): ToolDbWebSocket | undefined => {
+  public connectTo = (
+    host: string,
+    port: number,
+    connectionId?: string
+  ): ToolDbWebSocket | undefined => {
     try {
-      const wsUrl = url.replace(/^http/, "ws");
+      const wsUrl =
+        port === 443 ? "wss://" + host : "ws://" + host + ":" + port;
       const wss = new this._wss(wsUrl);
-      if (!this._connections[url]) {
-        this._connections[url] = { tries: 0, peer: wss, defer: null };
+      const connId = textRandom(10);
+      wss.connId = connectionId || connId;
+
+      const previousConnection = this._awaitingConnections.filter(
+        (c) => c.id === connectionId
+      )[0];
+      if (connectionId && previousConnection) {
+        previousConnection.socket = wss;
+      } else {
+        this._awaitingConnections.push({
+          id: connId,
+          socket: wss,
+          tries: 0,
+          defer: null,
+          host: host,
+          port: port,
+        });
       }
 
-      wss.origUrl = url;
-
       wss.onclose = (_error: any) => {
-        if (this._activePeers.includes(url)) {
-          this._activePeers.splice(this._activePeers.indexOf(url), 1);
-        }
         if (this.options.debug) {
           console.log(_error.error);
         }
-        this.reconnect(url);
+        this.reconnect(connId);
       };
 
       wss.onerror = (_error: any) => {
-        if (this._activePeers.includes(url)) {
-          this._activePeers.splice(this._activePeers.indexOf(url), 1);
-        }
         if (this.options.debug) {
           console.log(_error.error);
         }
         if (_error?.error?.code !== "ETIMEDOUT") {
-          this.reconnect(url);
+          this.reconnect(connId);
         }
       };
 
       wss.onopen = () => {
-        if (!this._activePeers.includes(url)) {
-          this._activePeers.push(url);
-        }
-        console.warn("Connected to " + url + " sucessfully.");
-
-        this._connections[url].peer = wss;
+        this.removeFromAwaiting(connId);
+        console.warn("Connected to " + host + ": " + port + " sucessfully.");
 
         // hi peer
         wss.send(
@@ -173,7 +186,25 @@ export default class toolDbNetwork {
         if (!msg) {
           return;
         }
-        this.tooldb.clientOnMessage(msg.data as any, wss.tooldb || "");
+
+        try {
+          const parsedMessage = JSON.parse(msg.data as string) as ToolDbMessage;
+          if (parsedMessage.type === "ping") {
+            wss.toolDbId = parsedMessage.clientId;
+            wss.isServer = parsedMessage.isServer;
+            this._clientSockets[parsedMessage.clientId] = wss;
+          }
+          if (parsedMessage.type === "pong") {
+            wss.toolDbId = parsedMessage.clientId;
+            wss.isServer = parsedMessage.isServer;
+            this._clientSockets[parsedMessage.clientId] = wss;
+          }
+
+          this.tooldb.clientOnMessage(parsedMessage, wss.toolDbId);
+        } catch (e) {
+          console.log("Got message ERR > ", msg);
+          console.log(e);
+        }
       };
 
       return wss;
@@ -228,36 +259,46 @@ export default class toolDbNetwork {
     }
   }
 
-  private reconnect = (url: string) => {
-    const peer = this._connections[url];
-    if (peer) {
-      if (peer.defer) {
-        clearTimeout(peer.defer);
+  private reconnect = (connectionId: string) => {
+    const connection = this._awaitingConnections.filter(
+      (c) => c.id === connectionId
+    )[0];
+    if (connection) {
+      if (connection.defer) {
+        clearTimeout(connection.defer);
       }
 
-      if (peer.tries < this.options.maxRetries) {
+      if (connection.tries < this.options.maxRetries) {
         const defer = () => {
-          peer.tries += 1;
-          console.warn("Connection to " + url + " retry.");
-          this.open(url);
+          connection.tries += 1;
+          console.warn(
+            "Connection to " +
+              connection.host +
+              ":" +
+              connection.port +
+              " retry."
+          );
+          this.connectTo(connection.host, connection.port, connectionId);
         };
 
-        peer.defer = setTimeout(defer, this.options.wait) as any;
+        connection.defer = setTimeout(defer, this.options.wait) as any;
       } else {
-        console.warn("Connection attempts to " + url + " exceeded.");
-        if (this._activePeers.includes(url)) {
-          this._activePeers.splice(this._activePeers.indexOf(url), 1);
-        }
-        delete this._connections[url];
+        console.warn(
+          "Connection attempts to " +
+            connection.host +
+            ":" +
+            connection.port +
+            " exceeded."
+        );
+        this.removeFromAwaiting(connectionId);
 
         // There are no more peers to connect!
         if (Object.keys(this._connections).length === 0) {
           this._tooldb.onDisconnect();
         }
       }
-    } else {
-      // no peer at url?
     }
+    // else , attempting to reconnect to a missing peer?
   };
 
   get tooldb() {
