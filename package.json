@@ -17,17 +17,12 @@
   "author": "Manuel Etchegaray",
   "license": "ISC",
   "dependencies": {
-    "@chainsafe/libp2p-noise": "^5.0.0",
     "@peculiar/webcrypto": "^1.1.7",
     "automerge": "^1.0.1-preview.4",
     "babel": "^6.23.0",
     "buffer": "^6.0.3",
     "crypto": "^1.0.1",
     "level": "^7.0.0",
-    "libp2p": "^0.35.8",
-    "libp2p-mplex": "^0.10.5",
-    "libp2p-webrtc-star": "^0.25.0",
-    "libp2p-websockets": "^0.16.2",
     "lodash": "^4.17.21",
     "ws": "^7.5.5"
   },
