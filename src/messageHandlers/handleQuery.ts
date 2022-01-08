@@ -13,4 +13,8 @@ export default function handleQuery(
       keys,
     } as QueryAckMessage);
   });
+
+  if (this.options.server) {
+    this.network.sendToAll(message, true);
+  }
 }
