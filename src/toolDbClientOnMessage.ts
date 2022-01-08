@@ -10,9 +10,9 @@ export default function toolDbClientOnMessage(
     this.processedIds[message.type] = [];
   }
   if (this.processedIds[message.type].includes(message.id)) {
-    console.warn(
-      `Already processed this message > ${message.type} from ${remotePeerId}`
-    );
+    // console.warn(
+    //   `Already processed this message > ${message.type} from ${remotePeerId}`
+    // );
     return;
   }
 
@@ -23,7 +23,7 @@ export default function toolDbClientOnMessage(
   //   (message as any).k || ""
   //   // message
   // );
-  console.warn(`Got message ${message.type} from ${remotePeerId}`);
+  // console.warn(`Got message ${message.type} from ${remotePeerId}`);
 
   // Check if we are listening for this ID
   if (message.id) {
