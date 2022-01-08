@@ -66,6 +66,12 @@ export default class ToolDb {
     return this._subscriptions;
   }
 
+  private _processedIds: Record<string, string[]> = {};
+
+  get processedIds() {
+    return this._processedIds;
+  }
+
   public subscribeData = toolDbSubscribe;
 
   // Emitted when there are no more server peers connected to
@@ -257,6 +263,9 @@ export default class ToolDb {
 
           exportKey("spki", key.publicKey).then((skpub) => {
             this._options.id = encodeKeyString(skpub as ArrayBuffer);
+            if (this._options.debug) {
+              console.log("My ID is:", this._options.id);
+            }
           });
         }
       })

@@ -6,12 +6,24 @@ export default function toolDbClientOnMessage(
   message: ToolDbMessage,
   remotePeerId: string
 ) {
+  if (!this.processedIds[message.type]) {
+    this.processedIds[message.type] = [];
+  }
+  if (this.processedIds[message.type].includes(message.id)) {
+    console.warn(
+      `Already processed this message > ${message.type} from ${remotePeerId}`
+    );
+    return;
+  }
+
+  this.processedIds[message.type].push(message.id);
   // console.warn(
   //   `Got message > ${remotePeerId}`,
   //   message.type,
-  //   (message as any).k || "",
-  //   message
+  //   (message as any).k || ""
+  //   // message
   // );
+  console.warn(`Got message ${message.type} from ${remotePeerId}`);
 
   // Check if we are listening for this ID
   if (message.id) {

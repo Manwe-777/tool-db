@@ -226,15 +226,21 @@ export default class toolDbNetwork {
     }
   }
 
-  public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
-    const to = _.uniq([...msg.to, this.options.id]);
+  public sendToAll(
+    msg: ToolDbMessage,
+    crossServerOnly = false,
+    isRelay = false
+  ) {
+    const to = isRelay
+      ? _.uniq([...msg.to])
+      : _.uniq([...msg.to, this.options.id]);
 
     const filteredConns = Object.keys(this.clientSockets)
       .filter((id) => !to.includes(id))
       .map((clientId) => this._clientSockets[clientId])
       .filter((conn) => conn && conn.readyState === conn.OPEN);
 
-    // console.log(">> Send message: ", msg, "to: ", to);
+    // console.log(">> Send message: ", msg.type, "to: ", to);
 
     // console.log(
     //   "filteredConns ",
@@ -243,7 +249,7 @@ export default class toolDbNetwork {
 
     filteredConns.forEach((conn) => {
       if ((crossServerOnly && conn.isServer) || !crossServerOnly) {
-        // console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
+        console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
         conn.send(JSON.stringify({ ...msg, to }));
       } else {
         // console.log("Fitlered out!", conn.toolDbId, conn.origUrl);

@@ -11,7 +11,11 @@ export class ToolDbNetworkAdapter {
     //
   }
 
-  public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
+  public sendToAll(
+    msg: ToolDbMessage,
+    crossServerOnly = false,
+    isRelay = false
+  ) {
     //
   }
 
