@@ -67,6 +67,7 @@ export interface ToolDbOptions {
   httpServer: HTTPServer | HTTPSServer | undefined;
   host: string;
   port: number;
+  storageName: string;
   networkAdapter: typeof ToolDbNetworkAdapter;
   storageAdapter: ToolDbStorageAdapter;
   id: string;

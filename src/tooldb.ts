@@ -225,6 +225,7 @@ export default class ToolDb {
     debug: false,
     httpServer: undefined,
     networkAdapter: toolDbNetwork,
+    storageName: "tooldb",
     storageAdapter: typeof window === "undefined" ? leveldb : indexedb,
     id: sha1(`${textRandom(100)}-${new Date().getTime()}`),
     topic: "tool-db-default",
@@ -273,6 +274,6 @@ export default class ToolDb {
 
     // These could be made to be customizable by setting the variables as public
     this._network = new this.options.networkAdapter(this);
-    this._store = this.options.storageAdapter();
+    this._store = this.options.storageAdapter(this.options.storageName);
   }
 }

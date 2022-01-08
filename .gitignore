@@ -1,3 +1,7 @@
 node_modules
 coverage
 dist
+test-alice
+test-bob
+test-node-a
+test-node-b
