@@ -12,7 +12,7 @@ This setup IS NOT a requirement! It is just what I think is the best and most re
 Since anyone can join a federated server swarm to help growing the network we use cryptography (basic public and private key authenthication and signature validation) to ensure all messages are coming from the real authors of the data that they intend to modify; this way by joining a swarm all peers in it can help validate without even having full data; even a new server peer can help, because all information is stored on each message and we dont rely on any centralized database to fetch users data.
 
 Please check the [chain-swarm](https://github.com/Manuel-777/chain-swarm) repository to see how a federated server swarm would look like, Tool Db only handles the connection and messaging between peers, but it does not have any logic for peer discovery.
-We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT solution you want! Theoretically, even WebRTC between browsers would work.
+We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT solution you want! even WebRTC between browsers could work.
 
 ## Base usage
 Connect to the selected toolDb peers;
@@ -21,26 +21,65 @@ const client = new ToolDb(options);
 ```
 
 These are the options you can pass to the constructor:
+
 ```
 {
   // Database name to use
   db: string;
+
   // Show debug console logs
   debug: boolean;
-  // List of peers to connect to (full URL with port like "http://127.0.0.1:9000")
-  peers: string[];
+
+  // Array of peers to connect to, each one in the form of { host: "127.0.0.1", port: 9000 }
+  peers: { host: "127.0.0.1", port: 9000 }[];
+
   // Max number of tries when a connection fails
   maxRetries: number;
+
+  // How long to wait (max) for a debounced key listener recv
+  triggerDebouce: number;
+
   // How long to wait between retries
   wait: number;
+
   // If you want to force a Proof of Work on all messages, set how much (zero is no POW)
   pow: number;
+
   // Weter we are a server or not
   server: boolean;
+
+  // Our hostname (server only)
+  host: string
+
   // Port to listen incoming connections (server only)
   port: number;
+
+  // A server instance like Express (server only)
+  httpServer: HTTPServer | HTTPSServer | undefined;
+
+  // Our storage namespace (default is "tooldb")
+  storageName: string;
+
+  // A custom network adapter class
+  networkAdapter: typeof ToolDbNetworkAdapter;
+
+  // A custom storage adapter function
+  storageAdapter: ToolDbStorageAdapter;
+
+  // Our client ID (defaults to a random ID)
+  id: string;
+
+  // The namespace/topic of our app
+  topic: string;
+  
+  // Public and private (ECDSA) keys of our client. In the default network adapter these are used to sign
+  // our messages as we join and leave the network, and public key should match the client ID.
+  publicKey: CryptoKey | undefined;
+  privateKey: CryptoKey | undefined;
 }
 ```
+Notice you can use your own network and storage modules if you would like to implement custom solutions for peers discovery, connections, storage, etc, the default adapters will work both on nodejs and the browser.
+
 
 You can create a user, sign in or create a random set of keys for anonymous usage;
 ```
