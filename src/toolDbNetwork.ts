@@ -168,7 +168,9 @@ export default class toolDbNetwork {
 
       wss.onopen = () => {
         this.removeFromAwaiting(connId);
-        console.warn("Connected to " + host + ": " + port + " sucessfully.");
+        if (this.options.debug) {
+          console.warn("Connected to " + host + ": " + port + " sucessfully.");
+        }
 
         // hi peer
         wss.send(
@@ -249,7 +251,9 @@ export default class toolDbNetwork {
 
     filteredConns.forEach((conn) => {
       if ((crossServerOnly && conn.isServer) || !crossServerOnly) {
-        console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
+        if (this.options.debug) {
+          console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
+        }
         conn.send(JSON.stringify({ ...msg, to }));
       } else {
         // console.log("Fitlered out!", conn.toolDbId, conn.origUrl);

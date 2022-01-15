@@ -32,7 +32,7 @@ const animals = [
   "Ant",
   "Spider",
   "Zebra",
-]
+];
 
 export default function randomAnimal() {
   return animals[Math.round(Math.random() * animals.length)];

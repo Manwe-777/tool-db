@@ -4,13 +4,14 @@ import stringToArrayBuffer from "../stringToArrayBuffer";
 export default function verifyData(
   data: string,
   signature: string,
-  publicKey: CryptoKey
+  publicKey: CryptoKey,
+  hashName = "SHA-256"
 ) {
   const crypto = getCrypto();
   return crypto.subtle.verify(
     {
       name: "ECDSA",
-      hash: { name: "SHA-256" }, // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
+      hash: { name: hashName }, // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     },
     publicKey, // from generateKey or importKey above
     stringToArrayBuffer(signature), // ArrayBuffer of the signature

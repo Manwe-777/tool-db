@@ -1,3 +1,4 @@
+import { base64ToArrayBuffer } from "..";
 import arrayBufferToBase64 from "../utils/arrayBufferToBase64";
 import arrayBufferToString from "../utils/arrayBufferToString";
 import base64ToUint8 from "../utils/base64ToUint8";
@@ -64,6 +65,12 @@ it("Converts uint8 to base64", () => {
 
 it("Converts string to arraybuffer", () => {
   expect(compare(stringToArrayBuffer("G#4:>,&/"), testArayBuffer)).toBeTruthy();
+});
+
+it("Converts string to arraybuffer", () => {
+  expect(
+    compare(base64ToArrayBuffer("RyM0Oj4sJi8="), testArayBuffer)
+  ).toBeTruthy();
 });
 
 it("Converts arraybuffer to string", () => {

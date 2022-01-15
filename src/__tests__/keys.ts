@@ -9,7 +9,7 @@ it("Can generate key pair combination", () => {
 });
 
 it("Can generate Signing/secure keys", async () => {
-  const keyPair = await generateKeyPair("ECDSA");
+  const keyPair = await generateKeyPair("ECDSA", false);
 
   let privKey, pubKey;
   try {
@@ -24,7 +24,7 @@ it("Can generate Signing/secure keys", async () => {
 });
 
 it("Can generate Encryption/secure keys", async () => {
-  const keyPair = await generateKeyPair("ECDH");
+  const keyPair = await generateKeyPair("ECDH", false);
 
   let privKey, pubKey;
   try {

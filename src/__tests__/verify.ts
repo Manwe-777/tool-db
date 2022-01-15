@@ -1,7 +1,18 @@
 import { VerificationData, VerifyResult } from "../types/message";
 import verifyMessage from "../utils/verifyMessage";
-
 import catchReturn from "../utils/catchReturn";
+import verifyPeer from "../utils/verifyPeer";
+import getPeerSignature from "../utils/getPeerSignature";
+
+import {
+  encodeKeyString,
+  exportKey,
+  generateKeyPair,
+  sha256,
+  signData,
+  toBase64,
+} from "..";
+import { Peer } from "../types/tooldb";
 
 jest.mock("../getCrypto.ts");
 
@@ -178,4 +189,39 @@ it("Can catch pubkey replacement", () => {
   return verifyMessage(privatePutPubkey).then((result) => {
     expect(result).toEqual(VerifyResult.PubKeyMismatch);
   });
+});
+
+it("Can verify peers", async () => {
+  const keys = await generateKeyPair("ECDSA", true);
+
+  const pubkeyString = await exportKey("spki", keys.publicKey).then((skpub) =>
+    encodeKeyString(skpub as ArrayBuffer)
+  );
+
+  const timestamp = new Date().getTime();
+
+  const signature = await getPeerSignature(
+    keys.privateKey,
+    "topic",
+    timestamp,
+    "host",
+    8080
+  );
+
+  expect(signature).toBeDefined();
+
+  if (!signature) return;
+
+  const peerData: Peer = {
+    topic: "topic",
+    timestamp: timestamp,
+    host: "host",
+    port: 8080,
+    pubkey: pubkeyString,
+    sig: signature,
+  };
+
+  const verified = await verifyPeer(peerData).catch(console.error);
+
+  expect(verified).toBeTruthy();
 });

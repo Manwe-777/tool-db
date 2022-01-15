@@ -1,5 +1,14 @@
-import { JoinMessage, PongMessage, signData, textRandom, ToolDb } from "..";
+import {
+  JoinMessage,
+  PongMessage,
+  sha256,
+  signData,
+  textRandom,
+  toBase64,
+  ToolDb,
+} from "..";
 import { Peer } from "../types/tooldb";
+import getPeerSignature from "../utils/getPeerSignature";
 
 export default function handlePong(
   this: ToolDb,
@@ -11,10 +20,13 @@ export default function handlePong(
   if (this.options.server && this.options.privateKey) {
     const timestamp = new Date().getTime();
 
-    // Should be an exact match of the verifyPeer function!
-    const dataToSign = `${this.options.topic}-${timestamp}-${this.options.host}:${this.options.port}`;
-
-    signData(dataToSign, this.options.privateKey).then((signature) => {
+    getPeerSignature(
+      this.options.privateKey,
+      this.options.topic,
+      timestamp,
+      this.options.host,
+      this.options.port
+    ).then((signature) => {
       const meAsPeer: Peer = {
         topic: this.options.topic,
         timestamp: timestamp,
