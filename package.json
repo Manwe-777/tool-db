@@ -10,7 +10,7 @@
     "build": "tsc",
     "publish": "np",
     "prepublish": "npm run build",
-    "test": "jest --clearCache",
+    "test": "jest --clearCache && jest ./src",
     "test:watch": "jest --watch ./src",
     "server": "npm run build && node dist/server.js"
   },

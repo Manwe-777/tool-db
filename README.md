@@ -1,7 +1,5 @@
 # Tool Db
 
-## WIP
-
 ToolDb is a peer-to-peer model for a decentralized database, inspired by Gun (Mark Nadal): https://gun.eco/
 
 Unlike Gun we dont rely on CRDTs as a requirement, but rather make them optional using [automerge](https://github.com/automerge/automerge). In my experience, crdts are great, but having to rely on them for every bit of data was making everything much more complex and unreliable.
@@ -11,7 +9,7 @@ This setup IS NOT a requirement! It is just what I think is the best and most re
 
 Since anyone can join a federated server swarm to help growing the network we use cryptography (basic public and private key authenthication and signature validation) to ensure all messages are coming from the real authors of the data that they intend to modify; this way by joining a swarm all peers in it can help validate without even having full data; even a new server peer can help, because all information is stored on each message and we dont rely on any centralized database to fetch users data.
 
-Please check the [chain-swarm](https://github.com/Manuel-777/chain-swarm) repository to see how a federated server swarm would look like, Tool Db only handles the connection and messaging between peers, but it does not have any logic for peer discovery.
+Please check the [chain-swarm](https://github.com/Manwe-777/chain-swarm) repository to see how a federated server swarm would look like, Tool Db only handles the connection and messaging between peers, but it does not have any logic for peer discovery.
 We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT solution you want! even WebRTC between browsers could work.
 
 ## Base usage
