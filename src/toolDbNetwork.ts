@@ -2,7 +2,7 @@ import _ from "lodash";
 import WebSocket from "ws";
 import { getIpFromUrl, PingMessage, textRandom, ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
-import { Peer, ToolDbOptions } from "./types/tooldb";
+import { ToolDbOptions } from "./types/tooldb";
 
 export type ToolDbWebSocket = WebSocket & {
   toolDbId?: string;
@@ -78,7 +78,6 @@ export default class toolDbNetwork {
 
       this.server.on("connection", (socket: ToolDbWebSocket) => {
         // console.log("new connection:", peerId);
-
         socket.on("close", () => {
           // console.log("closed connection:", peerId);
           if (socket.toolDbId) {
@@ -154,6 +153,7 @@ export default class toolDbNetwork {
         if (this.options.debug) {
           console.log(_error.error);
         }
+
         this.reconnect(connId);
       };
 

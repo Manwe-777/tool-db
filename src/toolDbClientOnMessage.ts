@@ -16,6 +16,8 @@ export default function toolDbClientOnMessage(
     return;
   }
 
+  this.emit("message", message, remotePeerId);
+
   this.processedIds[message.type].push(message.id);
   // console.warn(
   //   `Got message > ${remotePeerId}`,

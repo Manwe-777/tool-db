@@ -40,6 +40,8 @@ import handlePut from "./messageHandlers/handlePut";
 import handleQuery from "./messageHandlers/handleQuery";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
+import EventEmitter from "events";
+
 export interface Listener {
   key: string;
   timeout: number | null;
@@ -51,7 +53,7 @@ interface Verificator<T> {
   fn: (msg: VerificationData<T>) => Promise<boolean>;
 }
 
-export default class ToolDb {
+export default class ToolDb extends EventEmitter {
   private _network;
   private _store;
   private _peers: Peer[] = [];
@@ -149,7 +151,6 @@ export default class ToolDb {
       fn,
     };
 
-    this._keyListeners.push(newListener);
     return this._keyListeners.length;
   };
 
@@ -157,6 +158,7 @@ export default class ToolDb {
     if (this._keyListeners[id]?.timeout) {
       clearTimeout(this._keyListeners[id]?.timeout || undefined);
     }
+
     this._keyListeners[id] = null;
   };
 
@@ -227,7 +229,7 @@ export default class ToolDb {
     networkAdapter: toolDbNetwork,
     storageName: "tooldb",
     storageAdapter: typeof window === "undefined" ? leveldb : indexedb,
-    id: sha1(`${textRandom(100)}-${new Date().getTime()}`),
+    id: "",
     topic: "tool-db-default",
     publicKey: undefined,
     privateKey: undefined,
@@ -254,23 +256,29 @@ export default class ToolDb {
   }
 
   constructor(options: Partial<ToolDbOptions> = {}) {
+    super();
+
     this._options = { ...this.options, ...options };
 
-    generateKeyPair("ECDSA", false)
-      .then((key) => {
-        if (key.publicKey && key.privateKey) {
-          this._options.publicKey = key.publicKey;
-          this._options.privateKey = key.privateKey;
+    if (this._options.id === "") {
+      generateKeyPair("ECDSA", false)
+        .then((key) => {
+          if (key.publicKey && key.privateKey) {
+            this._options.publicKey = key.publicKey;
+            this._options.privateKey = key.privateKey;
 
-          exportKey("spki", key.publicKey).then((skpub) => {
-            this._options.id = encodeKeyString(skpub as ArrayBuffer);
-            if (this._options.debug) {
-              console.log("My ID is:", this._options.id);
-            }
-          });
-        }
-      })
-      .catch(console.warn);
+            exportKey("spki", key.publicKey).then((skpub) => {
+              this._options.id = encodeKeyString(skpub as ArrayBuffer);
+              if (this._options.debug) {
+                console.log("My ID is:", this._options.id);
+              }
+            });
+          }
+        })
+        .catch(console.warn);
+    } else {
+      this._options.id = sha1(`${textRandom(100)}-${new Date().getTime()}`);
+    }
 
     // These could be made to be customizable by setting the variables as public
     this._network = new this.options.networkAdapter(this);
