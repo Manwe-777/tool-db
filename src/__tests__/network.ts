@@ -58,6 +58,13 @@ beforeAll((done) => {
   };
 });
 
+afterAll((done) => {
+  nodeA.network.server.close();
+  nodeB.network.server.close();
+
+  setTimeout(done, 1000);
+});
+
 it("A and B can communicate trough the swarm", () => {
   return new Promise<void>((resolve) => {
     const testKey = "test-key-" + textRandom(16);
