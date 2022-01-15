@@ -1,13 +1,4 @@
-import {
-  decodeKeyString,
-  fromBase64,
-  importKey,
-  JoinMessage,
-  ServersMessage,
-  sha1,
-  ToolDb,
-  verifyData,
-} from "..";
+import { JoinMessage, ServersMessage, ToolDb } from "..";
 import verifyPeer from "../utils/verifyPeer";
 
 export default function handleJoin(

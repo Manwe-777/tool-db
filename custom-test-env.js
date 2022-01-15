@@ -1,3 +1,4 @@
+const fs = require("fs");
 const Environment = require("jest-environment-jsdom");
 
 /**
@@ -5,6 +6,11 @@ const Environment = require("jest-environment-jsdom");
  */
 module.exports = class CustomTestEnvironment extends Environment {
   async setup() {
+    fs.copyFileSync(
+      "pvutils-tests-replacement.js",
+      "node_modules/pvutils/build/utils.js"
+    );
+
     await super.setup();
     if (typeof this.global.TextEncoder === "undefined") {
       const { TextEncoder } = require("util");
