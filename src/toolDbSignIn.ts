@@ -25,12 +25,12 @@ export default function toolDbSignIn(
     this.getData<UserRootData>(`==${user}`, false, 5000)
       .then((_user) => {
         if (!_user) {
-          reject(Error("Could not find user"));
+          reject("Could not find user");
           return;
         }
 
         if (sha256(password) !== _user.pass) {
-          reject(Error("Invalid password"));
+          reject("Invalid password");
           return;
         }
 

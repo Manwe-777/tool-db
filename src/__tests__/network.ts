@@ -4,7 +4,10 @@ import { textRandom, ToolDb } from "..";
 import leveldb from "../utils/leveldb";
 jest.setTimeout(5000);
 
-let nodeA, nodeB, Alice, Bob;
+let nodeA: ToolDb | undefined;
+let nodeB: ToolDb | undefined;
+let Alice: ToolDb | undefined;
+let Bob: ToolDb | undefined;
 
 beforeAll((done) => {
   nodeA = new ToolDb({
@@ -74,5 +77,27 @@ it("A and B can communicate trough the swarm", () => {
           }, 1000);
         });
       });
+  });
+});
+
+it("A can sign up and B can sign in", () => {
+  return new Promise<void>((resolve) => {
+    const testUsername = "test-username-" + textRandom(16);
+    const testPassword = "im a password";
+
+    Alice.signUp(testUsername, testPassword).then((result) => {
+      setTimeout(() => {
+        Bob.signIn(testUsername, testPassword).then((res) => {
+          expect(Bob.user).toBeDefined();
+          expect(Bob.user.name).toBe(testUsername);
+
+          // test for failed sign in
+          Bob.signIn(testUsername, testPassword + " ").catch((e) => {
+            expect(e).toBe("Invalid password");
+            resolve();
+          });
+        });
+      }, 1000);
+    });
   });
 });
