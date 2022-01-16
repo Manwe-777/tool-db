@@ -4,7 +4,6 @@ import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
 import verifyData from "./crypto/verifyData";
 import fromBase64 from "./fromBase64";
-// import sha256 from "./sha256";
 
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
@@ -29,8 +28,9 @@ export default async function verifyMessage<T>(
     return VerifyResult.InvalidData;
   }
 
-  // Max clock shift allowed is ten seconds
-  if (msg.t > new Date().getTime() + 10000) {
+  // Max clock shift allowed is 30 seconds.
+  // Ten seconds was my original threshold but it failed some times.
+  if (msg.t > new Date().getTime() + 30000) {
     // console.warn("Invalid message timestamp.");
     return VerifyResult.InvalidTimestamp;
   }
