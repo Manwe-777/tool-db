@@ -110,6 +110,20 @@ it("A can sign up and B can sign in", () => {
   });
 });
 
+it("Can cancel GET timeout", () => {
+  return new Promise<void>((resolve) => {
+    const testKey = "crdt-get-test-" + textRandom(16);
+    const testValue = textRandom(24);
+
+    Alice.putData(testKey, testValue).then(() => {
+      Alice.getData(testKey, false, 1).then((res) => {
+        expect(res).toBe(testValue);
+        resolve();
+      });
+    });
+  });
+});
+
 it("CRDTs", () => {
   return new Promise<void>((resolve) => {
     const crdtKey = "crdt-test-" + textRandom(16);
