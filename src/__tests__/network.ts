@@ -116,8 +116,13 @@ it("CRDTs", () => {
     const crdtValue = textRandom(24);
 
     const origDoc = Automerge.init();
-    const newDoc = Automerge.change(origDoc, (doc: any) => {
+    const oneDoc = Automerge.change(origDoc, (doc: any) => {
       doc.test = crdtValue;
+      doc.arr = ["arr"];
+    });
+
+    const newDoc = Automerge.change(oneDoc, (doc: any) => {
+      doc.arr.push("test");
     });
 
     const changes = Automerge.getChanges(origDoc, newDoc);
@@ -126,6 +131,7 @@ it("CRDTs", () => {
         Bob.getCrdt(crdtKey).then((data) => {
           const doc = Automerge.load(base64ToBinaryDocument(data)) as any;
           expect(doc.test).toBe(crdtValue);
+          expect(doc.arr).toStrictEqual(["arr", "test"]);
           resolve();
         });
       }, 1000);
