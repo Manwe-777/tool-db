@@ -1,7 +1,6 @@
 import _ from "lodash";
 import { textRandom } from ".";
 import ToolDb from "./tooldb";
-import getIpFromUrl from "./utils/getIpFromUrl";
 
 /**
  * Triggers a QUERY request to other peers.

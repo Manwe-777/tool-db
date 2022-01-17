@@ -8,12 +8,12 @@ import ToolDb from "./tooldb";
  * @param timeout Max time to wait for remote.
  * @returns Promise<Data>
  */
-export default function toolDbGet<T = any>(
+export default function toolDbCrdtGet(
   this: ToolDb,
   key: string,
   userNamespaced = false,
   timeoutMs = 1000
-): Promise<T | null> {
+): Promise<string | null> {
   return new Promise((resolve, reject) => {
     if (userNamespaced && this.user?.pubKey === undefined) {
       reject(new Error("You are not authorized yet!"));
@@ -21,17 +21,17 @@ export default function toolDbGet<T = any>(
     }
     const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
     if (this.options.debug) {
-      console.log("GET > " + finalKey);
+      console.log("CRDT GET > " + finalKey);
     }
 
     const msgId = textRandom(10);
 
     const cancelTimeout = setTimeout(() => {
-      this.store.get(finalKey, (err, data) => {
+      this.loadCrdtDocument(finalKey).then((data: any) => {
         if (data) {
           try {
-            const message = JSON.parse(data);
-            resolve(message.v);
+            this.removeIdListener(msgId);
+            resolve(data);
           } catch (e) {
             resolve(null);
           }
@@ -43,31 +43,18 @@ export default function toolDbGet<T = any>(
 
     this.addIdListener(msgId, (msg) => {
       if (this.options.debug) {
-        console.log("GET RECV  > " + finalKey, msg);
+        console.log("CRDT GET RECV  > " + finalKey, msg);
       }
 
       clearTimeout(cancelTimeout);
-      if (msg.type === "put") {
-        resolve(msg.v);
-      }
-    });
-
-    this.store.get(finalKey, (err, data) => {
-      if (data) {
-        try {
-          const val = JSON.parse(data).v;
-          clearTimeout(cancelTimeout);
-          this.removeIdListener(msgId);
-          resolve(val);
-        } catch (e) {
-          // do nothing
-        }
+      if (msg.type === "crdt") {
+        resolve(msg.doc);
       }
     });
 
     // Do get
     this.network.sendToAll({
-      type: "get",
+      type: "crdtGet",
       to: [],
       key: finalKey,
       id: msgId,

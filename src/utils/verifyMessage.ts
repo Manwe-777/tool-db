@@ -54,7 +54,7 @@ export default async function verifyMessage<T>(
   // Disabled for now because it is painful on large requests
   if (pow > 0) {
     if (msg.h.slice(0, pow) !== new Array(pow).fill("0").join("")) {
-      console.warn("No valid hash (no pow)");
+      // console.warn("No valid hash (no pow)");
       return VerifyResult.NoProofOfWork;
     }
 

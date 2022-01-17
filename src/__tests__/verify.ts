@@ -4,14 +4,7 @@ import catchReturn from "../utils/catchReturn";
 import verifyPeer from "../utils/verifyPeer";
 import getPeerSignature from "../utils/getPeerSignature";
 
-import {
-  encodeKeyString,
-  exportKey,
-  generateKeyPair,
-  sha256,
-  signData,
-  toBase64,
-} from "..";
+import { encodeKeyString, exportKey, generateKeyPair } from "..";
 import { Peer } from "../types/tooldb";
 
 jest.mock("../getCrypto.ts");
@@ -32,6 +25,12 @@ it("Can verify PUT", () => {
   });
 });
 
+it("Can catch invalid POW", () => {
+  return verifyMessage(putOk, 5).then((result) => {
+    expect(result).toEqual(VerifyResult.NoProofOfWork);
+  });
+});
+
 const putSig: VerificationData<string> = {
   k: "value",
   p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
@@ -43,8 +42,24 @@ const putSig: VerificationData<string> = {
 };
 
 it("Can catch tampered messages (signature)", () => {
-  return verifyMessage(putSig).then((result) => {
+  return verifyMessage(putSig, 3).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidSignature);
+  });
+});
+
+const tamperedMsg: VerificationData<string> = {
+  k: "value",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
+  n: 679,
+  t: 1628918110150,
+  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca92",
+  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
+  v: "AzB4NzijkW",
+};
+
+it("Can catch tampered POW", () => {
+  return verifyMessage(tamperedMsg, 3).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidHashNonce);
   });
 });
 

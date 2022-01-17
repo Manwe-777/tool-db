@@ -1,18 +1,6 @@
-import toolDbNetwork from "./toolDbNetwork";
+import { FreezeObject } from "automerge";
+import EventEmitter from "events";
 
-import { Peer, ToolDbOptions } from "./types/tooldb";
-
-import toolDbGet from "./toolDbGet";
-import toolDbPut from "./toolDbPut";
-import toolDbGetPubKey from "./toolDbGetPubKey";
-import toolDbSignIn from "./toolDbSignIn";
-import toolDbAnonSignIn from "./toolDbAnonSignIn";
-import toolDbSignUp from "./toolDbSignUp";
-import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
-
-import toolDbClientOnMessage from "./toolDbClientOnMessage";
-import indexedb from "./utils/indexedb";
-import leveldb from "./utils/leveldb";
 import {
   CrdtMessage,
   encodeKeyString,
@@ -24,23 +12,39 @@ import {
   ToolDbMessage,
   VerificationData,
 } from ".";
-import toolDbSubscribe from "./toolDbSubscribe";
+
+import toolDbGet from "./toolDbGet";
+import toolDbPut from "./toolDbPut";
+import toolDbSignIn from "./toolDbSignIn";
+import toolDbSignUp from "./toolDbSignUp";
+import toolDbNetwork from "./toolDbNetwork";
+import toolDbCrdtGet from "./toolDbCrdtGet";
 import toolDbCrdtPut from "./toolDbCrdtPut";
-import { FreezeObject } from "automerge";
+import toolDbGetPubKey from "./toolDbGetPubKey";
+import toolDbAnonSignIn from "./toolDbAnonSignIn";
+import toolDbClientOnMessage from "./toolDbClientOnMessage";
+import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
+
+import leveldb from "./utils/leveldb";
+import indexedb from "./utils/indexedb";
+
+import toolDbSubscribe from "./toolDbSubscribe";
+
+import toolDbQueryKeys from "./toolDbQueryKeys";
 import loadCrdtDocument from "./loadCrdtDocument";
 import toolDbKeysSignIn from "./toolDbKeysSignIn";
-import toolDbQueryKeys from "./toolDbQueryKeys";
+
+import handleGet from "./messageHandlers/handleGet";
+import handlePut from "./messageHandlers/handlePut";
 import handlePing from "./messageHandlers/handlePing";
 import handlePong from "./messageHandlers/handlePong";
 import handleCrdt from "./messageHandlers/handleCrdt";
+import handleQuery from "./messageHandlers/handleQuery";
 import handleCrdtGet from "./messageHandlers/handleCrdtGet";
 import handleCrdtPut from "./messageHandlers/handleCrdtPut";
-import handleGet from "./messageHandlers/handleGet";
-import handlePut from "./messageHandlers/handlePut";
-import handleQuery from "./messageHandlers/handleQuery";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
-import EventEmitter from "events";
+import { Peer, ToolDbOptions } from "./types/tooldb";
 
 export interface Listener {
   key: string;
@@ -93,6 +97,8 @@ export default class ToolDb extends EventEmitter {
   public putData = toolDbPut;
 
   public putCrdt = toolDbCrdtPut;
+
+  public getCrdt = toolDbCrdtGet;
 
   public queryKeys = toolDbQueryKeys;
 

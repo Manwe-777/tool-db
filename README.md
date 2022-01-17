@@ -12,6 +12,16 @@ Since anyone can join a federated server swarm to help growing the network we us
 Please check the [chain-swarm](https://github.com/Manwe-777/chain-swarm) repository to see how a federated server swarm would look like, Tool Db only handles the connection and messaging between peers, but it does not have any logic for peer discovery.
 We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT solution you want! even WebRTC between browsers could work.
 
+# Future work
+
+While the database is currently functioning as expected, there are many things that could be added or improved to make it even better!
+
+[ ] Use a common web3 format for users identity, or a more standarized key pair.
+[ ] Allow messages encryption, add methods for Elliptic Curves, shared keys, etc.
+[ ] Allow adding Noise/encryption to connections (probably based on the ECC)
+[ ] 
+
+
 ## Base usage
 Connect to the selected toolDb peers;
 ```

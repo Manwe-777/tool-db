@@ -1,6 +1,6 @@
 import _ from "lodash";
 import WebSocket from "ws";
-import { getIpFromUrl, PingMessage, textRandom, ToolDbMessage } from ".";
+import { PingMessage, textRandom, ToolDbMessage } from ".";
 import ToolDb from "./tooldb";
 import { ToolDbOptions } from "./types/tooldb";
 
@@ -42,10 +42,6 @@ export default class toolDbNetwork {
       peer: ToolDbWebSocket;
     }
   > = {};
-
-  get allPeers(): string[] {
-    return Object.keys(this._connections).map(getIpFromUrl);
-  }
 
   private _awaitingConnections: ConnectionAwaiting[] = [];
 

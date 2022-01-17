@@ -58,7 +58,9 @@ export default function handleCrdtPut(
         // if (newDoc) {
         //   console.log(
         //     "new document changes:",
-        //     Automerge.getHistory(newDoc)
+        //     Automerge.getHistory(newDoc),
+        //     "final: ",
+        //     newDoc
         //   );
         // }
 

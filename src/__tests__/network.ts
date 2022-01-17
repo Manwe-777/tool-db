@@ -1,8 +1,9 @@
 jest.mock("../getCrypto.ts");
+import Automerge from "automerge";
 
-import { textRandom, ToolDb } from "..";
+import { base64ToBinaryDocument, textRandom, ToolDb } from "..";
 import leveldb from "../utils/leveldb";
-jest.setTimeout(5000);
+jest.setTimeout(10000);
 
 let nodeA: ToolDb | undefined;
 let nodeB: ToolDb | undefined;
@@ -103,6 +104,29 @@ it("A can sign up and B can sign in", () => {
             expect(e).toBe("Invalid password");
             resolve();
           });
+        });
+      }, 1000);
+    });
+  });
+});
+
+it("CRDTs", () => {
+  return new Promise<void>((resolve) => {
+    const crdtKey = "crdt-test-" + textRandom(16);
+    const crdtValue = textRandom(24);
+
+    const origDoc = Automerge.init();
+    const newDoc = Automerge.change(origDoc, (doc: any) => {
+      doc.test = crdtValue;
+    });
+
+    const changes = Automerge.getChanges(origDoc, newDoc);
+    Alice.putCrdt(crdtKey, changes).then((put) => {
+      setTimeout(() => {
+        Bob.getCrdt(crdtKey).then((data) => {
+          const doc = Automerge.load(base64ToBinaryDocument(data)) as any;
+          expect(doc.test).toBe(crdtValue);
+          resolve();
         });
       }, 1000);
     });

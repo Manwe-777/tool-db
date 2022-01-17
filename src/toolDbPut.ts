@@ -1,6 +1,5 @@
-import { PutMessage, textRandom, uint8ToBase64, VerificationData } from ".";
+import { PutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
-import getIpFromUrl from "./utils/getIpFromUrl";
 
 import proofOfWork from "./utils/proofOfWork";
 

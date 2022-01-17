@@ -5,6 +5,11 @@ export interface ParsedKeys {
   ekpriv: string;
 }
 
+export interface Keys {
+  pub: string;
+  priv: string;
+}
+
 export type GenericObject = { [key: string]: any };
 
 export interface UserRootData {
