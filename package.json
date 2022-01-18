@@ -24,6 +24,7 @@
     "crypto": "^1.0.1",
     "level": "^7.0.0",
     "lodash": "^4.17.21",
+    "simple-peer": "^9.11.0",
     "ws": "^7.5.5"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@types/jest": "^26.0.24",
     "@types/lodash": "^4.14.172",
     "@types/node": "^15.0.1",
+    "@types/simple-peer": "^9.11.4",
     "@types/ws": "^7.4.7",
     "@typescript-eslint/eslint-plugin": "^4.29.1",
     "eslint": "^7.32.0",

@@ -57,6 +57,8 @@ export { default as saveKeysComb } from "./utils/crypto/saveKeysComb";
 export { default as verifyData } from "./utils/crypto/verifyData";
 
 export { default as toolDbNetwork } from "./toolDbNetwork";
+export { default as toolDbWebrtc } from "./toolDbWebrtc";
+
 export { default as handleCrdt } from "./messageHandlers/handleCrdt";
 export { default as handleCrdtGet } from "./messageHandlers/handleCrdtGet";
 export { default as handleCrdtPut } from "./messageHandlers/handleCrdtPut";

@@ -19,13 +19,11 @@ export default function toolDbClientOnMessage(
   this.emit("message", message, remotePeerId);
 
   this.processedIds[message.type].push(message.id);
-  // console.warn(
-  //   `Got message > ${remotePeerId}`,
-  //   message.type,
-  //   (message as any).k || ""
-  //   // message
-  // );
-  // console.warn(`Got message ${message.type} from ${remotePeerId}`);
+
+  if (this.options.debug) {
+    console.warn(`Got message ${message.type} from ${remotePeerId}`);
+    console.warn(message);
+  }
 
   // Check if we are listening for this ID
   if (message.id) {
