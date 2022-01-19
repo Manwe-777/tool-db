@@ -282,9 +282,9 @@ export default class ToolDb extends EventEmitter {
           }
         })
         .catch(console.warn);
-    } else {
-      this._options.id = sha1(`${textRandom(100)}-${new Date().getTime()}`);
-    }
+    } // else {
+    // this._options.id = sha1(`${textRandom(100)}-${new Date().getTime()}`);
+    // }
 
     // These could be made to be customizable by setting the variables as public
     this._network = new this.options.networkAdapter(this);

@@ -21,8 +21,8 @@ type IOffers = Record<
   }
 >;
 
-const offerPoolSize = 10;
-const defaultAnnounceSecs = 33;
+const offerPoolSize = 5;
+const announceSecs = 30;
 const maxAnnounceSecs = 120;
 
 const defaultTrackerUrls = [
@@ -44,7 +44,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
   private connectedPeers: Record<string, boolean> = {};
 
-  private onDisconnect = (id: string) => delete this.connectedPeers[id];
+  private onDisconnect = (id: string) => {
+    if (this.connectedPeers[id]) delete this.connectedPeers[id];
+    if (this.peerMap[id]) delete this.peerMap[id];
+  };
 
   private announceInterval;
 
@@ -63,8 +66,6 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     });
     return peer;
   };
-
-  private announceSecs = defaultAnnounceSecs;
 
   private handledOffers: Record<string, boolean> = {};
 
@@ -108,8 +109,17 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     const onData = (data: Uint8Array) => {
       const str = new TextDecoder().decode(data);
       try {
-        const msg = JSON.parse(str);
-        this.tooldb.clientOnMessage(msg, id);
+        const msg = JSON.parse(str) as ToolDbMessage;
+        if (
+          msg.type !== "servers" &&
+          msg.type !== "join" &&
+          msg.type !== "pong"
+        ) {
+          this.tooldb.clientOnMessage(msg, id);
+        }
+        if (msg.type === "pong") {
+          this.tooldb.onConnect();
+        }
       } catch (e) {
         //
       }
@@ -119,7 +129,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     peer.on("data", onData);
 
-    peer.on("close", () => console.log("close > ", id));
+    peer.on("close", () => this.onDisconnect(id));
+
+    peer.on("error", () => this.onDisconnect(id));
 
     peer.send(
       JSON.stringify({
@@ -146,6 +158,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     Object.entries(this.offerPool).forEach(([id, { peer }]) => {
       if (!this.handledOffers[id] && !this.connectedPeers[id]) {
         peer.destroy();
+        delete this.peerMap[id];
       }
     });
 
@@ -196,7 +209,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         action: "announce",
         info_hash: infoHash,
         numwant: offerPoolSize,
-        peer_id: encodeURIComponent(this.tooldb.options.id),
+        peer_id: encodeURIComponent(this.tooldb.options.id).slice(-20),
         offers: await Promise.all(
           Object.entries(this.offerPool).map(async ([id, { offerP }]) => {
             const offer = await offerP;
@@ -233,7 +246,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
    */
   private onSocketMessage: SocketMessageFn = async (
     socket: WebSocket,
-    e: { data: any }
+    e: any
   ) => {
     let val: {
       info_hash: string;
@@ -253,6 +266,13 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       return;
     }
 
+    const failure = val["failure reason"];
+
+    if (failure) {
+      console.warn(`${e.origin}: torrent tracker failure (${failure})`);
+      return;
+    }
+
     if (val.info_hash !== this.infoHash) {
       // console.warn("Info hash mismatch");
       return;
@@ -260,30 +280,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     if (
       val.peer_id &&
-      val.peer_id === encodeURIComponent(this.tooldb.options.id)
+      val.peer_id === encodeURIComponent(this.tooldb.options.id).slice(-20)
     ) {
       // console.warn("Peer ids mismatch", val.peer_id, selfId);
       return;
-    }
-
-    const failure = val["failure reason"];
-
-    if (failure) {
-      // console.warn(`${libName}: torrent tracker failure (${failure})`);
-      return;
-    }
-
-    if (
-      val.interval &&
-      val.interval > this.announceSecs &&
-      val.interval <= maxAnnounceSecs
-    ) {
-      clearInterval(this.announceInterval);
-      this.announceSecs = val.interval;
-      this.announceInterval = setInterval(
-        this.announceAll,
-        this.announceSecs * 1000
-      );
     }
 
     if (val.offer && val.offer_id) {
@@ -304,7 +304,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
             answer,
             action: "announce",
             info_hash: this.infoHash,
-            peer_id: encodeURIComponent(this.tooldb.options.id),
+            peer_id: encodeURIComponent(this.tooldb.options.id).slice(-20),
             to_peer_id: val.peer_id,
             offer_id: val.offer_id,
           })
@@ -336,9 +336,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         }
 
         this.handledOffers[val.offer_id] = true;
-        peer.on("connect", () =>
-          this.onConnect(peer, val.peer_id, val.offer_id)
-        );
+        peer.on("connect", () => {
+          this.onConnect(peer, val.peer_id, val.offer_id);
+        });
         peer.on("close", () => this.onDisconnect(val.peer_id));
         peer.signal(val.answer);
       }
@@ -360,10 +360,20 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     super(db);
     this._tooldb = db;
 
-    this.announceInterval = setInterval(
-      this.announceAll,
-      this.announceSecs * 1000
-    );
+    this.announceInterval = setInterval(this.announceAll, announceSecs * 1000);
+
+    // Stop announcing after maxAnnounceSecs
+    const intervalStart = new Date().getTime();
+    const checkInterval = setInterval(() => {
+      if (
+        !this.tooldb.options.server &&
+        new Date().getTime() - intervalStart > maxAnnounceSecs * 1000
+      ) {
+        clearInterval(checkInterval);
+        clearInterval(this.announceInterval);
+      }
+    }, 200);
+
     this.infoHash = sha1(`tooldb:${this.tooldb.options.topic}`).slice(20);
     this.announceAll();
   }
@@ -377,7 +387,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     crossServerOnly = false,
     isRelay = false
   ) {
-    const to = _.uniq([...msg.to, encodeURIComponent(this.tooldb.options.id)]);
+    const to = _.uniq([
+      ...msg.to,
+      encodeURIComponent(this.tooldb.options.id).slice(-20),
+    ]);
 
     Object.keys(this.peerMap)
       .filter((id) => !to.includes(id))
@@ -405,7 +418,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         if (peer.connected) {
           const to = _.uniq([
             ...msg.to,
-            encodeURIComponent(this.tooldb.options.id),
+            encodeURIComponent(this.tooldb.options.id).slice(-20),
           ]);
           peer.send(JSON.stringify({ ...msg, to }));
         } else {
