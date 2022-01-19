@@ -196,6 +196,8 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         } catch (e) {
           resolve(null);
         }
+      } else {
+        resolve(this.sockets[url]);
       }
     });
   };
