@@ -156,6 +156,7 @@ export default class ToolDb extends EventEmitter {
       timeout: null,
       fn,
     };
+    this._keyListeners.push(newListener);
 
     return this._keyListeners.length;
   };

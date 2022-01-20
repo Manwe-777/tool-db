@@ -419,7 +419,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
         if (peer.connected) {
           const to = _.uniq([
-            ...msg.to,
+            ...[msg.to || []],
             encodeURIComponent(this.tooldb.options.id).slice(-20),
           ]);
           peer.send(JSON.stringify({ ...msg, to }));
