@@ -2,7 +2,14 @@
 
 ToolDb is a peer-to-peer model for a decentralized database, inspired by Gun (Mark Nadal): https://gun.eco/
 
-Unlike Gun we dont rely on CRDTs as a requirement, but rather make them optional using [automerge](https://github.com/automerge/automerge). In my experience, crdts are great, but having to rely on them for every bit of data was making everything much more complex and unreliable.
+
+It is the mix of a lot of cool concepts into one;
+- Cryptographically secure.
+- Offline first.
+- Fully decentralized.
+- Capable of providing realtime updates.
+- Key-value/document storage.
+- Works in the Browser and Nodejs seamlessly.
 
 We push towards of the concept of federated servers, where we set up a p2p mesh network between any servers who want to join the swarm, and have those servers manage the connection and data sharing between them, while allowing client peers to connect to them to push updates to the database.
 This setup IS NOT a requirement! It is just what I think is the best and most reliable way of creating a p2p network for dApps using both desktop and web compatible technologies. Any peer has the capability of connecting to any other peer trough websockets, and modifiying the code to allow webRtc connections between web peers is absolutely possible.
@@ -10,16 +17,15 @@ This setup IS NOT a requirement! It is just what I think is the best and most re
 Since anyone can join a federated server swarm to help growing the network we use cryptography (basic public and private key authenthication and signature validation) to ensure all messages are coming from the real authors of the data that they intend to modify; this way by joining a swarm all peers in it can help validate without even having full data; even a new server peer can help, because all information is stored on each message and we dont rely on any centralized database to fetch users data.
 
 Please check the [chain-swarm](https://github.com/Manwe-777/chain-swarm) repository to see how a federated server swarm would look like, Tool Db only handles the connection and messaging between peers, but it does not have any logic for peer discovery.
-We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT solution you want! even WebRTC between browsers could work.
+We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT/networking solution you want! even WebRTC between browsers works using the `toolDbWebrtc` transport.
 
 # Future work
 
 While the database is currently functioning as expected, there are many things that could be added or improved to make it even better!
 
-[ ] Use a common web3 format for users identity, or a more standarized key pair.
-[ ] Allow messages encryption, add methods for Elliptic Curves, shared keys, etc.
-[ ] Allow adding Noise/encryption to connections (probably based on the ECC)
-[ ] 
+- Use a common web3 format for users identity, or a more standarized key pair.
+- Allow messages encryption, add methods for Elliptic Curves, shared keys, etc.
+- Allow adding Noise/encryption to connections (probably based on the ECC?)
 
 
 ## Base usage
@@ -81,7 +87,7 @@ These are the options you can pass to the constructor:
   topic: string;
   
   // Public and private (ECDSA) keys of our client. In the default network adapter these are used to sign
-  // our messages as we join and leave the network, and public key should match the client ID.
+  // our messages as we join and leave the network, public key should match the client ID (as a base64 exported string).
   publicKey: CryptoKey | undefined;
   privateKey: CryptoKey | undefined;
 }
