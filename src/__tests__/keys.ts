@@ -1,6 +1,10 @@
+import { method } from "lodash";
+import { ToolDb } from "..";
+import toolDbGetPubKey from "../toolDbGetPubKey";
 import exportKey from "../utils/crypto/exportKey";
 import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateKeysComb from "../utils/crypto/generateKeysComb";
+import leveldb from "../utils/leveldb";
 
 jest.mock("../getCrypto.ts");
 
@@ -66,4 +70,44 @@ it("Can generate Encryption/extractable keys", async () => {
 
   expect(pubKey).toBeDefined();
   expect(privKey).toBeDefined();
+});
+
+it("Cant get the public key keys if its not authorized", (done) => {
+  const Client = new ToolDb({
+    server: true,
+    host: "127.0.0.1",
+    port: 9999,
+    storageAdapter: leveldb,
+    storageName: "test-keys-a",
+  });
+
+  setTimeout(() => {
+    toolDbGetPubKey
+      .call(Client)
+      .then((e) => {
+        expect(e).toBeUndefined();
+      })
+      .catch((e) => {
+        expect(e.message).toBe("You are not authorized yet.");
+        done();
+      });
+  }, 250);
+});
+
+it("Cant get the public key keys", (done) => {
+  const Client = new ToolDb({
+    server: true,
+    host: "127.0.0.1",
+    port: 9998,
+    storageAdapter: leveldb,
+    storageName: "test-keys-b",
+  });
+  Client.anonSignIn();
+
+  setTimeout(() => {
+    toolDbGetPubKey.call(Client).then((key) => {
+      expect(key).toBeDefined();
+      done();
+    });
+  }, 250);
 });
