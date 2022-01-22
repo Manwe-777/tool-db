@@ -44,7 +44,8 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
   private connectedPeers: Record<string, boolean> = {};
 
-  private onDisconnect = (id: string) => {
+  private onDisconnect = (id: string, err: any) => {
+    // console.warn(id, err);
     if (this.connectedPeers[id]) delete this.connectedPeers[id];
     if (this.peerMap[id]) delete this.peerMap[id];
   };
@@ -82,7 +83,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private infoHash = "";
 
   /**
-   * Make connection offerst to send to the tracker
+   * Make connection offers (sdp) to send to the tracker
    */
   private makeOffers = () => {
     const offers: IOffers = {};
@@ -103,7 +104,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
    */
   private onPeerConnect = (peer: Peer.Instance, id: string) => {
     if (this.peerMap[id]) {
-      return;
+      this.peerMap[id].end();
+      this.peerMap[id].destroy();
+      delete this.peerMap[id];
     }
 
     const onData = (data: Uint8Array) => {
@@ -129,9 +132,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     peer.on("data", onData);
 
-    peer.on("close", () => this.onDisconnect(id));
+    peer.on("close", (err: any) => this.onDisconnect(id, err));
 
-    peer.on("error", () => this.onDisconnect(id));
+    peer.on("error", (err: any) => this.onDisconnect(id, err));
 
     peer.send(
       JSON.stringify({
@@ -157,6 +160,8 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private cleanPool = () => {
     Object.entries(this.offerPool).forEach(([id, { peer }]) => {
       if (!this.handledOffers[id] && !this.connectedPeers[id]) {
+        // console.log("closed peer " + id);
+        peer.end();
         peer.destroy();
         delete this.peerMap[id];
       }
@@ -234,10 +239,12 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     }
 
     this.offerPool = this.makeOffers();
+    // console.log("offerPool", this.offerPool);
 
     this.trackerUrls.forEach(async (url: string) => {
       const socket = await this.makeSocket(url, this.infoHash);
       if (socket && socket.readyState === WebSocket.OPEN) {
+        // console.log("announce to " + url);
         this.announce(socket, this.infoHash);
       }
     });
@@ -314,7 +321,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       );
 
       peer.on("connect", () => this.onConnect(peer, val.peer_id));
-      peer.on("close", () => this.onDisconnect(val.peer_id));
+      peer.on("close", (err: any) => this.onDisconnect(val.peer_id, err));
       peer.signal(val.offer);
       return;
     }
@@ -341,7 +348,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         peer.on("connect", () => {
           this.onConnect(peer, val.peer_id, val.offer_id);
         });
-        peer.on("close", () => this.onDisconnect(val.peer_id));
+        peer.on("close", (err: any) => this.onDisconnect(val.peer_id, err));
         peer.signal(val.answer);
       }
     }
