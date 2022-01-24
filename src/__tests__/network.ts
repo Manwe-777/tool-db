@@ -3,7 +3,7 @@ import Automerge from "automerge";
 
 import { base64ToBinaryDocument, textRandom, ToolDb } from "..";
 import leveldb from "../utils/leveldb";
-jest.setTimeout(10000);
+jest.setTimeout(15000);
 
 let nodeA: ToolDb | undefined;
 let nodeB: ToolDb | undefined;
