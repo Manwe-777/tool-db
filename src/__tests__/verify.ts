@@ -1,13 +1,33 @@
 import { VerificationData, VerifyResult } from "../types/message";
-import verifyMessage from "../utils/verifyMessage";
+
 import catchReturn from "../utils/catchReturn";
 import verifyPeer from "../utils/verifyPeer";
 import getPeerSignature from "../utils/getPeerSignature";
 
-import { encodeKeyString, exportKey, generateKeyPair } from "..";
+import { encodeKeyString, exportKey, generateKeyPair, ToolDb } from "..";
 import { Peer } from "../types/tooldb";
+import leveldb from "../utils/leveldb";
 
 jest.mock("../getCrypto.ts");
+jest.setTimeout(10000);
+
+let ClientA: ToolDb | undefined;
+
+beforeAll((done) => {
+  ClientA = new ToolDb({
+    server: true,
+    host: "127.0.0.1",
+    port: 8888,
+    storageAdapter: leveldb,
+    storageName: "test-verify-a",
+  });
+  done();
+});
+
+afterAll((done) => {
+  ClientA.network.server.close();
+  setTimeout(done, 1000);
+});
 
 const putOk: VerificationData<string> = {
   k: "value",
@@ -20,13 +40,13 @@ const putOk: VerificationData<string> = {
 };
 
 it("Can verify PUT", () => {
-  return verifyMessage(putOk).then((result) => {
+  return ClientA.verifyMessage(putOk).then((result) => {
     expect(result).toEqual(VerifyResult.Verified);
   });
 });
 
 it("Can catch invalid POW", () => {
-  return verifyMessage(putOk, 5).then((result) => {
+  return ClientA.verifyMessage(putOk, 5).then((result) => {
     expect(result).toEqual(VerifyResult.NoProofOfWork);
   });
 });
@@ -42,7 +62,7 @@ const putSig: VerificationData<string> = {
 };
 
 it("Can catch tampered messages (signature)", () => {
-  return verifyMessage(putSig, 3).then((result) => {
+  return ClientA.verifyMessage(putSig, 3).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidSignature);
   });
 });
@@ -58,44 +78,44 @@ const tamperedMsg: VerificationData<string> = {
 };
 
 it("Can catch tampered POW", () => {
-  return verifyMessage(tamperedMsg, 3).then((result) => {
+  return ClientA.verifyMessage(tamperedMsg, 3).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidHashNonce);
   });
 });
 
 it("Can catch messages with missing data", () => {
   const delA: any = delete { ...putOk }.h;
-  const pa = verifyMessage(delA).then((result) => {
+  const pa = ClientA.verifyMessage(delA).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
   const delB: any = delete { ...putOk }.k;
-  const pb = verifyMessage(delB).then((result) => {
+  const pb = ClientA.verifyMessage(delB).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
   const delC: any = delete { ...putOk }.n;
-  const pc = verifyMessage(delC).then((result) => {
+  const pc = ClientA.verifyMessage(delC).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
   const delD: any = delete { ...putOk }.p;
-  const pd = verifyMessage(delD).then((result) => {
+  const pd = ClientA.verifyMessage(delD).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
   const delE: any = delete { ...putOk }.s;
-  const pe = verifyMessage(delE).then((result) => {
+  const pe = ClientA.verifyMessage(delE).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
   const delF: any = delete { ...putOk }.t;
-  const pf = verifyMessage(delF).then((result) => {
+  const pf = ClientA.verifyMessage(delF).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
   const delG: any = delete { ...putOk }.v;
-  const pg = verifyMessage(delG).then((result) => {
+  const pg = ClientA.verifyMessage(delG).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
@@ -121,7 +141,7 @@ const putTime: VerificationData<string> = {
 };
 
 it("Can catch tampered messages (time)", () => {
-  return verifyMessage(putTime).then((result) => {
+  return ClientA.verifyMessage(putTime).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidTimestamp);
   });
 });
@@ -137,7 +157,7 @@ const putPow: VerificationData<string> = {
 };
 
 // it("Can catch tampered messages (pow)", () => {
-//   return verifyMessage(putPow).then((result) => {
+//   return ClientA.verifyMessage(putPow).then((result) => {
 //     expect(result).toEqual(VerifyResult.NoProofOfWork);
 //   });
 // });
@@ -153,7 +173,7 @@ const putNonce: VerificationData<string> = {
 };
 
 // it("Can catch tampered messages (nonce)", () => {
-//   return verifyMessage(putNonce).then((result) => {
+//   return ClientA.verifyMessage(putNonce).then((result) => {
 //     expect(result).toEqual(VerifyResult.InvalidHashNonce);
 //   });
 // });
@@ -169,7 +189,7 @@ const putValue: VerificationData<string> = {
 };
 
 // it("Can catch tampered messages (value)", () => {
-//   return verifyMessage(putValue).then((result) => {
+//   return ClientA.verifyMessage(putValue).then((result) => {
 //     expect(result).toEqual(VerifyResult.InvalidHashNonce);
 //   });
 // });
@@ -185,7 +205,7 @@ const privatePut: VerificationData<{ test: string }> = {
 };
 
 it("Can verify namespaced PUT", () => {
-  return verifyMessage(privatePut).then((result) => {
+  return ClientA.verifyMessage(privatePut).then((result) => {
     expect(result).toEqual(VerifyResult.Verified);
   });
 });
@@ -201,7 +221,7 @@ const privatePutPubkey: VerificationData<{ test: string }> = {
 };
 
 it("Can catch pubkey replacement", () => {
-  return verifyMessage(privatePutPubkey).then((result) => {
+  return ClientA.verifyMessage(privatePutPubkey).then((result) => {
     expect(result).toEqual(VerifyResult.PubKeyMismatch);
   });
 });

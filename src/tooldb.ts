@@ -11,6 +11,7 @@ import {
   textRandom,
   ToolDbMessage,
   VerificationData,
+  verifyMessage,
 } from ".";
 
 import toolDbGet from "./toolDbGet";
@@ -65,6 +66,8 @@ export default class ToolDb extends EventEmitter {
   private _documents: Record<string, FreezeObject<any>> = {};
 
   public clientOnMessage = toolDbClientOnMessage;
+
+  public verifyMessage = verifyMessage;
 
   private _subscriptions: string[] = [];
 

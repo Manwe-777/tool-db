@@ -51,7 +51,7 @@ export default async function verifyMessage<T>(
         if (data) {
           try {
             const message = JSON.parse(data);
-            resolve(message.v);
+            resolve(message);
           } catch (e) {
             resolve(null);
           }

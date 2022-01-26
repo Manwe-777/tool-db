@@ -6,7 +6,7 @@ export default function toolDbVerificationWrapper(
 ) {
   // This wrapper function adds our custom verification functions to all messages.
   return new Promise((resolve) => {
-    verifyMessage(data, this.options.pow).then(async (verified) => {
+    this.verifyMessage(data, this.options.pow).then(async (verified) => {
       if (verified) {
         let skipCustom = true;
         this._customVerificator.forEach((listener) => {
