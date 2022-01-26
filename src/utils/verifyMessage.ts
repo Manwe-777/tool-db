@@ -4,6 +4,7 @@ import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
 import verifyData from "./crypto/verifyData";
 import fromBase64 from "./fromBase64";
+import { ToolDb } from "..";
 
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
@@ -12,6 +13,7 @@ import fromBase64 from "./fromBase64";
  * @returns boolean or undefined if the message type does not match
  */
 export default async function verifyMessage<T>(
+  this: ToolDb,
   msg: Partial<VerificationData<T>>,
   pow = 0
 ): Promise<VerifyResult> {
@@ -39,6 +41,26 @@ export default async function verifyMessage<T>(
   let publicKeyNamespace: false | string = false;
   if (msg.k.slice(0, 1) == ":") {
     publicKeyNamespace = msg.k.split(".")[0].slice(1);
+  }
+
+  // This namespace can only be written if data does not exist previously
+  if (msg.k.slice(0, 2) == "==") {
+    const key = msg.k;
+    const data = await new Promise<VerificationData<T> | null>((resolve) => {
+      this.store.get(key, (err, data) => {
+        if (data) {
+          try {
+            const message = JSON.parse(data);
+            resolve(message.v);
+          } catch (e) {
+            resolve(null);
+          }
+        } else {
+          resolve(null);
+        }
+      });
+    });
+    if (data && data.p !== msg.p) return VerifyResult.CantOverwrite;
   }
 
   const pubKeyString = msg.p;

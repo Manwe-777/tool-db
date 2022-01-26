@@ -4,6 +4,7 @@ export enum VerifyResult {
   CustomVerificationFailed = "CustomVerificationFailed",
   InvalidData = "InvalidData",
   InvalidVerification = "InvalidVerification",
+  CantOverwrite = "CantOverwrite",
   InvalidTimestamp = "InvalidTimestamp",
   PubKeyMismatch = "PubKeyMismatch",
   NoProofOfWork = "NoProofOfWork",
