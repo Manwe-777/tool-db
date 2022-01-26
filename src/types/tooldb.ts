@@ -74,4 +74,5 @@ export interface ToolDbOptions {
   topic: string;
   publicKey: CryptoKey | undefined;
   privateKey: CryptoKey | undefined;
+  [extra: string]: any;
 }

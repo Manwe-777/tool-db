@@ -2,8 +2,9 @@ import _ from "lodash";
 import Peer from "simple-peer";
 
 import { PingMessage, sha1, textRandom, ToolDbMessage } from ".";
-import { ToolDbNetworkAdapter } from "./types/tooldb";
+import { ToolDbNetworkAdapter, ToolDbOptions } from "./types/tooldb";
 import ToolDb from "./tooldb";
+import WebSocket from "ws";
 
 export type ToolDbWebSocket = WebSocket & {
   toolDbId?: string;
@@ -33,8 +34,21 @@ const defaultTrackerUrls = [
   "wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
 ];
 
+interface WebrtcAdapterOptions {
+  wrtc?: any;
+}
+
 export default class toolDbWebrtc extends ToolDbNetworkAdapter {
-  private _tooldb: ToolDb;
+  private _tooldb: ToolDb & {
+    options: ToolDbOptions & WebrtcAdapterOptions;
+  };
+
+  private wnd =
+    typeof window === "undefined" ? undefined : (window as any | undefined);
+
+  private wss = this.wnd
+    ? this.wnd.WebSocket || this.wnd.webkitWebSocket || this.wnd.mozWebSocket
+    : WebSocket;
 
   private sockets: Record<string, WebSocket | null> = {};
 
@@ -45,7 +59,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private connectedPeers: Record<string, boolean> = {};
 
   private onDisconnect = (id: string, err: any) => {
-    // console.warn(id, err);
+    console.warn(id, err);
     if (this.connectedPeers[id]) delete this.connectedPeers[id];
     if (this.peerMap[id]) delete this.peerMap[id];
   };
@@ -61,6 +75,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     rtcConfig: any // RTCConfiguration
   ) => {
     const peer: Peer.Instance = new Peer({
+      wrtc: this._tooldb.options.wrtc,
       initiator,
       trickle,
       config: rtcConfig,
@@ -89,12 +104,16 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     const offers: IOffers = {};
 
     new Array(offerPoolSize).fill(0).forEach(() => {
-      const peer = this.initPeer(true, false, {});
-      const oid = textRandom(20);
-      offers[oid] = {
-        peer,
-        offerP: new Promise((res) => peer.once("signal", res)),
-      };
+      try {
+        const peer = this.initPeer(true, false, {});
+        const oid = textRandom(20);
+        offers[oid] = {
+          peer,
+          offerP: new Promise((res) => peer.once("signal", res)),
+        };
+      } catch (e) {
+        console.warn(e);
+      }
     });
     return offers;
   };
@@ -108,6 +127,8 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       this.peerMap[id].destroy();
       delete this.peerMap[id];
     }
+
+    // console.log("onPeerConnect", id);
 
     const onData = (data: Uint8Array) => {
       const str = new TextDecoder().decode(data);
@@ -183,14 +204,14 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         };
 
         try {
-          const socket = new WebSocket(url);
+          const socket = new this.wss(url);
           // eslint-disable-next-line func-names
           const socks = this.sockets;
           socket.onopen = function () {
             socks[url] = this;
             resolve(this);
           };
-          socket.onmessage = (e) =>
+          socket.onmessage = (e: any) =>
             Object.values(this.socketListeners[url]).forEach((f) =>
               f(socket, e)
             );
@@ -239,10 +260,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     }
 
     this.offerPool = this.makeOffers();
-    // console.log("offerPool", this.offerPool);
 
     this.trackerUrls.forEach(async (url: string) => {
       const socket = await this.makeSocket(url, this.infoHash);
+      // console.log("socket", url, Object.keys(socket || {}));
       if (socket && socket.readyState === WebSocket.OPEN) {
         // console.log("announce to " + url);
         this.announce(socket, this.infoHash);
@@ -407,7 +428,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         const peer = this.peerMap[id];
         if (peer.connected) {
           if (this.tooldb.options.debug) {
-            console.log("Sent out to: ", id);
+            // console.log("Sent out to: ", id);
             // console.log("OUT > ", { ...msg, to });
           }
           peer.send(JSON.stringify({ ...msg, to }));
