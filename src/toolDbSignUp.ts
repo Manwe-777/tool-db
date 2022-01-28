@@ -17,7 +17,7 @@ export default async function toolDbSignUp(
   this: ToolDb,
   user: string,
   password: string
-): Promise<any> {
+): Promise<PutMessage<any>> {
   const userRoot = `==${user}`;
   return new Promise((resolve, reject) => {
     this.getData<UserRootData>(userRoot, false, 3000)

@@ -2,13 +2,12 @@ import { FreezeObject } from "automerge";
 import EventEmitter from "events";
 
 import {
+  BaseMessage,
   CrdtMessage,
   encodeKeyString,
   exportKey,
   generateKeyPair,
   PutMessage,
-  sha1,
-  textRandom,
   ToolDbMessage,
   VerificationData,
   verifyMessage,
@@ -55,7 +54,7 @@ export interface Listener {
 
 interface Verificator<T> {
   key: string;
-  fn: (msg: VerificationData<T>) => Promise<boolean>;
+  fn: (msg: VerificationData<T> & BaseMessage) => Promise<boolean>;
 }
 
 export default class ToolDb extends EventEmitter {
@@ -198,7 +197,7 @@ export default class ToolDb extends EventEmitter {
 
   public addCustomVerification = <T = any>(
     key: string,
-    fn: (msg: VerificationData) => Promise<boolean>
+    fn: (msg: VerificationData & BaseMessage) => Promise<boolean>
   ) => {
     const newListener: Verificator<T> = {
       key,
