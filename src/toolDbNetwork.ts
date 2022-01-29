@@ -95,11 +95,13 @@ export default class toolDbNetwork {
               socket.toolDbId = parsedMessage.clientId;
               socket.isServer = parsedMessage.isServer;
               this._clientSockets[parsedMessage.clientId] = socket;
+              this.tooldb.processedOutHashes[parsedMessage.clientId] = [];
             }
             if (parsedMessage.type === "pong") {
               socket.toolDbId = parsedMessage.clientId;
               socket.isServer = parsedMessage.isServer;
               this._clientSockets[parsedMessage.clientId] = socket;
+              this.tooldb.processedOutHashes[parsedMessage.clientId] = [];
             }
 
             this.tooldb.clientOnMessage(parsedMessage, socket.toolDbId || "");
@@ -191,11 +193,13 @@ export default class toolDbNetwork {
             wss.toolDbId = parsedMessage.clientId;
             wss.isServer = parsedMessage.isServer;
             this._clientSockets[parsedMessage.clientId] = wss;
+            this.tooldb.processedOutHashes[parsedMessage.clientId] = [];
           }
           if (parsedMessage.type === "pong") {
             wss.toolDbId = parsedMessage.clientId;
             wss.isServer = parsedMessage.isServer;
             this._clientSockets[parsedMessage.clientId] = wss;
+            this.tooldb.processedOutHashes[parsedMessage.clientId] = [];
           }
 
           this.tooldb.clientOnMessage(parsedMessage, wss.toolDbId);
@@ -250,7 +254,17 @@ export default class toolDbNetwork {
         if (this.options.debug) {
           console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
         }
-        conn.send(JSON.stringify({ ...msg, to }));
+        if (msg.type === "put" || msg.type === "crdtPut") {
+          if (
+            conn.toolDbId &&
+            !this.tooldb.processedOutHashes[conn.toolDbId].includes(msg.h)
+          ) {
+            conn.send(JSON.stringify({ ...msg, to }));
+            this.tooldb.processedOutHashes[conn.toolDbId].push(msg.h);
+          }
+        } else {
+          conn.send(JSON.stringify({ ...msg, to }));
+        }
       } else {
         // console.log("Fitlered out!", conn.toolDbId, conn.origUrl);
       }
@@ -261,7 +275,18 @@ export default class toolDbNetwork {
     const socket = this._clientSockets[clientId];
     if (socket) {
       const to = _.uniq([...msg.to, this.options.id]);
-      socket.send(JSON.stringify({ ...msg, to }));
+
+      if (msg.type === "put" || msg.type === "crdtPut") {
+        if (
+          clientId &&
+          !this.tooldb.processedOutHashes[clientId].includes(msg.h)
+        ) {
+          socket.send(JSON.stringify({ ...msg, to }));
+          this.tooldb.processedOutHashes[clientId].push(msg.h);
+        }
+      } else {
+        socket.send(JSON.stringify({ ...msg, to }));
+      }
     }
   }
 

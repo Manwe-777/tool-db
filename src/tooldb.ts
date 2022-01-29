@@ -80,6 +80,12 @@ export default class ToolDb extends EventEmitter {
     return this._processedIds;
   }
 
+  private _processedOutHashes: Record<string, string[]> = {};
+
+  get processedOutHashes() {
+    return this._processedOutHashes;
+  }
+
   public subscribeData = toolDbSubscribe;
 
   // Emitted when there are no more server peers connected to
