@@ -1,8 +1,5 @@
+import { exportKeyAsHex, randomAnimal } from ".";
 import ToolDb from "./tooldb";
-import encodeKeyString from "./utils/crypto/encodeKeyString";
-import exportKey from "./utils/crypto/exportKey";
-
-import randomAnimal from "./utils/randomAnimal";
 
 export default function toolDbKeysSignIn(
   this: ToolDb,
@@ -15,14 +12,12 @@ export default function toolDbKeysSignIn(
   signKeys: CryptoKeyPair;
   encryptionKeys: CryptoKeyPair;
 }> {
-  return exportKey("spki", keys.signKeys.publicKey as CryptoKey)
-    .then((skpub) => encodeKeyString(skpub as ArrayBuffer))
-    .then((pubKey) => {
-      this.user = {
-        keys: keys,
-        name: username || `Anonymous ${randomAnimal()}`,
-        pubKey,
-      };
-      return keys;
-    });
+  return exportKeyAsHex(keys.signKeys.publicKey as CryptoKey).then((pubKey) => {
+    this.user = {
+      keys: keys,
+      name: username || `Anonymous ${randomAnimal()}`,
+      adress: pubKey.slice(-40),
+    };
+    return keys;
+  });
 }

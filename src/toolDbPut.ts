@@ -1,10 +1,6 @@
-import {
-  arrayBufferToBase64,
-  PutMessage,
-  textRandom,
-  VerificationData,
-} from ".";
+import { PutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
+import arrayBufferToHex from "./utils/arrayBufferToHex";
 
 import proofOfWork from "./utils/proofOfWork";
 
@@ -37,7 +33,7 @@ export default function toolDbPut<T = any>(
 
     const timestamp = new Date().getTime();
     const dataString = `${JSON.stringify(value)}${
-      this.user.pubKey
+      this.user.adress
     }${timestamp}`;
 
     // WORK
@@ -48,16 +44,16 @@ export default function toolDbPut<T = any>(
           signData(hash, this.user.keys.signKeys.privateKey as CryptoKey)
             .then(async (signature) => {
               const finalKey = userNamespaced
-                ? `:${this.user?.pubKey}.${key}`
+                ? `:${this.user?.adress}.${key}`
                 : key;
               // Compose the message
               const data: VerificationData = {
                 k: finalKey,
-                p: this.user?.pubKey || "",
+                a: this.user?.adress || "",
                 n: nonce,
                 t: timestamp,
                 h: hash,
-                s: arrayBufferToBase64(signature),
+                s: arrayBufferToHex(signature),
                 v: value,
               };
 

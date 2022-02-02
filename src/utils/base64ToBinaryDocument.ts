@@ -1,5 +1,5 @@
 import { BinaryDocument } from "automerge";
-import fromBase64 from "./fromBase64";
+import { fromBase64 } from "..";
 
 export default function base64ToBinaryDocument(based: string): BinaryDocument {
   const str = fromBase64(based);

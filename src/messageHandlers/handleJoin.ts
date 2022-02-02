@@ -1,5 +1,4 @@
-import { JoinMessage, ServersMessage, ToolDb } from "..";
-import verifyPeer from "../utils/verifyPeer";
+import { JoinMessage, ServersMessage, verifyPeer, ToolDb } from "..";
 
 export default function handleJoin(
   this: ToolDb,

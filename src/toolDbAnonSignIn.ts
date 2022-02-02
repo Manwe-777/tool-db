@@ -1,6 +1,6 @@
 import ToolDb from "./tooldb";
-import encodeKeyString from "./utils/crypto/encodeKeyString";
-import exportKey from "./utils/crypto/exportKey";
+
+import exportKeyAsHex from "./utils/crypto/exportKeyAsHex";
 import generateKeysComb from "./utils/crypto/generateKeysComb";
 import randomAnimal from "./utils/randomAnimal";
 
@@ -9,15 +9,13 @@ export default function toolDbAnonSignIn(this: ToolDb): Promise<{
   encryptionKeys: CryptoKeyPair;
 }> {
   return generateKeysComb().then((newKeys) =>
-    exportKey("spki", newKeys.signKeys.publicKey as CryptoKey)
-      .then((skpub) => encodeKeyString(skpub as ArrayBuffer))
-      .then((pubKey) => {
-        this.user = {
-          keys: newKeys,
-          name: `Anonymous ${randomAnimal()}`,
-          pubKey,
-        };
-        return newKeys;
-      })
+    exportKeyAsHex(newKeys.signKeys.publicKey as CryptoKey).then((pubKey) => {
+      this.user = {
+        keys: newKeys,
+        name: `Anonymous ${randomAnimal()}`,
+        adress: pubKey.slice(-40),
+      };
+      return newKeys;
+    })
   );
 }

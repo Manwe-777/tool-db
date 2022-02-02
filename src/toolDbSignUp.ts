@@ -1,23 +1,22 @@
+import ToolDb from "./tooldb";
+
 import {
-  arrayBufferToBase64,
   PutMessage,
   textRandom,
   UserRootData,
   VerificationData,
+  arrayBufferToHex,
+  encryptWithPass,
+  exportKeyAsHex,
+  generateKeysComb,
+  saveKeysComb,
+  generateIv,
+  proofOfWork,
+  sha256,
+  signData,
+  toBase64,
+  uint8ToBase64,
 } from ".";
-
-import ToolDb from "./tooldb";
-
-import encryptWithPass from "./utils/crypto/encryptWithPass";
-import generateKeysComb from "./utils/crypto/generateKeysComb";
-import saveKeysComb from "./utils/crypto/saveKeysComb";
-import generateIv from "./utils/generateIv";
-
-import proofOfWork from "./utils/proofOfWork";
-import sha256 from "./utils/sha256";
-import signData from "./utils/signData";
-import toBase64 from "./utils/toBase64";
-import uint8ToBase64 from "./utils/uint8ToBase64";
 
 export default async function toolDbSignUp(
   this: ToolDb,
@@ -32,70 +31,76 @@ export default async function toolDbSignUp(
           generateKeysComb()
             .then((keys) => {
               if (keys) {
-                saveKeysComb(keys.signKeys, keys.encryptionKeys)
-                  .then((savedKeys) => {
-                    const iv = generateIv();
-                    let encskpriv = "";
-                    let encekpriv = "";
+                exportKeyAsHex(keys.signKeys.publicKey as CryptoKey)
+                  .then((publicHexed) => {
+                    saveKeysComb(keys.signKeys, keys.encryptionKeys)
+                      .then((savedKeys) => {
+                        const iv = generateIv();
+                        let encskpriv = "";
+                        let encekpriv = "";
 
-                    // Encrypt sign key
-                    encryptWithPass(savedKeys.skpriv, password, iv)
-                      .then((skenc) => {
-                        encryptWithPass(savedKeys.ekpriv, password, iv)
-                          .then((ekenc) => {
-                            if (skenc) encskpriv = skenc;
-                            if (ekenc) encekpriv = ekenc;
+                        const userAdress = publicHexed.slice(-40);
 
-                            const userData: UserRootData = {
-                              keys: {
-                                skpub: savedKeys.skpub,
-                                skpriv: toBase64(encskpriv),
-                                ekpub: savedKeys.ekpub,
-                                ekpriv: toBase64(encekpriv),
-                              },
-                              iv: uint8ToBase64(iv),
-                              pass: sha256(password),
-                            };
+                        // Encrypt sign key
+                        encryptWithPass(savedKeys.skpriv, password, iv)
+                          .then((skenc) => {
+                            encryptWithPass(savedKeys.ekpriv, password, iv)
+                              .then((ekenc) => {
+                                if (skenc) encskpriv = skenc;
+                                if (ekenc) encekpriv = ekenc;
 
-                            const timestamp = new Date().getTime();
-                            const userDataString = `${JSON.stringify(
-                              userData
-                            )}${savedKeys.skpub}${timestamp}`;
+                                const userData: UserRootData = {
+                                  keys: {
+                                    skpub: savedKeys.skpub,
+                                    skpriv: toBase64(encskpriv),
+                                    ekpub: savedKeys.ekpub,
+                                    ekpriv: toBase64(encekpriv),
+                                  },
+                                  iv: uint8ToBase64(iv),
+                                  pass: sha256(password),
+                                };
 
-                            proofOfWork(userDataString, 0)
-                              .then(({ hash, nonce }) => {
-                                signData(
-                                  hash,
-                                  keys.signKeys.privateKey as CryptoKey
-                                ).then((signature) => {
-                                  const signupMessage: VerificationData<UserRootData> =
-                                    {
-                                      k: userRoot,
-                                      p: savedKeys.skpub,
-                                      n: nonce,
-                                      t: timestamp,
-                                      h: hash,
-                                      s: arrayBufferToBase64(signature),
-                                      v: userData,
-                                    };
+                                const timestamp = new Date().getTime();
+                                const userDataString = `${JSON.stringify(
+                                  userData
+                                )}${userAdress}${timestamp}`;
 
-                                  if (this.options.debug) {
-                                    console.log(
-                                      "SIGNUP PUT > " + userRoot,
-                                      signupMessage
-                                    );
-                                  }
+                                proofOfWork(userDataString, 0)
+                                  .then(({ hash, nonce }) => {
+                                    signData(
+                                      hash,
+                                      keys.signKeys.privateKey as CryptoKey
+                                    ).then((signature) => {
+                                      const signupMessage: VerificationData<UserRootData> =
+                                        {
+                                          k: userRoot,
+                                          a: userAdress,
+                                          n: nonce,
+                                          t: timestamp,
+                                          h: hash,
+                                          s: arrayBufferToHex(signature),
+                                          v: userData,
+                                        };
 
-                                  const finalMsg = {
-                                    type: "put",
-                                    id: textRandom(10),
-                                    to: [],
-                                    ...signupMessage,
-                                  } as PutMessage;
+                                      if (this.options.debug) {
+                                        console.log(
+                                          "SIGNUP PUT > " + userRoot,
+                                          signupMessage
+                                        );
+                                      }
 
-                                  this.network.sendToAll(finalMsg);
-                                  resolve(finalMsg);
-                                });
+                                      const finalMsg = {
+                                        type: "put",
+                                        id: textRandom(10),
+                                        to: [],
+                                        ...signupMessage,
+                                      } as PutMessage;
+
+                                      this.network.sendToAll(finalMsg);
+                                      resolve(finalMsg);
+                                    });
+                                  })
+                                  .catch(reject);
                               })
                               .catch(reject);
                           })

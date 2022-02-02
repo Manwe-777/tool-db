@@ -1,16 +1,12 @@
 import { BinaryChange } from "automerge";
-import {
-  arrayBufferToBase64,
-  CrdtPutMessage,
-  textRandom,
-  uint8ToBase64,
-  VerificationData,
-} from ".";
+import { CrdtPutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
+import arrayBufferToHex from "./utils/arrayBufferToHex";
 
 import proofOfWork from "./utils/proofOfWork";
 
 import signData from "./utils/signData";
+import uint8ToBase64 from "./utils/uint8ToBase64";
 
 /**
  * Triggers a PUT request to other peers.
@@ -41,7 +37,7 @@ export default function toolDbCrdtPut<T = any>(
 
     const encodedData = JSON.stringify(value.map(uint8ToBase64));
 
-    const dataString = `${encodedData}${this.user.pubKey}${timestamp}`;
+    const dataString = `${encodedData}${this.user.adress}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
@@ -52,12 +48,12 @@ export default function toolDbCrdtPut<T = any>(
             .then(async (signature) => {
               // Compose the message
               const data: VerificationData = {
-                k: userNamespaced ? `:${this.user?.pubKey}.${key}` : key,
-                p: this.user?.pubKey || "",
+                k: userNamespaced ? `:${this.user?.adress}.${key}` : key,
+                a: this.user?.adress || "",
                 n: nonce,
                 t: timestamp,
                 h: hash,
-                s: arrayBufferToBase64(signature),
+                s: arrayBufferToHex(signature),
                 v: encodedData,
               };
 

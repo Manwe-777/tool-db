@@ -15,11 +15,11 @@ export default function toolDbQueryKeys(
   timeoutMs = 1000
 ): Promise<string[] | null> {
   return new Promise((resolve, reject) => {
-    if (userNamespaced && this.user?.pubKey === undefined) {
+    if (userNamespaced && this.user?.adress === undefined) {
       reject(new Error("You are not authorized yet!"));
       return;
     }
-    const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
+    const finalKey = userNamespaced ? `:${this.user?.adress}.${key}` : key;
     if (this.options.debug) {
       console.log("QUERY > " + finalKey);
     }

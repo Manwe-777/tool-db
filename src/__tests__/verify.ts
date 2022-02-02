@@ -7,6 +7,7 @@ import arrayBufferToHex from "../utils/arrayBufferToHex";
 
 import base64KeyToHex from "../utils/crypto/base64KeyToHex";
 import recoverPubKey from "../utils/crypto/recoverPubKey";
+import exportKeyAsHex from "../utils/crypto/exportKeyAsHex";
 
 import {
   base64ToArrayBuffer,
@@ -88,16 +89,14 @@ it("Can recover public key from signed data", (done) => {
 
   generateKeyPair("ECDSA", true).then((keys) => {
     const message = "test";
-    crypto.subtle.exportKey("raw", keys.publicKey).then((pk) => {
-      const publicHexed = arrayBufferToHex(pk);
-      signData(message, keys.privateKey).then((s) => {
-        const signature = s;
-        const pubKeyRecovered = recoverPubKey(sha256(message), signature);
+    exportKeyAsHex(keys.publicKey).then((publicHexed) => {
+    signData(message, keys.privateKey).then((s) => {
+      const signature = s;
+      const pubKeyRecovered = recoverPubKey(sha256(message), signature);
 
-        const matches = pubKeyRecovered.filter((k) => k === publicHexed);
-        expect(matches[0]).toBe(publicHexed);
-        done();
-      });
+      const matches = pubKeyRecovered.filter((k) => k === publicHexed);
+      expect(matches[0]).toBe(publicHexed);
+      done();
     });
   });
 });

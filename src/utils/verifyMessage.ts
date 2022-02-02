@@ -1,10 +1,14 @@
 import sha256 from "./sha256";
 import { VerifyResult, VerificationData } from "../types/message";
-import decodeKeyString from "./crypto/decodeKeyString";
-import importKey from "./crypto/importKey";
-import verifyData from "./crypto/verifyData";
 
-import { base64ToArrayBuffer, ToolDb } from "..";
+import {
+  ToolDb,
+  decodeKeyString,
+  importKey,
+  verifyData,
+  recoverPubKey,
+  hexToArrayBuffer,
+} from "..";
 
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
@@ -24,7 +28,7 @@ export default async function verifyMessage<T>(
     msg.t === undefined ||
     msg.k === undefined ||
     msg.h === undefined ||
-    msg.p === undefined ||
+    msg.a === undefined ||
     msg.s === undefined
   ) {
     return VerifyResult.InvalidData;
@@ -38,9 +42,9 @@ export default async function verifyMessage<T>(
   }
 
   // This is a user namespace
-  let publicKeyNamespace: false | string = false;
+  let adressNamespace: false | string = false;
   if (msg.k.slice(0, 1) == ":") {
-    publicKeyNamespace = msg.k.split(".")[0].slice(1);
+    adressNamespace = msg.k.split(".")[0].slice(1);
   }
 
   // This namespace can only be written if data does not exist previously
@@ -60,12 +64,12 @@ export default async function verifyMessage<T>(
         }
       });
     });
-    if (data && data.p !== msg.p) return VerifyResult.CantOverwrite;
+    if (data && data.a !== msg.a) return VerifyResult.CantOverwrite;
   }
 
-  const pubKeyString = msg.p;
+  const adress = msg.a;
 
-  if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
+  if (adressNamespace && adressNamespace !== adress) {
     // console.warn("Provided pub keys do not match");
     return VerifyResult.PubKeyMismatch;
   }
@@ -80,11 +84,17 @@ export default async function verifyMessage<T>(
       return VerifyResult.NoProofOfWork;
     }
 
-    if (sha256(`${strData}${pubKeyString}${msg.t}${msg.n}`) !== msg.h) {
+    if (sha256(`${strData}${adress}${msg.t}${msg.n}`) !== msg.h) {
       // console.warn("Specified hash does not generate a valid pow");
       return VerifyResult.InvalidHashNonce;
     }
   }
+
+  const pubKeys = await recoverPubKey(sha256(msg.h), hexToArrayBuffer(msg.s));
+
+  let pubKeyString = "";
+  if (pubKeys[0].slice(-40) === msg.a.slice(-40)) pubKeyString = pubKeys[0];
+  if (pubKeys[1].slice(-40) === msg.a.slice(-40)) pubKeyString = pubKeys[1];
 
   const pubKey = await importKey(
     decodeKeyString(pubKeyString),
@@ -93,9 +103,7 @@ export default async function verifyMessage<T>(
     ["verify"]
   );
 
-  // console.log("Message verification: ", msg.hash, pubKeyString, msg);
-
-  const verified = await verifyData(msg.h, base64ToArrayBuffer(msg.s), pubKey);
+  const verified = await verifyData(msg.h, hexToArrayBuffer(msg.s), pubKey);
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;

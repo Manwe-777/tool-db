@@ -9,6 +9,7 @@ import sha256 from "./utils/sha256";
 import { UserRootData } from ".";
 
 import ToolDb from "./tooldb";
+import exportKeyAsHex from "./utils/crypto/exportKeyAsHex";
 
 export default function toolDbSignIn(
   this: ToolDb,
@@ -92,7 +93,7 @@ export default function toolDbSignIn(
               }
 
               importKeys()
-                .then(({ skpub, skpriv, ekpub, ekpriv }) => {
+                .then(async ({ skpub, skpriv, ekpub, ekpriv }) => {
                   if (!skpub || !skpriv || !ekpub || !ekpriv) {
                     reject(new Error("Could not import keys"));
                   } else {
@@ -107,10 +108,14 @@ export default function toolDbSignIn(
                       },
                     };
 
+                    const pubKeyHex = await exportKeyAsHex(
+                      newKeys.signKeys.publicKey
+                    );
+
                     this.user = {
                       keys: newKeys,
                       name: user,
-                      pubKey: _user.keys.skpub,
+                      adress: pubKeyHex.slice(-40),
                     };
                     resolve(newKeys);
                   }

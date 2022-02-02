@@ -147,7 +147,7 @@ export default class ToolDb extends EventEmitter {
   };
 
   public getUserNamespacedKey(key: string) {
-    return ":" + (this.user?.pubKey || "") + "." + key;
+    return ":" + (this.user?.adress || "") + "." + key;
   }
 
   /**
@@ -226,7 +226,7 @@ export default class ToolDb extends EventEmitter {
           encryptionKeys: CryptoKeyPair;
         };
         name: string;
-        pubKey: string;
+        adress: string;
       };
 
   private _options: ToolDbOptions = {
