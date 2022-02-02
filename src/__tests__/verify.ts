@@ -3,10 +3,24 @@ import { VerificationData, VerifyResult } from "../types/message";
 import catchReturn from "../utils/catchReturn";
 import verifyPeer from "../utils/verifyPeer";
 import getPeerSignature from "../utils/getPeerSignature";
+import arrayBufferToHex from "../utils/arrayBufferToHex";
 
-import { encodeKeyString, exportKey, generateKeyPair, ToolDb } from "..";
+import base64KeyToHex from "../utils/crypto/base64KeyToHex";
+import recoverPubKey from "../utils/crypto/recoverPubKey";
+
+import {
+  base64ToArrayBuffer,
+  encodeKeyString,
+  exportKey,
+  generateKeyPair,
+  sha256,
+  signData,
+  ToolDb,
+} from "..";
+
 import { Peer } from "../types/tooldb";
 import leveldb from "../utils/leveldb";
+import getCrypto from "../getCrypto";
 
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
@@ -39,9 +53,52 @@ const putOk: VerificationData<string> = {
   v: "AzB4NzijkW",
 };
 
+const recoverTest: VerificationData<string> = {
+  k: "test",
+  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/wvoRihtBva5KXRXJhocUa1Nt9B6+DeSvetQ2ygaDStdBvgwWc8si/dcfK4kjVhtgzGfTAS/MogKzFg5lkI7Dw==",
+  n: 0,
+  t: 1643731511429,
+  h: "38780383388f8fca79ac216f48ac529dacea3058498c55ecd52ef625af74b2ae",
+  s: "CwVbOMK3Zi/Dv8KVw6rDuMOQbyw8GcKnbhx8wpnDo8Oqw48tw5TDgQzCh3jDgDbDqsKLTQJdw79Xw7Rjwo8yPhM5I8O8UMK8wrjDt8Kjw7gCwrQiwqobeMO+wqTDoUU=",
+  v: "value",
+};
+
 it("Can verify PUT", () => {
-  return ClientA.verifyMessage(putOk).then((result) => {
+  return ClientA.verifyMessage(recoverTest).then((result) => {
     expect(result).toEqual(VerifyResult.Verified);
+  });
+});
+
+it("Can recover public key from message", async () => {
+  // Convert the public key to hex
+  const publicHexed = await base64KeyToHex(recoverTest.p);
+  //
+  const signature = base64ToArrayBuffer(recoverTest.s);
+  const message = recoverTest.h;
+
+  // Message needs to be hashed because webcrypto does it internally
+  const pubKeyRecovered = recoverPubKey(sha256(message), signature);
+
+  const matches = pubKeyRecovered.filter((k) => k === publicHexed);
+  expect(matches[0]).toBe(publicHexed);
+});
+
+it("Can recover public key from signed data", (done) => {
+  const crypto = getCrypto();
+
+  generateKeyPair("ECDSA", true).then((keys) => {
+    const message = "test";
+    crypto.subtle.exportKey("raw", keys.publicKey).then((pk) => {
+      const publicHexed = arrayBufferToHex(pk);
+      signData(message, keys.privateKey).then((s) => {
+        const signature = s;
+        const pubKeyRecovered = recoverPubKey(sha256(message), signature);
+
+        const matches = pubKeyRecovered.filter((k) => k === publicHexed);
+        expect(matches[0]).toBe(publicHexed);
+        done();
+      });
+    });
   });
 });
 

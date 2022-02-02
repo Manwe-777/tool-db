@@ -3,7 +3,7 @@ import stringToArrayBuffer from "../stringToArrayBuffer";
 
 export default function verifyData(
   data: string,
-  signature: string,
+  signature: ArrayBuffer,
   publicKey: CryptoKey,
   hashName = "SHA-256"
 ) {
@@ -14,7 +14,7 @@ export default function verifyData(
       hash: { name: hashName }, // can be "SHA-1", "SHA-256", "SHA-384", or "SHA-512"
     },
     publicKey, // from generateKey or importKey above
-    stringToArrayBuffer(signature), // ArrayBuffer of the signature
+    signature, // ArrayBuffer of the signature
     stringToArrayBuffer(data) // ArrayBuffer of the data
   );
 }

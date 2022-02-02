@@ -3,6 +3,9 @@ import toolDbGetPubKey from "../toolDbGetPubKey";
 import exportKey from "../utils/crypto/exportKey";
 import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateKeysComb from "../utils/crypto/generateKeysComb";
+import arrayBufferToHex from "../utils/arrayBufferToHex";
+import hexToArrayBuffer from "../utils/hexToArrayBuffer";
+
 import leveldb from "../utils/leveldb";
 
 jest.setTimeout(10000);
@@ -37,6 +40,16 @@ afterAll((done) => {
   ClientB.network.server.close();
   setTimeout(done, 1000);
 });
+
+function equal(buf1: ArrayBuffer, buf2: ArrayBuffer) {
+  if (buf1.byteLength != buf2.byteLength) return false;
+  const dv1 = new Int8Array(buf1);
+  const dv2 = new Int8Array(buf2);
+  for (let i = 0; i != buf1.byteLength; i++) {
+    if (dv1[i] != dv2[i]) return false;
+  }
+  return true;
+}
 
 it("Can generate key pair combination", () => {
   return expect(generateKeysComb()).resolves.toBeDefined();
@@ -123,4 +136,17 @@ it("Cant get the public key keys", (done) => {
       done();
     });
   }, 250);
+});
+
+it("Cant convert keys to hexa and back", async () => {
+  const keysComb = await generateKeysComb();
+
+  const rawKey = await exportKey("raw", keysComb.signKeys.publicKey);
+
+  const hexed = arrayBufferToHex(rawKey as ArrayBuffer);
+  const dehexed = hexToArrayBuffer(hexed);
+
+  const isEqual = equal(rawKey as ArrayBuffer, dehexed);
+
+  expect(isEqual).toBe(true);
 });

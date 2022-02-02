@@ -3,8 +3,8 @@ import { VerifyResult, VerificationData } from "../types/message";
 import decodeKeyString from "./crypto/decodeKeyString";
 import importKey from "./crypto/importKey";
 import verifyData from "./crypto/verifyData";
-import fromBase64 from "./fromBase64";
-import { ToolDb } from "..";
+
+import { base64ToArrayBuffer, ToolDb } from "..";
 
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
@@ -95,7 +95,7 @@ export default async function verifyMessage<T>(
 
   // console.log("Message verification: ", msg.hash, pubKeyString, msg);
 
-  const verified = await verifyData(msg.h, fromBase64(msg.s), pubKey);
+  const verified = await verifyData(msg.h, base64ToArrayBuffer(msg.s), pubKey);
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;

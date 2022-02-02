@@ -1,4 +1,4 @@
-import { sha256, signData, toBase64 } from "..";
+import { arrayBufferToBase64, sha256, signData, toBase64 } from "..";
 
 export default function getPeerSignature(
   privateKey: CryptoKey,
@@ -9,5 +9,5 @@ export default function getPeerSignature(
 ) {
   const dataToSign = sha256(`${topic}-${timestamp}-${host}:${port}`);
 
-  return signData(dataToSign, privateKey, "SHA-1").then(toBase64);
+  return signData(dataToSign, privateKey, "SHA-1").then(arrayBufferToBase64);
 }

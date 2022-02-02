@@ -1,10 +1,14 @@
-import { PutMessage, textRandom, VerificationData } from ".";
+import {
+  arrayBufferToBase64,
+  PutMessage,
+  textRandom,
+  VerificationData,
+} from ".";
 import ToolDb from "./tooldb";
 
 import proofOfWork from "./utils/proofOfWork";
 
 import signData from "./utils/signData";
-import toBase64 from "./utils/toBase64";
 
 /**
  * Triggers a PUT request to other peers.
@@ -53,7 +57,7 @@ export default function toolDbPut<T = any>(
                 n: nonce,
                 t: timestamp,
                 h: hash,
-                s: toBase64(signature),
+                s: arrayBufferToBase64(signature),
                 v: value,
               };
 

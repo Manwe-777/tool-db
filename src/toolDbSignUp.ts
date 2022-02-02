@@ -1,4 +1,10 @@
-import { PutMessage, textRandom, UserRootData, VerificationData } from ".";
+import {
+  arrayBufferToBase64,
+  PutMessage,
+  textRandom,
+  UserRootData,
+  VerificationData,
+} from ".";
 
 import ToolDb from "./tooldb";
 
@@ -69,7 +75,7 @@ export default async function toolDbSignUp(
                                       n: nonce,
                                       t: timestamp,
                                       h: hash,
-                                      s: toBase64(signature),
+                                      s: arrayBufferToBase64(signature),
                                       v: userData,
                                     };
 
