@@ -4,7 +4,7 @@ import Automerge from "automerge";
 
 import { base64ToBinaryDocument, textRandom, ToolDb } from "..";
 import leveldb from "../utils/leveldb";
-jest.setTimeout(15000);
+jest.setTimeout(20000);
 
 let nodeA: ToolDb | undefined;
 let nodeB: ToolDb | undefined;
@@ -121,16 +121,20 @@ it("A can sign up and B can sign in", () => {
     const testPassword = "im a password";
 
     Alice.signUp(testUsername, testPassword).then((result) => {
+      expect(result).toBeDefined();
       setTimeout(() => {
         Bob.signIn(testUsername, testPassword).then((res) => {
+          expect(res).toBeDefined();
           expect(Bob.user).toBeDefined();
           expect(Bob.user.name).toBe(testUsername);
 
           // test for failed sign in
-          Bob.signIn(testUsername, testPassword + " ").catch((e) => {
-            expect(e).toBe("Invalid password");
-            resolve();
-          });
+          setTimeout(() => {
+            Bob.signIn(testUsername, testPassword + " ").catch((e) => {
+              expect(e).toBe("Invalid password");
+              resolve();
+            });
+          }, 1000);
         });
       }, 1000);
     });
