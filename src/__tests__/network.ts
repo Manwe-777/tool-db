@@ -40,6 +40,7 @@ beforeAll((done) => {
     storageName: "test-alice",
     storageAdapter: leveldb,
   });
+  Alice.anonSignIn();
   Alice.onConnect = () => checkIfOk(Alice.options.id);
 
   Bob = new ToolDb({
@@ -48,6 +49,7 @@ beforeAll((done) => {
     storageName: "test-bob",
     storageAdapter: leveldb,
   });
+  Bob.anonSignIn();
   Bob.onConnect = () => checkIfOk(Bob.options.id);
 
   const connected = [];
@@ -56,6 +58,12 @@ beforeAll((done) => {
       connected.push(id);
 
       if (connected.length === 3) {
+        let signedIn = false;
+        while (!signedIn) {
+          if (Alice.user && Bob.user) {
+            signedIn = true;
+          }
+        }
         done();
       }
     }
@@ -69,22 +77,24 @@ afterAll((done) => {
   setTimeout(done, 1000);
 });
 
+it("A and B are signed in", () => {
+  expect(Alice.user).toBeDefined();
+  expect(Bob.user).toBeDefined();
+});
+
 it("A can put and get", () => {
   return new Promise<void>((resolve) => {
     const testKey = "test-key-" + textRandom(16);
     const testValue = "Cool value";
 
-    Alice.anonSignIn().then((ak) => {
-      expect(ak).toBeDefined();
-      Alice.putData(testKey, testValue).then((msg) => {
-        expect(msg).toBeDefined();
-        setTimeout(() => {
-          Alice.getData(testKey).then((data) => {
-            expect(data).toBe(testValue);
-            resolve();
-          });
-        }, 1000);
-      });
+    Alice.putData(testKey, testValue).then((msg) => {
+      expect(msg).toBeDefined();
+      setTimeout(() => {
+        Alice.getData(testKey).then((data) => {
+          expect(data).toBe(testValue);
+          resolve();
+        });
+      }, 1000);
     });
   });
 });
@@ -94,24 +104,16 @@ it("A and B can communicate trough the swarm", () => {
     const testKey = "test-key-" + textRandom(16);
     const testValue = "Awesome value";
 
-    Alice.anonSignIn()
-      .then((ak) => {
-        expect(ak).toBeDefined();
-        return Bob.anonSignIn();
-      })
-      .then((bk) => {
-        expect(bk).toBeDefined();
-        Alice.putData(testKey, testValue).then((msg) => {
-          expect(msg).toBeDefined();
+    Alice.putData(testKey, testValue).then((msg) => {
+      expect(msg).toBeDefined();
 
-          setTimeout(() => {
-            Bob.getData(testKey).then((data) => {
-              expect(data).toBe(testValue);
-              resolve();
-            });
-          }, 1500);
+      setTimeout(() => {
+        Bob.getData(testKey).then((data) => {
+          expect(data).toBe(testValue);
+          resolve();
         });
-      });
+      }, 1500);
+    });
   });
 });
 
