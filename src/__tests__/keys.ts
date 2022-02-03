@@ -1,5 +1,6 @@
 import { ToolDb } from "..";
 import toolDbGetPubKey from "../toolDbGetPubKey";
+import recoverPubKeyFromPrivate from "../utils/crypto/recoverPubKeyFromPrivate";
 import exportKey from "../utils/crypto/exportKey";
 import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateKeysComb from "../utils/crypto/generateKeysComb";
@@ -141,12 +142,23 @@ it("Cant get the public key keys", (done) => {
 it("Cant convert keys to hexa and back", async () => {
   const keysComb = await generateKeysComb();
 
-  const rawKey = await exportKey("raw", keysComb.signKeys.publicKey);
+  const rawPublicKey = (await exportKey(
+    "raw",
+    keysComb.signKeys.publicKey
+  )) as ArrayBuffer;
 
-  const hexed = arrayBufferToHex(rawKey as ArrayBuffer);
+  // const rawPrivateKey = (await exportKey(
+  //   "raw",
+  //   keysComb.signKeys.privateKey
+  // )) as ArrayBuffer;
+
+  const hexed = arrayBufferToHex(rawPublicKey as ArrayBuffer);
   const dehexed = hexToArrayBuffer(hexed);
 
-  const isEqual = equal(rawKey as ArrayBuffer, dehexed);
+  const isEqual = equal(rawPublicKey as ArrayBuffer, dehexed);
 
   expect(isEqual).toBe(true);
+
+  // const recoveredPublic = recoverPubKeyFromPrivate(rawPrivateKey);
+  // expect(recoveredPublic).toBe(hexed);
 });

@@ -160,6 +160,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     peer.send(
       JSON.stringify({
         type: "ping",
+        clientId: this._tooldb.options.id,
+        to: [this._tooldb.options.id],
+        isServer: this._tooldb.options.server,
+        id: textRandom(10),
       } as PingMessage)
     );
   };
@@ -237,7 +241,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         action: "announce",
         info_hash: infoHash,
         numwant: offerPoolSize,
-        peer_id: encodeURIComponent(this.tooldb.options.id).slice(-20),
+        peer_id: this.tooldb.options.id.slice(-20),
         offers: await Promise.all(
           Object.entries(this.offerPool).map(async ([id, { offerP }]) => {
             const offer = await offerP;
@@ -308,10 +312,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       return;
     }
 
-    if (
-      val.peer_id &&
-      val.peer_id === encodeURIComponent(this.tooldb.options.id).slice(-20)
-    ) {
+    if (val.peer_id && val.peer_id === this.tooldb.options.id.slice(-20)) {
       // console.warn("Peer ids mismatch", val.peer_id, selfId);
       return;
     }
@@ -334,7 +335,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
             answer,
             action: "announce",
             info_hash: this.infoHash,
-            peer_id: encodeURIComponent(this.tooldb.options.id).slice(-20),
+            peer_id: this.tooldb.options.id.slice(-20),
             to_peer_id: val.peer_id,
             offer_id: val.offer_id,
           })
@@ -417,10 +418,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     crossServerOnly = false,
     isRelay = false
   ) {
-    const to = _.uniq([
-      ...msg.to,
-      encodeURIComponent(this.tooldb.options.id).slice(-20),
-    ]);
+    const to = _.uniq([...msg.to, this.tooldb.options.id.slice(-20)]);
 
     Object.keys(this.peerMap)
       .filter((id) => !to.includes(id))
@@ -448,7 +446,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         if (peer.connected) {
           const to = _.uniq([
             ...[msg.to || []],
-            encodeURIComponent(this.tooldb.options.id).slice(-20),
+            this.tooldb.options.id.slice(-20),
           ]);
           peer.send(JSON.stringify({ ...msg, to }));
         } else {

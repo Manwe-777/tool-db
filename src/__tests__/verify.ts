@@ -1,19 +1,18 @@
+import elliptic from "elliptic";
 import { VerificationData, VerifyResult } from "../types/message";
 
 import catchReturn from "../utils/catchReturn";
 import verifyPeer from "../utils/verifyPeer";
 import getPeerSignature from "../utils/getPeerSignature";
-import arrayBufferToHex from "../utils/arrayBufferToHex";
 
-import base64KeyToHex from "../utils/crypto/base64KeyToHex";
 import recoverPubKey from "../utils/crypto/recoverPubKey";
 import exportKeyAsHex from "../utils/crypto/exportKeyAsHex";
 
 import {
-  base64ToArrayBuffer,
-  encodeKeyString,
+  arrayBufferToHex,
   exportKey,
   generateKeyPair,
+  hexToArrayBuffer,
   sha256,
   signData,
   ToolDb,
@@ -21,7 +20,6 @@ import {
 
 import { Peer } from "../types/tooldb";
 import leveldb from "../utils/leveldb";
-import getCrypto from "../getCrypto";
 
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
@@ -29,6 +27,8 @@ jest.setTimeout(10000);
 let ClientA: ToolDb | undefined;
 
 beforeAll((done) => {
+  (global as any).ecp256 = new elliptic.ec("p256");
+
   ClientA = new ToolDb({
     server: true,
     host: "127.0.0.1",
@@ -36,6 +36,7 @@ beforeAll((done) => {
     storageAdapter: leveldb,
     storageName: "test-verify-a",
   });
+
   done();
 });
 
@@ -45,58 +46,49 @@ afterAll((done) => {
 });
 
 const putOk: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
-};
-
-const recoverTest: VerificationData<string> = {
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
   k: "test",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/wvoRihtBva5KXRXJhocUa1Nt9B6+DeSvetQ2ygaDStdBvgwWc8si/dcfK4kjVhtgzGfTAS/MogKzFg5lkI7Dw==",
   n: 0,
-  t: 1643731511429,
-  h: "38780383388f8fca79ac216f48ac529dacea3058498c55ecd52ef625af74b2ae",
-  s: "CwVbOMK3Zi/Dv8KVw6rDuMOQbyw8GcKnbhx8wpnDo8Oqw48tw5TDgQzCh3jDgDbDqsKLTQJdw79Xw7Rjwo8yPhM5I8O8UMK8wrjDt8Kjw7gCwrQiwqobeMO+wqTDoUU=",
+  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
+  t: 1643897763483,
   v: "value",
 };
 
 it("Can verify PUT", () => {
-  return ClientA.verifyMessage(recoverTest).then((result) => {
+  return ClientA.verifyMessage(putOk).then((result) => {
     expect(result).toEqual(VerifyResult.Verified);
   });
 });
 
 it("Can recover public key from message", async () => {
   // Convert the public key to hex
-  const publicHexed = await base64KeyToHex(recoverTest.p);
+  const publicHexed = putOk.a;
   //
-  const signature = base64ToArrayBuffer(recoverTest.s);
-  const message = recoverTest.h;
+  const signature = hexToArrayBuffer(putOk.s);
+  const message = putOk.h;
 
   // Message needs to be hashed because webcrypto does it internally
-  const pubKeyRecovered = recoverPubKey(sha256(message), signature);
+  const pubKey = recoverPubKey(sha256(message), signature, publicHexed);
 
-  const matches = pubKeyRecovered.filter((k) => k === publicHexed);
-  expect(matches[0]).toBe(publicHexed);
+  expect(pubKey.slice(-40)).toBe(publicHexed.slice(-40));
 });
 
 it("Can recover public key from signed data", (done) => {
-  const crypto = getCrypto();
-
   generateKeyPair("ECDSA", true).then((keys) => {
     const message = "test";
     exportKeyAsHex(keys.publicKey).then((publicHexed) => {
-    signData(message, keys.privateKey).then((s) => {
-      const signature = s;
-      const pubKeyRecovered = recoverPubKey(sha256(message), signature);
+      signData(message, keys.privateKey).then((s) => {
+        const signature = s;
+        const pubKeyRecovered = recoverPubKey(
+          sha256(message),
+          signature,
+          publicHexed
+        );
 
-      const matches = pubKeyRecovered.filter((k) => k === publicHexed);
-      expect(matches[0]).toBe(publicHexed);
-      done();
+        expect(pubKeyRecovered.slice(-40)).toBe(publicHexed.slice(-40));
+        done();
+      });
     });
   });
 });
@@ -108,13 +100,13 @@ it("Can catch invalid POW", () => {
 });
 
 const putSig: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z2fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "0000e4f2a7f633519e1ed1d20e79523f88f51b2655d26805f95aecbab7e3d2a6",
+  k: "test",
+  n: 6643,
+  s: "925cd517779b79da5136644fe3484bee61a4b3ce5b95044ccd8022b7148968e7212c34c11ef4ad3b06a95a0eeac256e0be83baa046e91f185cfcef18cb1c6760",
+  t: 1643899535113,
+  v: "value",
 };
 
 it("Can catch tampered messages (signature)", () => {
@@ -123,18 +115,18 @@ it("Can catch tampered messages (signature)", () => {
   });
 });
 
-const tamperedMsg: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca92",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+const tamperedNonce: VerificationData<string> = {
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "0000e4f2a7f633519e1ed1d20e79523f88f51b2655d26805f95aecbab7e3d2a6",
+  k: "test",
+  n: 0,
+  s: "926cd517779b79da5136644fe3484bee61a4b3ce5b95044ccd8022b7148968e7212c34c11ef4ad3b06a95a0eeac256e0be83baa046e91f185cfcef18cb1c6769",
+  t: 1643899535113,
+  v: "value",
 };
 
 it("Can catch tampered POW", () => {
-  return ClientA.verifyMessage(tamperedMsg, 3).then((result) => {
+  return ClientA.verifyMessage(tamperedNonce, 3).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidHashNonce);
   });
 });
@@ -155,7 +147,7 @@ it("Can catch messages with missing data", () => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delD: any = delete { ...putOk }.p;
+  const delD: any = delete { ...putOk }.a;
   const pd = ClientA.verifyMessage(delD).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
@@ -187,13 +179,13 @@ it("Can print errors", async () => {
 });
 
 const putTime: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 2628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
+  k: "test",
+  n: 0,
+  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
+  t: 1943887760383,
+  v: "value",
 };
 
 it("Can catch tampered messages (time)", () => {
@@ -203,13 +195,13 @@ it("Can catch tampered messages (time)", () => {
 });
 
 const putPow: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "00a6fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
+  k: "test",
+  n: 0,
+  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
+  t: 1643897763483,
+  v: "value",
 };
 
 // it("Can catch tampered messages (pow)", () => {
@@ -219,13 +211,13 @@ const putPow: VerificationData<string> = {
 // });
 
 const putNonce: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 111,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
+  k: "test",
+  n: 0,
+  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
+  t: 1643897763483,
+  v: "value",
 };
 
 // it("Can catch tampered messages (nonce)", () => {
@@ -235,13 +227,13 @@ const putNonce: VerificationData<string> = {
 // });
 
 const putValue: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "hackerman",
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
+  k: "test",
+  n: 0,
+  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
+  t: 1643897763483,
+  v: "value",
 };
 
 // it("Can catch tampered messages (value)", () => {
@@ -250,14 +242,14 @@ const putValue: VerificationData<string> = {
 //   });
 // });
 
-const privatePut: VerificationData<{ test: string }> = {
-  k: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==.value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
-  n: 1268,
-  t: 1628919444909,
-  h: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
-  s: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
-  v: { test: "a1AMXh4hZhI2lc5ONBa5" },
+const privatePut: VerificationData<string> = {
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "9533de18f7e4727879233f96ab5f58b90c95c4c9cd9f989d939f4ca2dfb75eec",
+  k: ":248d586d83319f4c04bf32880acc583996423b0f.test",
+  n: 0,
+  s: "12c53594eeab23c5fd4a3610bd20f1063afe64ec5ba6a9cd927f5afb10675cf4042c36727d681b92ecc1e34f300e7c08e1d9837c0137fddde1f2b2dbc3d31173",
+  t: 1643897897090,
+  v: "value",
 };
 
 it("Can verify namespaced PUT", () => {
@@ -266,14 +258,14 @@ it("Can verify namespaced PUT", () => {
   });
 });
 
-const privatePutPubkey: VerificationData<{ test: string }> = {
-  k: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Gw==.value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
-  n: 1268,
-  t: 1628919444909,
-  h: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
-  s: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
-  v: { test: "a1AMXh4hZhI2lc5ONBa5" },
+const privatePutPubkey: VerificationData<string> = {
+  a: "248d586d83319f4c04bf32880acc583996423b0f",
+  h: "9533de18f7e4727879233f96ab5f58b90c95c4c9cd9f989d939f4ca2dfb75eec",
+  k: ":204bf32880acc583996423b0f48d586d83319f4c.test",
+  n: 0,
+  s: "12c53594eeab23c5fd4a3610bd20f1063afe64ec5ba6a9cd927f5afb10675cf4042c36727d681b92ecc1e34f300e7c08e1d9837c0137fddde1f2b2dbc3d31173",
+  t: 1643897897090,
+  v: "value",
 };
 
 it("Can catch pubkey replacement", () => {
@@ -285,8 +277,8 @@ it("Can catch pubkey replacement", () => {
 it("Can verify peers", async () => {
   const keys = await generateKeyPair("ECDSA", true);
 
-  const pubkeyString = await exportKey("spki", keys.publicKey).then((skpub) =>
-    encodeKeyString(skpub as ArrayBuffer)
+  const hexPubkey = await exportKey("raw", keys.publicKey).then((skpub) =>
+    arrayBufferToHex(skpub as ArrayBuffer)
   );
 
   const timestamp = new Date().getTime();
@@ -308,7 +300,7 @@ it("Can verify peers", async () => {
     timestamp: timestamp,
     host: "host",
     port: 8080,
-    pubkey: pubkeyString,
+    adress: hexPubkey.slice(-40),
     sig: signature,
   };
 

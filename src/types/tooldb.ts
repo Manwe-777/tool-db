@@ -29,7 +29,7 @@ export interface Peer {
   timestamp: number;
   host: string;
   port: number;
-  pubkey: string;
+  adress: string;
   sig: string;
 }
 

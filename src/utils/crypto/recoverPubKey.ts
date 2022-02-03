@@ -2,15 +2,16 @@ import { ec } from "elliptic";
 
 import arrayBufferToHex from "../arrayBufferToHex";
 
-const ecCurve =
-  typeof window === "undefined"
-    ? ((global as any).ecp256 as ec)
-    : ((window as any).ecp256 as ec);
-
 export default function recoverPubKey(
   origMessage: string,
-  signature: ArrayBuffer
-): [string, string] {
+  signature: ArrayBuffer,
+  compareToHex?: string
+): string {
+  const ecCurve =
+    typeof window === "undefined"
+      ? ((global as any).ecp256 as ec)
+      : ((window as any).ecp256 as ec);
+
   // function hexToDec(hex: string) {
   //   return new BN(hex, 16);
   // }
@@ -27,5 +28,10 @@ export default function recoverPubKey(
 
   const keyA = ecCurve.recoverPubKey(msg, ecSig, 0).encode("hex");
   const keyB = ecCurve.recoverPubKey(msg, ecSig, 1).encode("hex");
-  return [keyA, keyB];
+
+  let pubKeyString = keyA;
+  if (keyA.slice(-40) === compareToHex?.slice(-40)) pubKeyString = keyA;
+  if (keyB.slice(-40) === compareToHex?.slice(-40)) pubKeyString = keyB;
+
+  return pubKeyString;
 }

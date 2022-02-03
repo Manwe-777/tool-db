@@ -4,8 +4,7 @@ import EventEmitter from "events";
 import {
   BaseMessage,
   CrdtMessage,
-  encodeKeyString,
-  exportKey,
+  exportKeyAsHex,
   generateKeyPair,
   PutMessage,
   ToolDbMessage,
@@ -282,12 +281,14 @@ export default class ToolDb extends EventEmitter {
             this._options.publicKey = key.publicKey;
             this._options.privateKey = key.privateKey;
 
-            exportKey("spki", key.publicKey).then((skpub) => {
-              this._options.id = encodeKeyString(skpub as ArrayBuffer);
-              if (this._options.debug) {
-                console.log("My ID is:", this._options.id);
-              }
-            });
+            if (this._options.publicKey) {
+              exportKeyAsHex(this._options.publicKey).then((pubkey) => {
+                this._options.id = pubkey.slice(-40);
+                if (this._options.debug) {
+                  console.log("My ID is:", this._options.id);
+                }
+              });
+            }
           }
         })
         .catch(console.warn);

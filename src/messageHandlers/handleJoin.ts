@@ -9,7 +9,7 @@ export default function handleJoin(
     // Add this peer to our list of peers
     if (verified) {
       const filteredPeers = this.peers.filter(
-        (p) => p.pubkey !== message.peer.pubkey
+        (p) => p.adress !== message.peer.adress
       );
       if (
         filteredPeers.length === 0 &&

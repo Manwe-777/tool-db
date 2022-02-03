@@ -11,7 +11,7 @@ export default function handleServers(
       // Add this peer to our list of peers
       if (verified) {
         const filteredPeers = this.peers.findIndex(
-          (p) => p.pubkey === peer.pubkey
+          (p) => p.adress === peer.adress
         );
         if (filteredPeers === -1) {
           // Add this peer to the list

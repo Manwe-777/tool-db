@@ -1,4 +1,5 @@
 jest.mock("../getCrypto.ts");
+import elliptic from "elliptic";
 import Automerge from "automerge";
 
 import { base64ToBinaryDocument, textRandom, ToolDb } from "..";
@@ -11,6 +12,8 @@ let Alice: ToolDb | undefined;
 let Bob: ToolDb | undefined;
 
 beforeAll((done) => {
+  (global as any).ecp256 = new elliptic.ec("p256");
+
   nodeA = new ToolDb({
     server: true,
     host: "127.0.0.1",
@@ -66,14 +69,38 @@ afterAll((done) => {
   setTimeout(done, 1000);
 });
 
+it("A can put and get", () => {
+  return new Promise<void>((resolve) => {
+    const testKey = "test-key-" + textRandom(16);
+    const testValue = "Cool value";
+
+    Alice.anonSignIn().then((ak) => {
+      expect(ak).toBeDefined();
+      Alice.putData(testKey, testValue).then((msg) => {
+        expect(msg).toBeDefined();
+        setTimeout(() => {
+          Alice.getData(testKey).then((data) => {
+            expect(data).toBe(testValue);
+            resolve();
+          });
+        }, 1000);
+      });
+    });
+  });
+});
+
 it("A and B can communicate trough the swarm", () => {
   return new Promise<void>((resolve) => {
     const testKey = "test-key-" + textRandom(16);
     const testValue = "Awesome value";
 
     Alice.anonSignIn()
-      .then(() => Bob.anonSignIn())
-      .then(() => {
+      .then((ak) => {
+        expect(ak).toBeDefined();
+        return Bob.anonSignIn();
+      })
+      .then((bk) => {
+        expect(bk).toBeDefined();
         Alice.putData(testKey, testValue).then((msg) => {
           expect(msg).toBeDefined();
 

@@ -9,5 +9,5 @@ export default function getPeerSignature(
 ) {
   const dataToSign = sha256(`${topic}-${timestamp}-${host}:${port}`);
 
-  return signData(dataToSign, privateKey, "SHA-1").then(arrayBufferToHex);
+  return signData(dataToSign, privateKey).then(arrayBufferToHex);
 }

@@ -24,7 +24,7 @@ export default function handlePong(
         timestamp: timestamp,
         host: this.options.host,
         port: this.options.port,
-        pubkey: this.options.id,
+        adress: this.options.id,
         sig: signature,
       };
 

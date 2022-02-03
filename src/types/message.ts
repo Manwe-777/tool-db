@@ -13,9 +13,19 @@ export enum VerifyResult {
   Verified = "Verified",
 }
 
-export interface VerificationData<T = any> {
+export interface VerificationDataLegacy<T = any> {
+  p: string; // base64 public key
   k: string; // Key/id
-  p: string; // public key
+  n: number; // nonce
+  h: string; // hash of JSON.stringify(value) + nonce
+  t: number; // Timestamp this was created
+  s: string; // signature
+  v: T; // value
+}
+
+export interface VerificationData<T = any> {
+  a: string; // adress
+  k: string; // Key/id
   n: number; // nonce
   h: string; // hash of JSON.stringify(value) + nonce
   t: number; // Timestamp this was created
@@ -35,7 +45,9 @@ export type MessageType =
   | "crdtGet"
   | "crdt"
   | "join"
-  | "servers";
+  | "servers"
+  | "tx"
+  | "stake";
 
 export interface BaseMessage {
   type: MessageType;
@@ -104,6 +116,19 @@ export interface CrdtMessage extends BaseMessage {
   doc: string;
 }
 
+export interface StakeMessage extends BaseMessage {
+  type: "stake";
+  amount: number;
+  sig: string;
+}
+
+export interface TxMessage extends BaseMessage {
+  type: "tx";
+  amount: number;
+  target: string;
+  sig: string;
+}
+
 export type ToolDbMessage =
   | JoinMessage
   | ServersMessage
@@ -116,4 +141,6 @@ export type ToolDbMessage =
   | PutMessage
   | CrdtPutMessage
   | CrdtGetMessage
-  | CrdtMessage;
+  | CrdtMessage
+  | StakeMessage
+  | TxMessage;

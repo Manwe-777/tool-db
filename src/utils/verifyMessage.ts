@@ -48,6 +48,7 @@ export default async function verifyMessage<T>(
   }
 
   // This namespace can only be written if data does not exist previously
+  // This violates the offline first principle..?
   if (msg.k.slice(0, 2) == "==") {
     const key = msg.k;
     const data = await new Promise<VerificationData<T> | null>((resolve) => {
@@ -90,18 +91,16 @@ export default async function verifyMessage<T>(
     }
   }
 
-  const pubKeys = await recoverPubKey(sha256(msg.h), hexToArrayBuffer(msg.s));
+  let hexPubKey = "";
+  try {
+    hexPubKey = recoverPubKey(sha256(msg.h), hexToArrayBuffer(msg.s), msg.a);
+  } catch (e) {
+    return VerifyResult.InvalidSignature;
+  }
 
-  let pubKeyString = "";
-  if (pubKeys[0].slice(-40) === msg.a.slice(-40)) pubKeyString = pubKeys[0];
-  if (pubKeys[1].slice(-40) === msg.a.slice(-40)) pubKeyString = pubKeys[1];
-
-  const pubKey = await importKey(
-    decodeKeyString(pubKeyString),
-    "spki",
-    "ECDSA",
-    ["verify"]
-  );
+  const pubKey = await importKey(hexToArrayBuffer(hexPubKey), "raw", "ECDSA", [
+    "verify",
+  ]);
 
   const verified = await verifyData(msg.h, hexToArrayBuffer(msg.s), pubKey);
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
