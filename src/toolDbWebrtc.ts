@@ -267,8 +267,8 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     this.trackerUrls.forEach(async (url: string) => {
       const socket = await this.makeSocket(url, this.infoHash);
-      // console.log("socket", url, Object.keys(socket || {}));
-      if (socket && socket.readyState === WebSocket.OPEN) {
+      // console.log("socket", url, Object.keys(socket || {}), socket?.readyState);
+      if (socket) {
         // console.log("announce to " + url);
         this.announce(socket, this.infoHash);
       }
