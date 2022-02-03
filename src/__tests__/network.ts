@@ -109,7 +109,7 @@ it("A and B can communicate trough the swarm", () => {
               expect(data).toBe(testValue);
               resolve();
             });
-          }, 1000);
+          }, 1500);
         });
       });
   });
