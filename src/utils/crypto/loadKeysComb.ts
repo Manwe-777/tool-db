@@ -3,32 +3,31 @@ import catchReturn from "../catchReturn";
 import hexToArrayBuffer from "../hexToArrayBuffer";
 
 import importKey from "./importKey";
-import recoverPubKeyFromPrivate from "./recoverPubKeyFromPrivate";
 
 async function importKeys(parsedKeys: ParsedKeys) {
   const skpriv = await importKey(
-    hexToArrayBuffer(parsedKeys.sk),
+    hexToArrayBuffer(parsedKeys.skpriv),
     "pkcs8",
     "ECDSA",
     ["sign"]
   ).catch(catchReturn);
 
   const ekpriv = await importKey(
-    hexToArrayBuffer(parsedKeys.ek),
+    hexToArrayBuffer(parsedKeys.ekpriv),
     "pkcs8",
     "ECDH",
     ["deriveKey", "deriveBits"]
   ).catch(catchReturn);
 
-  // Derive publics from privates
-  const skPubHex = recoverPubKeyFromPrivate(hexToArrayBuffer(parsedKeys.sk));
-  const skpub = await importKey(hexToArrayBuffer(skPubHex), "spki", "ECDSA", [
-    "verify",
-  ]).catch(catchReturn);
+  const skpub = await importKey(
+    hexToArrayBuffer(parsedKeys.skpub),
+    "spki",
+    "ECDSA",
+    ["verify"]
+  ).catch(catchReturn);
 
-  const ekPubHex = recoverPubKeyFromPrivate(hexToArrayBuffer(parsedKeys.ek));
   const ekpub = await importKey(
-    hexToArrayBuffer(ekPubHex),
+    hexToArrayBuffer(parsedKeys.ekpub),
     "spki",
     "ECDH",
     []
