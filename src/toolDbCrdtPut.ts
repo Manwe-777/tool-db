@@ -1,12 +1,12 @@
 import { BinaryChange } from "automerge";
-import { CrdtPutMessage, textRandom, VerificationData } from ".";
+import { base64ToHex, CrdtPutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
 import arrayBufferToHex from "./utils/arrayBufferToHex";
 
 import proofOfWork from "./utils/proofOfWork";
 
 import signData from "./utils/signData";
-import uint8ToBase64 from "./utils/uint8ToBase64";
+import uint8ArrayToHex from "./utils/uint8ArrayToHex";
 
 /**
  * Triggers a PUT request to other peers.
@@ -35,7 +35,7 @@ export default function toolDbCrdtPut<T = any>(
 
     const timestamp = new Date().getTime();
 
-    const encodedData = JSON.stringify(value.map(uint8ToBase64));
+    const encodedData = JSON.stringify(value.map(uint8ArrayToHex));
 
     const dataString = `${encodedData}${this.user.adress}${timestamp}`;
 

@@ -46,12 +46,12 @@ afterAll((done) => {
 });
 
 const putOk: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
+  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
+  h: "423a5bfac6d5af6c83930e18c53df722b661bb78ea5e4ac9e02057ed65f35104",
   k: "test",
   n: 0,
-  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
-  t: 1643897763483,
+  s: "62fe76e5c4c959f7a910070ebb003aea0af4edb15577e174ade9e225d4a432f9d38b76442e54f5d25fb33d075f863f92af4e5b78fbec6b63acb67fbe07992781",
+  t: 1643989186242,
   v: "value",
 };
 
@@ -100,12 +100,12 @@ it("Can catch invalid POW", () => {
 });
 
 const putSig: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "0000e4f2a7f633519e1ed1d20e79523f88f51b2655d26805f95aecbab7e3d2a6",
+  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
+  h: "0000f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
   k: "test",
-  n: 6643,
-  s: "925cd517779b79da5136644fe3484bee61a4b3ce5b95044ccd8022b7148968e7212c34c11ef4ad3b06a95a0eeac256e0be83baa046e91f185cfcef18cb1c6760",
-  t: 1643899535113,
+  n: 373,
+  s: "66c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
+  t: 1643989211311,
   v: "value",
 };
 
@@ -116,12 +116,12 @@ it("Can catch tampered messages (signature)", () => {
 });
 
 const tamperedNonce: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "0000e4f2a7f633519e1ed1d20e79523f88f51b2655d26805f95aecbab7e3d2a6",
+  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
+  h: "0000f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
   k: "test",
   n: 0,
-  s: "926cd517779b79da5136644fe3484bee61a4b3ce5b95044ccd8022b7148968e7212c34c11ef4ad3b06a95a0eeac256e0be83baa046e91f185cfcef18cb1c6769",
-  t: 1643899535113,
+  s: "77c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
+  t: 1643989211311,
   v: "value",
 };
 
@@ -179,12 +179,12 @@ it("Can print errors", async () => {
 });
 
 const putTime: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
+  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
+  h: "0000f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
   k: "test",
-  n: 0,
-  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
-  t: 1943887760383,
+  n: 373,
+  s: "77c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
+  t: 1999989211311,
   v: "value",
 };
 
@@ -195,12 +195,12 @@ it("Can catch tampered messages (time)", () => {
 });
 
 const putPow: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
+  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
+  h: "2fe0f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
   k: "test",
-  n: 0,
-  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
-  t: 1643897763483,
+  n: 373,
+  s: "77c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
+  t: 1643989211311,
   v: "value",
 };
 
@@ -210,45 +210,13 @@ const putPow: VerificationData<string> = {
 //   });
 // });
 
-const putNonce: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
-  k: "test",
-  n: 0,
-  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
-  t: 1643897763483,
-  v: "value",
-};
-
-// it("Can catch tampered messages (nonce)", () => {
-//   return ClientA.verifyMessage(putNonce).then((result) => {
-//     expect(result).toEqual(VerifyResult.InvalidHashNonce);
-//   });
-// });
-
-const putValue: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "591aa039f34a7b48c6d7631742a91afd095035853ac058f83744f8cc510dc915",
-  k: "test",
-  n: 0,
-  s: "f9f16da80a8e280c8aa819f87f0bf7807da353eb5a7178d5dec4aa1c0abaa3fc380348da23297262fbf3ab726ff9929a15878bf5d4adf7d36c4aba9467104bdd",
-  t: 1643897763483,
-  v: "value",
-};
-
-// it("Can catch tampered messages (value)", () => {
-//   return ClientA.verifyMessage(putValue).then((result) => {
-//     expect(result).toEqual(VerifyResult.InvalidHashNonce);
-//   });
-// });
-
 const privatePut: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "9533de18f7e4727879233f96ab5f58b90c95c4c9cd9f989d939f4ca2dfb75eec",
-  k: ":248d586d83319f4c04bf32880acc583996423b0f.test",
-  n: 0,
-  s: "12c53594eeab23c5fd4a3610bd20f1063afe64ec5ba6a9cd927f5afb10675cf4042c36727d681b92ecc1e34f300e7c08e1d9837c0137fddde1f2b2dbc3d31173",
-  t: 1643897897090,
+  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
+  h: "00056bc08cd8765ee792f6c67c6c04d52be1583d75508910da00169c0f3c063a",
+  k: ":0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64.test",
+  n: 733,
+  s: "70ecc005fe2d57df8c9fbb61ed6203faa9933de15eebdd3d52b5dee5f4a424bdeb4714f0cb63047432d7d71d142469c0e5f3c4b08384d82c6f5bc9cac824344a",
+  t: 1643989274250,
   v: "value",
 };
 
@@ -259,12 +227,12 @@ it("Can verify namespaced PUT", () => {
 });
 
 const privatePutPubkey: VerificationData<string> = {
-  a: "248d586d83319f4c04bf32880acc583996423b0f",
-  h: "9533de18f7e4727879233f96ab5f58b90c95c4c9cd9f989d939f4ca2dfb75eec",
-  k: ":204bf32880acc583996423b0f48d586d83319f4c.test",
-  n: 0,
-  s: "12c53594eeab23c5fd4a3610bd20f1063afe64ec5ba6a9cd927f5afb10675cf4042c36727d681b92ecc1e34f300e7c08e1d9837c0137fddde1f2b2dbc3d31173",
-  t: 1643897897090,
+  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
+  h: "00056bc08cd8765ee792f6c67c6c04d52be1583d75508910da00169c0f3c063a",
+  k: ":04ff0be846286d06f6b9297457261a1c51ad4db7d07af83792bdeb50db281a0d2b5d06f83059cf2c8bf75c7cae248d586d83319f4c04bf32880acc583996423b0f.test",
+  n: 733,
+  s: "70ecc005fe2d57df8c9fbb61ed6203faa9933de15eebdd3d52b5dee5f4a424bdeb4714f0cb63047432d7d71d142469c0e5f3c4b08384d82c6f5bc9cac824344a",
+  t: 1643989274250,
   v: "value",
 };
 
@@ -300,7 +268,7 @@ it("Can verify peers", async () => {
     timestamp: timestamp,
     host: "host",
     port: 8080,
-    adress: hexPubkey.slice(-40),
+    adress: hexPubkey,
     sig: signature,
   };
 

@@ -26,6 +26,7 @@ export default function recoverPubKey(
     s: arrayBufferToHex(signature.slice(32, 64)),
   };
 
+  // THIS IS SLOW! We shouldnt use this on browsers or nodejs at all
   const keyA = ecCurve.recoverPubKey(msg, ecSig, 0).encode("hex");
   const keyB = ecCurve.recoverPubKey(msg, ecSig, 1).encode("hex");
 

@@ -1,4 +1,4 @@
-import { ToolDb } from ".";
+import { hexToArrayBuffer, ToolDb } from ".";
 import Automerge from "automerge";
 
 export default function loadCrdtDocument(
@@ -10,20 +10,14 @@ export default function loadCrdtDocument(
     if (this.documents[key]) {
       resolve(this.documents[key]);
     } else {
-      this.store.get(`${key}.crdt`, (err, data: unknown) => {
+      this.store.get(`${key}.crdt`, (err, data) => {
         let currentDoc = null;
+        // console.warn(err, data);
         if (data) {
           // De-serealize stored crdt document
           // console.log("data", typeof data, data);
-          let loaded = data as Uint8Array;
-          if (typeof data === "string") {
-            const split = data.split(",");
-            loaded = new Uint8Array(split.length);
+          const loaded = new Uint8Array(hexToArrayBuffer(data));
 
-            split.forEach((s, i) => {
-              loaded[i] = parseInt(s);
-            });
-          }
           currentDoc = Automerge.load(loaded as any);
           // console.log("CRDT LOADED", key, currentDoc);
         } else {

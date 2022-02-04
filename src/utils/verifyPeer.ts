@@ -12,14 +12,8 @@ export default async function verifyPeer(peer: Peer) {
     `${peer.topic}-${peer.timestamp}-${peer.host}:${peer.port}`
   );
 
-  const pubKey = await recoverPubKey(
-    sha256(data),
-    hexToArrayBuffer(peer.sig),
-    peer.adress
-  );
-
   // Import the public key string
-  return importKey(hexToArrayBuffer(pubKey), "raw", "ECDSA", ["verify"]).then(
-    (pubKey) => verifyData(data, hexToArrayBuffer(peer.sig), pubKey)
-  );
+  return importKey(hexToArrayBuffer(peer.adress), "raw", "ECDSA", [
+    "verify",
+  ]).then((pubKey) => verifyData(data, hexToArrayBuffer(peer.sig), pubKey));
 }

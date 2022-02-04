@@ -1,6 +1,7 @@
 import { CrdtMessage, textRandom, uint8ToBase64 } from ".";
 import ToolDb from "./tooldb";
 import Automerge from "automerge";
+import uint8ArrayToHex from "./utils/uint8ArrayToHex";
 
 /**
  * Subscribe to all PUT updates for this key.
@@ -45,7 +46,7 @@ export default function toolDbSubscribe(
           key: finalKey,
           id: textRandom(10),
           to: [],
-          doc: uint8ToBase64(savedDoc),
+          doc: uint8ArrayToHex(savedDoc),
         };
         this.triggerKeyListener(finalKey, msg);
       }

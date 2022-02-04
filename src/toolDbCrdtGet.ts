@@ -1,4 +1,4 @@
-import { textRandom } from ".";
+import { hexToArrayBuffer, textRandom } from ".";
 import ToolDb from "./tooldb";
 
 /**
@@ -13,7 +13,7 @@ export default function toolDbCrdtGet(
   key: string,
   userNamespaced = false,
   timeoutMs = 1000
-): Promise<string | null> {
+): Promise<Uint8Array | null> {
   return new Promise((resolve, reject) => {
     if (userNamespaced && this.user?.adress === undefined) {
       reject(new Error("You are not authorized yet!"));
@@ -28,10 +28,14 @@ export default function toolDbCrdtGet(
 
     const cancelTimeout = setTimeout(() => {
       this.loadCrdtDocument(finalKey).then((data: any) => {
+        if (this.options.debug) {
+          console.log("CRDT DATA > ", data);
+        }
         if (data) {
           try {
             this.removeIdListener(msgId);
-            resolve(data);
+            const document = new Uint8Array(hexToArrayBuffer(data));
+            resolve(document);
           } catch (e) {
             resolve(null);
           }
@@ -48,7 +52,8 @@ export default function toolDbCrdtGet(
 
       clearTimeout(cancelTimeout);
       if (msg.type === "crdt") {
-        resolve(msg.doc);
+        const document = new Uint8Array(hexToArrayBuffer(msg.doc));
+        resolve(document);
       }
     });
 

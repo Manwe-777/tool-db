@@ -252,7 +252,7 @@ export default class toolDbNetwork {
     filteredConns.forEach((conn) => {
       if ((crossServerOnly && conn.isServer) || !crossServerOnly) {
         if (this.options.debug) {
-          console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
+          // console.log("Sent out to: ", conn.toolDbId, conn.origUrl);
         }
         if (msg.type === "put" || msg.type === "crdtPut") {
           if (

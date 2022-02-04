@@ -16,7 +16,7 @@ export default function toolDbKeysSignIn(
     this.user = {
       keys: keys,
       name: username || `Anonymous ${randomAnimal()}`,
-      adress: pubKey.slice(-40),
+      adress: pubKey,
     };
     return keys;
   });

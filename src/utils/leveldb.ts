@@ -28,6 +28,7 @@ export default function leveldb(dbName = "tooldb"): ToolDbStore {
 
   store.put = function (key, data, cb) {
     db.put(key, data, function (err: any) {
+      // console.warn("put", key, err, err?.message);
       if (err) {
         if (cb) cb(err);
       } else {
@@ -45,6 +46,7 @@ export default function leveldb(dbName = "tooldb"): ToolDbStore {
       return;
     }
     db.get(key, function (err: any, value: any) {
+      // console.warn("get", key, err, err?.message);
       if (err) {
         if (cb) cb(err);
       } else {

@@ -13,7 +13,7 @@ export default function toolDbAnonSignIn(this: ToolDb): Promise<{
       this.user = {
         keys: newKeys,
         name: `Anonymous ${randomAnimal()}`,
-        adress: pubKey.slice(-40),
+        adress: pubKey,
       };
       return newKeys;
     })

@@ -2,8 +2,9 @@ jest.mock("../getCrypto.ts");
 import elliptic from "elliptic";
 import Automerge from "automerge";
 
-import { base64ToBinaryDocument, textRandom, ToolDb } from "..";
+import { textRandom, ToolDb } from "..";
 import leveldb from "../utils/leveldb";
+
 jest.setTimeout(20000);
 
 let nodeA: ToolDb | undefined;
@@ -173,10 +174,10 @@ it("CRDTs", () => {
     });
 
     const changes = Automerge.getChanges(origDoc, newDoc);
-    Alice.putCrdt(crdtKey, changes).then((put) => {
+    Alice.putCrdt(crdtKey, changes).then(async (put) => {
       setTimeout(() => {
         Bob.getCrdt(crdtKey).then((data) => {
-          const doc = Automerge.load(base64ToBinaryDocument(data)) as any;
+          const doc = Automerge.load(data as any) as any;
           expect(doc.test).toBe(crdtValue);
           expect(doc.arr).toStrictEqual(["arr", "test"]);
           resolve();

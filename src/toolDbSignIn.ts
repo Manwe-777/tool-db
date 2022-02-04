@@ -115,7 +115,7 @@ export default function toolDbSignIn(
                     this.user = {
                       keys: newKeys,
                       name: user,
-                      adress: pubKeyHex.slice(-40),
+                      adress: pubKeyHex,
                     };
                     resolve(newKeys);
                   }

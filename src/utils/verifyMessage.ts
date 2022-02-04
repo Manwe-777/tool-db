@@ -3,7 +3,6 @@ import { VerifyResult, VerificationData } from "../types/message";
 
 import {
   ToolDb,
-  decodeKeyString,
   importKey,
   verifyData,
   recoverPubKey,
@@ -91,14 +90,7 @@ export default async function verifyMessage<T>(
     }
   }
 
-  let hexPubKey = "";
-  try {
-    hexPubKey = recoverPubKey(sha256(msg.h), hexToArrayBuffer(msg.s), msg.a);
-  } catch (e) {
-    return VerifyResult.InvalidSignature;
-  }
-
-  const pubKey = await importKey(hexToArrayBuffer(hexPubKey), "raw", "ECDSA", [
+  const pubKey = await importKey(hexToArrayBuffer(msg.a), "raw", "ECDSA", [
     "verify",
   ]);
 

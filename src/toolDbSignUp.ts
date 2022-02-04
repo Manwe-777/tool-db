@@ -39,7 +39,7 @@ export default async function toolDbSignUp(
                         let encskpriv = "";
                         let encekpriv = "";
 
-                        const userAdress = publicHexed.slice(-40);
+                        const userAdress = publicHexed;
 
                         // Encrypt sign key
                         encryptWithPass(savedKeys.skpriv, password, iv)

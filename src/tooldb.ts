@@ -43,7 +43,7 @@ import handleCrdtGet from "./messageHandlers/handleCrdtGet";
 import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
-import { Peer, ToolDbOptions } from "./types/tooldb";
+import { Peer, ToolDbOptions, ToolDbStore } from "./types/tooldb";
 
 export interface Listener {
   key: string;
@@ -58,7 +58,7 @@ interface Verificator<T> {
 
 export default class ToolDb extends EventEmitter {
   private _network;
-  private _store;
+  private _store: ToolDbStore;
   private _peers: Peer[] = [];
 
   private _documents: Record<string, FreezeObject<any>> = {};
@@ -283,7 +283,7 @@ export default class ToolDb extends EventEmitter {
 
             if (this._options.publicKey) {
               exportKeyAsHex(this._options.publicKey).then((pubkey) => {
-                this._options.id = pubkey.slice(-40);
+                this._options.id = pubkey;
                 if (this._options.debug) {
                   console.log("My ID is:", this._options.id);
                 }

@@ -1,4 +1,4 @@
-import { base64ToBinaryDocument, CrdtMessage, ToolDb } from "..";
+import { CrdtMessage, ToolDb } from "..";
 
 export default function handleCrdt(
   this: ToolDb,
@@ -8,10 +8,7 @@ export default function handleCrdt(
   const key = message.key;
   this.triggerKeyListener(key, message);
 
-  // OOHH THE TYPECAST PAIN
-  // This works but the hacking is awful, we need a better solution for storing the crdts
-  const savedDoc = base64ToBinaryDocument(message.doc) as any;
-  this.store.put(`${key}.crdt`, savedDoc, (err, data) => {
+  this.store.put(`${key}.crdt`, message.doc, (err, data) => {
     //
   });
 }
