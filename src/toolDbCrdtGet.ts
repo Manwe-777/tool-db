@@ -1,5 +1,6 @@
 import { hexToArrayBuffer, textRandom } from ".";
 import ToolDb from "./tooldb";
+import hexToUint8 from "./utils/hexToUint8";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -34,7 +35,7 @@ export default function toolDbCrdtGet(
         if (data) {
           try {
             this.removeIdListener(msgId);
-            const document = new Uint8Array(hexToArrayBuffer(data));
+            const document = hexToUint8(data);
             resolve(document);
           } catch (e) {
             resolve(null);
@@ -52,7 +53,7 @@ export default function toolDbCrdtGet(
 
       clearTimeout(cancelTimeout);
       if (msg.type === "crdt") {
-        const document = new Uint8Array(hexToArrayBuffer(msg.doc));
+        const document = hexToUint8(msg.doc);
         resolve(document);
       }
     });

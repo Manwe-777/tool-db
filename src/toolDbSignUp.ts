@@ -14,9 +14,9 @@ import {
   proofOfWork,
   sha256,
   signData,
-  toBase64,
-  uint8ToBase64,
 } from ".";
+
+import uint8ArrayToHex from "./utils/uint8ArrayToHex";
 
 export default async function toolDbSignUp(
   this: ToolDb,
@@ -36,34 +36,34 @@ export default async function toolDbSignUp(
                     saveKeysComb(keys.signKeys, keys.encryptionKeys)
                       .then((savedKeys) => {
                         const iv = generateIv();
-                        let encskpriv = "";
-                        let encekpriv = "";
-
-                        const userAdress = publicHexed;
-
                         // Encrypt sign key
-                        encryptWithPass(savedKeys.skpriv, password, iv)
-                          .then((skenc) => {
-                            encryptWithPass(savedKeys.ekpriv, password, iv)
-                              .then((ekenc) => {
-                                if (skenc) encskpriv = skenc;
-                                if (ekenc) encekpriv = ekenc;
-
+                        encryptWithPass(savedKeys?.skpriv || "", password, iv)
+                          .then((skEncrypted) => {
+                            encryptWithPass(
+                              savedKeys?.ekpriv || "",
+                              password,
+                              iv
+                            )
+                              .then((ekEncrypted) => {
                                 const userData: UserRootData = {
                                   keys: {
-                                    skpub: savedKeys.skpub,
-                                    skpriv: toBase64(encskpriv),
-                                    ekpub: savedKeys.ekpub,
-                                    ekpriv: toBase64(encekpriv),
+                                    skpriv: skEncrypted
+                                      ? arrayBufferToHex(skEncrypted)
+                                      : "",
+                                    ekpriv: ekEncrypted
+                                      ? arrayBufferToHex(ekEncrypted)
+                                      : "",
+                                    skpub: savedKeys?.skpub || "",
+                                    ekpub: savedKeys?.ekpub || "",
                                   },
-                                  iv: uint8ToBase64(iv),
+                                  iv: uint8ArrayToHex(iv),
                                   pass: sha256(password),
                                 };
 
                                 const timestamp = new Date().getTime();
                                 const userDataString = `${JSON.stringify(
                                   userData
-                                )}${userAdress}${timestamp}`;
+                                )}${publicHexed}${timestamp}`;
 
                                 proofOfWork(userDataString, 0)
                                   .then(({ hash, nonce }) => {
@@ -74,7 +74,7 @@ export default async function toolDbSignUp(
                                       const signupMessage: VerificationData<UserRootData> =
                                         {
                                           k: userRoot,
-                                          a: userAdress,
+                                          a: publicHexed,
                                           n: nonce,
                                           t: timestamp,
                                           h: hash,

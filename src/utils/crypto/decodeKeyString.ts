@@ -1,7 +1,6 @@
-import stringToArrayBuffer from "../stringToArrayBuffer";
+import hexToArrayBuffer from "../hexToArrayBuffer";
 
-export default function decodeKeyString(keydataB64: string): ArrayBuffer {
-  const keydataS = global.atob(keydataB64);
-  const keydata = stringToArrayBuffer(keydataS);
+export default function decodeKeyString(keyDataHex: string): ArrayBuffer {
+  const keydata = hexToArrayBuffer(keyDataHex);
   return keydata;
 }

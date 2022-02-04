@@ -1,7 +1,6 @@
-import arrayBufferToString from "../arrayBufferToString";
+import arrayBufferToHex from "../arrayBufferToHex";
 
 export default function encodeKeyString(keydata: ArrayBuffer) {
-  const keydataS = arrayBufferToString(keydata);
-  const keydataB64 = global.btoa(keydataS);
-  return keydataB64;
+  const keydataHexed = arrayBufferToHex(keydata);
+  return keydataHexed;
 }

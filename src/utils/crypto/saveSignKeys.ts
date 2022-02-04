@@ -2,7 +2,7 @@ import { Keys } from "../../types/graph";
 import encodeKeyString from "./encodeKeyString";
 import exportKey from "./exportKey";
 
-export default async function saveKeysComb(
+export default async function saveSignKeys(
   signKeys: CryptoKeyPair
 ): Promise<Keys> {
   const skpub = await exportKey("spki", signKeys.publicKey as CryptoKey);

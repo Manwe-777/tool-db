@@ -1,5 +1,3 @@
-import { ec } from "elliptic";
-
 import arrayBufferToString from "../arrayBufferToString";
 import base64ToUint8 from "../base64ToUint8";
 

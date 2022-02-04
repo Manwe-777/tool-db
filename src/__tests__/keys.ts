@@ -1,6 +1,6 @@
 import { ToolDb } from "..";
 import toolDbGetPubKey from "../toolDbGetPubKey";
-import recoverPubKeyFromPrivate from "../utils/crypto/recoverPubKeyFromPrivate";
+
 import exportKey from "../utils/crypto/exportKey";
 import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateKeysComb from "../utils/crypto/generateKeysComb";

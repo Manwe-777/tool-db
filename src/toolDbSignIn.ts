@@ -1,15 +1,12 @@
-import decodeKeyString from "./utils/crypto/decodeKeyString";
-import decryptWithPass from "./utils/crypto/decryptWithPass";
-import importKey from "./utils/crypto/importKey";
-import base64ToUint8 from "./utils/base64ToUint8";
-import catchReturn from "./utils/catchReturn";
-import fromBase64 from "./utils/fromBase64";
-import sha256 from "./utils/sha256";
-
-import { UserRootData } from ".";
-
 import ToolDb from "./tooldb";
+import { decodeKeyString, hexToArrayBuffer, UserRootData } from ".";
+
+import decryptWithPass from "./utils/crypto/decryptWithPass";
 import exportKeyAsHex from "./utils/crypto/exportKeyAsHex";
+import importKey from "./utils/crypto/importKey";
+import catchReturn from "./utils/catchReturn";
+import hexToUint8 from "./utils/hexToUint8";
+import sha256 from "./utils/sha256";
 
 export default function toolDbSignIn(
   this: ToolDb,
@@ -36,20 +33,20 @@ export default function toolDbSignIn(
         }
 
         decryptWithPass(
-          fromBase64(_user.keys.skpriv),
+          hexToArrayBuffer(_user.keys.skpriv),
           password,
-          base64ToUint8(_user.iv)
-        ).then((decryptedskpriv) => {
+          hexToUint8(_user.iv)
+        ).then((decryptedSKpriv) => {
           decryptWithPass(
-            fromBase64(_user.keys.ekpriv),
+            hexToArrayBuffer(_user.keys.ekpriv),
             password,
-            base64ToUint8(_user.iv)
+            hexToUint8(_user.iv)
           )
-            .then((decryptedekpriv) => {
+            .then((decryptedEKpriv) => {
               const parsedKeys = {
                 ..._user.keys,
-                skpriv: decryptedskpriv || "",
-                ekpriv: decryptedekpriv || "",
+                skpriv: decryptedSKpriv || "",
+                ekpriv: decryptedEKpriv || "",
               };
 
               // const jsonKeys = {

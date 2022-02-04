@@ -1,12 +1,12 @@
 import getCrypto from "../../getCrypto";
-import arrayBufferToString from "../arrayBufferToString";
+
 import stringToArrayBuffer from "../stringToArrayBuffer";
 
 export default function encryptData(
   data: string,
   publicKey: CryptoKey,
   iv: Uint8Array
-): Promise<string | void> {
+): Promise<ArrayBuffer | void> {
   const crypto = getCrypto();
   return crypto.subtle
     .encrypt(
@@ -22,9 +22,5 @@ export default function encryptData(
       publicKey, // from generateKey or importKey above
       stringToArrayBuffer(data) // ArrayBuffer of data you want to encrypt
     )
-    .then((encrypted) => {
-      // returns an ArrayBuffer containing the encrypted data
-      return arrayBufferToString(encrypted);
-    })
     .catch(console.error);
 }

@@ -1,5 +1,6 @@
 import { hexToArrayBuffer, ToolDb } from ".";
 import Automerge from "automerge";
+import hexToUint8 from "./utils/hexToUint8";
 
 export default function loadCrdtDocument(
   this: ToolDb,
@@ -16,7 +17,7 @@ export default function loadCrdtDocument(
         if (data) {
           // De-serealize stored crdt document
           // console.log("data", typeof data, data);
-          const loaded = new Uint8Array(hexToArrayBuffer(data));
+          const loaded = hexToUint8(data);
 
           currentDoc = Automerge.load(loaded as any);
           // console.log("CRDT LOADED", key, currentDoc);
