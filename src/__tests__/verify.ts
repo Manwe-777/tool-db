@@ -86,7 +86,7 @@ it("Can recover public key from signed data", (done) => {
           publicHexed
         );
 
-        expect(pubKeyRecovered.toUpperCase()).toBe(publicHexed.toUpperCase());
+        expect(pubKeyRecovered).toBe(publicHexed.toLowerCase());
         done();
       });
     });
