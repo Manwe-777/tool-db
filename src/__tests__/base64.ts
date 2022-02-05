@@ -67,7 +67,7 @@ it("Converts string to arraybuffer", () => {
   expect(compare(stringToArrayBuffer("G#4:>,&/"), testArayBuffer)).toBeTruthy();
 });
 
-it("Converts string to arraybuffer", () => {
+it("Converts base64 to arraybuffer", () => {
   expect(
     compare(base64ToArrayBuffer("RyM0Oj4sJi8="), testArayBuffer)
   ).toBeTruthy();

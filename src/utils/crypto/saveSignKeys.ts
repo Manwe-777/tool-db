@@ -1,4 +1,4 @@
-import { Keys } from "../../types/graph";
+import { Keys } from "../../types/tooldb";
 import encodeKeyString from "./encodeKeyString";
 import exportKey from "./exportKey";
 

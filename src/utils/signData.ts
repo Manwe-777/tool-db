@@ -1,5 +1,4 @@
 import getCrypto from "../getCrypto";
-import arrayBufferToString from "./arrayBufferToString";
 import stringToArrayBuffer from "./stringToArrayBuffer";
 
 export default function signData(

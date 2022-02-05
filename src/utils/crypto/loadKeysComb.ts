@@ -1,4 +1,4 @@
-import { ParsedKeys } from "../../types/graph";
+import { ParsedKeys } from "../../types/tooldb";
 import catchReturn from "../catchReturn";
 import decodeKeyString from "./decodeKeyString";
 import importKey from "./importKey";
