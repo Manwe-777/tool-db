@@ -1,8 +1,8 @@
 import getCrypto from "../../getCrypto";
-import arrayBufferToString from "../arrayBufferToString";
-import base64ToUint8 from "../base64ToUint8";
+import arrayBufferToString from "../encoding/arrayBufferToString";
+import base64ToUint8 from "../encoding/base64ToUint8";
 import catchReturn from "../catchReturn";
-import stringToArrayBuffer from "../stringToArrayBuffer";
+import stringToArrayBuffer from "../encoding/stringToArrayBuffer";
 
 export default function decryptData(
   data: string,

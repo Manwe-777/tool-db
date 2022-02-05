@@ -1,6 +1,8 @@
 import Automerge from "automerge";
-import { CrdtMessage, SubscribeMessage, textRandom, ToolDb } from "..";
-import uint8ArrayToHex from "../utils/uint8ArrayToHex";
+import { ToolDb } from "..";
+import { CrdtMessage, SubscribeMessage } from "../types/message";
+import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
+import textRandom from "../utils/textRandom";
 
 export default function handleSubscribe(
   this: ToolDb,

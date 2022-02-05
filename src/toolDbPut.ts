@@ -1,6 +1,6 @@
 import { PutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
-import arrayBufferToHex from "./utils/arrayBufferToHex";
+import arrayBufferToHex from "./utils/encoding/arrayBufferToHex";
 
 import proofOfWork from "./utils/proofOfWork";
 

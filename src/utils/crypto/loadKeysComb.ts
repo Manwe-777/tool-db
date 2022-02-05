@@ -1,6 +1,6 @@
 import { ParsedKeys } from "../../types/graph";
 import catchReturn from "../catchReturn";
-import hexToArrayBuffer from "../hexToArrayBuffer";
+import hexToArrayBuffer from "../encoding/hexToArrayBuffer";
 
 import importKey from "./importKey";
 

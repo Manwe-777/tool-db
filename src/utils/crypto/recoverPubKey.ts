@@ -1,6 +1,6 @@
 import { ec } from "elliptic";
 
-import arrayBufferToHex from "../arrayBufferToHex";
+import arrayBufferToHex from "../encoding/arrayBufferToHex";
 
 export default function recoverPubKey(
   origMessage: string,

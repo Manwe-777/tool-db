@@ -1,10 +1,6 @@
-import {
-  PingMessage,
-  PongMessage,
-  ServersMessage,
-  textRandom,
-  ToolDb,
-} from "..";
+import { ToolDb } from "..";
+import { PingMessage, PongMessage, ServersMessage } from "../types/message";
+import textRandom from "../utils/textRandom";
 
 export default function handlePing(
   this: ToolDb,

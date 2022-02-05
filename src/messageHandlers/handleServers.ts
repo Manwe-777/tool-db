@@ -1,5 +1,6 @@
-import { ServersMessage, ToolDb } from "..";
+import { ToolDb } from "..";
 import verifyPeer from "../utils/verifyPeer";
+import { ServersMessage } from "../types/message";
 
 export default function handleServers(
   this: ToolDb,

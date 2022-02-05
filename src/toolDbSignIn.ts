@@ -1,12 +1,14 @@
 import ToolDb from "./tooldb";
-import { decodeKeyString, hexToArrayBuffer, UserRootData } from ".";
 
+import decodeKeyString from "./utils/crypto/decodeKeyString";
 import decryptWithPass from "./utils/crypto/decryptWithPass";
 import exportKeyAsHex from "./utils/crypto/exportKeyAsHex";
 import importKey from "./utils/crypto/importKey";
 import catchReturn from "./utils/catchReturn";
-import hexToUint8 from "./utils/hexToUint8";
 import sha256 from "./utils/sha256";
+import hexToUint8 from "./utils/encoding/hexToUint8";
+import hexToArrayBuffer from "./utils/encoding/hexToArrayBuffer";
+import { UserRootData } from "./types/graph";
 
 export default function toolDbSignIn(
   this: ToolDb,

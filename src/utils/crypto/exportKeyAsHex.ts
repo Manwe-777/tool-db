@@ -1,5 +1,5 @@
 import getCrypto from "../../getCrypto";
-import arrayBufferToHex from "../arrayBufferToHex";
+import arrayBufferToHex from "../encoding/arrayBufferToHex";
 
 export default function exportKeyAsHex(key: CryptoKey) {
   const crypto = getCrypto();

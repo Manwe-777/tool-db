@@ -1,6 +1,6 @@
-import { hexToArrayBuffer, textRandom } from ".";
+import { textRandom } from ".";
 import ToolDb from "./tooldb";
-import hexToUint8 from "./utils/hexToUint8";
+import hexToUint8 from "./utils/encoding/hexToUint8";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.

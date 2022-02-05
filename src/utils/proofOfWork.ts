@@ -1,4 +1,4 @@
-import { sha256 } from "..";
+import sha256 from "./sha256";
 
 export default function proofOfWork(
   value: string,

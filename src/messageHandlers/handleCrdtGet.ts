@@ -1,6 +1,7 @@
 import Automerge from "automerge";
-import { CrdtGetMessage, CrdtMessage, ToolDb } from "..";
-import uint8ArrayToHex from "../utils/uint8ArrayToHex";
+import { ToolDb } from "..";
+import { CrdtMessage, CrdtGetMessage } from "../types/message";
+import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
 
 export default function handleCrdtGet(
   this: ToolDb,

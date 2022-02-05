@@ -1,10 +1,8 @@
-import {
-  hexToArrayBuffer,
-  importKey,
-  recoverPubKey,
-  sha256,
-  verifyData,
-} from "..";
+import sha256 from "./sha256";
+import importKey from "./crypto/importKey";
+import verifyData from "./crypto/verifyData";
+import hexToArrayBuffer from "./encoding/hexToArrayBuffer";
+
 import { Peer } from "../types/tooldb";
 
 export default async function verifyPeer(peer: Peer) {

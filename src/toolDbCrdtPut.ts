@@ -1,12 +1,12 @@
 import { BinaryChange } from "automerge";
-import { base64ToHex, CrdtPutMessage, textRandom, VerificationData } from ".";
+import { CrdtPutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
-import arrayBufferToHex from "./utils/arrayBufferToHex";
 
 import proofOfWork from "./utils/proofOfWork";
 
 import signData from "./utils/signData";
-import uint8ArrayToHex from "./utils/uint8ArrayToHex";
+import arrayBufferToHex from "./utils/encoding/arrayBufferToHex";
+import uint8ArrayToHex from "./utils/encoding/uint8ArrayToHex";
 
 /**
  * Triggers a PUT request to other peers.

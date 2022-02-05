@@ -1,5 +1,5 @@
 import { BinaryChange } from "automerge";
-import { fromBase64 } from "..";
+import fromBase64 from "./fromBase64";
 
 export default function base64ToBinaryChange(based: string): BinaryChange {
   const str = fromBase64(based);

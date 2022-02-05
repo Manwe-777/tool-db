@@ -1,4 +1,4 @@
-import arrayBufferToHex from "../arrayBufferToHex";
+import arrayBufferToHex from "../encoding/arrayBufferToHex";
 
 export default function encodeKeyString(keydata: ArrayBuffer) {
   const keydataHexed = arrayBufferToHex(keydata);

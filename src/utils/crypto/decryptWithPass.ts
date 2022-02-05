@@ -1,4 +1,4 @@
-import arrayBufferToString from "../arrayBufferToString";
+import arrayBufferToString from "../encoding/arrayBufferToString";
 import catchReturn from "../catchReturn";
 import generateKeyFromPassword from "./generateKeyFromPassword";
 

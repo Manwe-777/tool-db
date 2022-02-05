@@ -1,6 +1,8 @@
-import { JoinMessage, PongMessage, textRandom, ToolDb } from "..";
+import { ToolDb } from "..";
 import { Peer } from "../types/tooldb";
 import getPeerSignature from "../utils/getPeerSignature";
+import { JoinMessage, PongMessage } from "../types/message";
+import textRandom from "../utils/textRandom";
 
 export default function handlePong(
   this: ToolDb,

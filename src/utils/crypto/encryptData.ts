@@ -1,6 +1,6 @@
 import getCrypto from "../../getCrypto";
 
-import stringToArrayBuffer from "../stringToArrayBuffer";
+import stringToArrayBuffer from "../encoding/stringToArrayBuffer";
 
 export default function encryptData(
   data: string,

@@ -1,6 +1,6 @@
 import getCrypto from "../getCrypto";
 
-import { stringToArrayBuffer } from "..";
+import stringToArrayBuffer from "./encoding/stringToArrayBuffer";
 
 export default function signData(
   data: string,

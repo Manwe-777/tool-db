@@ -1,14 +1,10 @@
 import Automerge from "automerge";
-import {
-  base64ToBinaryChange,
-  CrdtMessage,
-  CrdtPutMessage,
-  ToolDb,
-  VerifyResult,
-} from "..";
+import { ToolDb } from "..";
+import { VerifyResult, CrdtMessage, CrdtPutMessage } from "../types/message";
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
-import hexToBase64 from "../utils/hexToBase64";
-import uint8ArrayToHex from "../utils/uint8ArrayToHex";
+import hexToBase64 from "../utils/encoding/hexToBase64";
+import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
+import base64ToBinaryChange from "../utils/encoding/base64ToBinaryChange";
 
 export default function handleCrdtPut(
   this: ToolDb,

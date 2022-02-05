@@ -1,7 +1,7 @@
-import { CrdtMessage, textRandom, uint8ToBase64 } from ".";
+import { CrdtMessage, textRandom } from ".";
 import ToolDb from "./tooldb";
 import Automerge from "automerge";
-import uint8ArrayToHex from "./utils/uint8ArrayToHex";
+import uint8ArrayToHex from "./utils/encoding/uint8ArrayToHex";
 
 /**
  * Subscribe to all PUT updates for this key.

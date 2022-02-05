@@ -1,5 +1,5 @@
-import arrayBufferToString from "../arrayBufferToString";
-import base64ToUint8 from "../base64ToUint8";
+import arrayBufferToString from "../encoding/arrayBufferToString";
+import base64ToUint8 from "../encoding/base64ToUint8";
 
 export default function recoverPubKeyFromPrivate(
   privateKey: ArrayBuffer

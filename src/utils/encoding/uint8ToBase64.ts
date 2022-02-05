@@ -1,5 +1,5 @@
 import { BinaryChange } from "automerge";
-import { toBase64 } from "..";
+import toBase64 from "./toBase64";
 
 export default function uint8ToBase64(
   byteArray: Uint8Array | BinaryChange

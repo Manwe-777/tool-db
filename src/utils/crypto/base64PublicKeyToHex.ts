@@ -1,7 +1,5 @@
-import getCrypto from "../../getCrypto";
-
-import base64ToHex from "../base64ToHex";
-import hexToArrayBuffer from "../hexToArrayBuffer";
+import base64ToHex from "../encoding/base64ToHex";
+import hexToArrayBuffer from "../encoding/hexToArrayBuffer";
 import exportKeyAsHex from "./exportKeyAsHex";
 import importKey from "./importKey";
 

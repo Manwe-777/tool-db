@@ -1,4 +1,4 @@
-import { fromBase64 } from "..";
+import fromBase64 from "./fromBase64";
 
 export default function base64ToUint8(based: string): Uint8Array {
   const str = fromBase64(based);

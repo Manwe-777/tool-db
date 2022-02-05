@@ -16,7 +16,7 @@ import {
   signData,
 } from ".";
 
-import uint8ArrayToHex from "./utils/uint8ArrayToHex";
+import uint8ArrayToHex from "./utils/encoding/uint8ArrayToHex";
 
 export default async function toolDbSignUp(
   this: ToolDb,

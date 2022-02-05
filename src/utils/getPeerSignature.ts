@@ -1,4 +1,6 @@
-import { sha256, signData, arrayBufferToHex } from "..";
+import sha256 from "./sha256";
+import signData from "./signData";
+import arrayBufferToHex from "./encoding/arrayBufferToHex";
 
 export default function getPeerSignature(
   privateKey: CryptoKey,

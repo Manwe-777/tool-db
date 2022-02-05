@@ -4,8 +4,8 @@ import toolDbGetPubKey from "../toolDbGetPubKey";
 import exportKey from "../utils/crypto/exportKey";
 import generateKeyPair from "../utils/crypto/generateKeyPair";
 import generateKeysComb from "../utils/crypto/generateKeysComb";
-import arrayBufferToHex from "../utils/arrayBufferToHex";
-import hexToArrayBuffer from "../utils/hexToArrayBuffer";
+import arrayBufferToHex from "../utils/encoding/arrayBufferToHex";
+import hexToArrayBuffer from "../utils/encoding/hexToArrayBuffer";
 
 import leveldb from "../utils/leveldb";
 

@@ -1,6 +1,6 @@
-import { hexToArrayBuffer, ToolDb } from ".";
+import { ToolDb } from ".";
 import Automerge from "automerge";
-import hexToUint8 from "./utils/hexToUint8";
+import hexToUint8 from "./utils/encoding/hexToUint8";
 
 export default function loadCrdtDocument(
   this: ToolDb,

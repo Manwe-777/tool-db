@@ -1,4 +1,5 @@
-import { GetMessage, PutMessage, ToolDb } from "..";
+import { ToolDb } from "..";
+import { GetMessage, PutMessage } from "../types/message";
 
 export default function handleGet(
   this: ToolDb,
