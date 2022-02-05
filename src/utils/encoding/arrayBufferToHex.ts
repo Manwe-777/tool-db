@@ -14,5 +14,5 @@ export default function arrayBufferToHex(buffer: ArrayBuffer) {
     hex += c;
   }
 
-  return hex;
+  return hex.toUpperCase();
 }

@@ -71,7 +71,7 @@ it("Can recover public key from message", async () => {
   // Message needs to be hashed because webcrypto does it internally
   const pubKey = recoverPubKey(sha256(message), signature, publicHexed);
 
-  expect(pubKey.slice(-40)).toBe(publicHexed.slice(-40));
+  expect(pubKey).toBe(publicHexed);
 });
 
 it("Can recover public key from signed data", (done) => {
@@ -86,7 +86,7 @@ it("Can recover public key from signed data", (done) => {
           publicHexed
         );
 
-        expect(pubKeyRecovered.slice(-40)).toBe(publicHexed.slice(-40));
+        expect(pubKeyRecovered.toUpperCase()).toBe(publicHexed.toUpperCase());
         done();
       });
     });
