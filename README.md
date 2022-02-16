@@ -27,6 +27,25 @@ While the database is currently functioning as expected, there are many things t
 - Allow messages encryption, add methods for Elliptic Curves, shared keys, etc.
 - Allow adding Noise/encryption to connections (probably based on the ECC?)
 
+# Install
+
+You can install ToolDb via npm or yarn;
+
+```
+npm install tool-db
+```
+
+or use it via script in your html;
+
+```
+<script src="https://unpkg.com/tool-db/bundle.js"></script>
+```
+
+That will include all of ToolDb exports in `tooldb`, then you can use it like;
+
+```
+const { ToolDb, sha256 } = tooldb;
+```
 
 ## Base usage
 Connect to the selected toolDb peers;
