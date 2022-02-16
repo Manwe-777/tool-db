@@ -1,13 +1,13 @@
 {
   "name": "tool-db",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "private": false,
   "description": "A decentralized database model for federated p2p networks.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "eslint:fix": "eslint --fix . --ext .ts",
-    "bundle": "browserify ./dist/index.js --standalone XXX > ./dist/bundle.js",
+    "bundle": "browserify ./dist/index.js --standalone tooldb > ./bundle.js",
     "build": "tsc && npm run bundle",
     "publish": "np",
     "prepublish": "npm run build",
