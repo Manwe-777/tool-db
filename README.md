@@ -38,34 +38,34 @@ These are the options you can pass to the constructor:
 
 ```
 {
-  // Database name to use
+  // Database name to use (default "tooldb")
   db: string;
 
-  // Show debug console logs
+  // Show debug console logs (default false)
   debug: boolean;
 
   // Array of peers to connect to, each one in the form of { host: "127.0.0.1", port: 9000 }
   peers: { host: "127.0.0.1", port: 9000 }[];
 
-  // Max number of tries when a connection fails
+  // Max number of tries when a connection fails (default 5)
   maxRetries: number;
 
-  // How long to wait (max) for a debounced key listener recv
+  // How long to wait (max) for a debounced key listener recv (default 100)
   triggerDebouce: number;
 
-  // How long to wait between retries
+  // How long to wait between retries (default 2000)
   wait: number;
 
-  // If you want to force a Proof of Work on all messages, set how much (zero is no POW)
+  // If you want to force a Proof of Work on all messages, set how much (zero is no POW, default 0)
   pow: number;
 
-  // Weter we are a server or not
+  // Whether we are a server or not (default false)
   server: boolean;
 
   // Our hostname (server only)
   host: string
 
-  // Port to listen incoming connections (server only)
+  // Port to listen incoming connections (server only, default is 8080)
   port: number;
 
   // A server instance like Express (server only)
@@ -80,10 +80,10 @@ These are the options you can pass to the constructor:
   // A custom storage adapter function
   storageAdapter: ToolDbStorageAdapter;
 
-  // Our client ID (defaults to a random ID)
+  // Our client ID (defaults to a generated publicKey)
   id: string;
 
-  // The namespace/topic of our app
+  // The namespace/topic of our app (default is "tool-db-default")
   topic: string;
   
   // Public and private (ECDSA) keys of our client. In the default network adapter these are used to sign
@@ -200,7 +200,8 @@ function handleDocumentKeyCrdt(msg) {
 ## Events
 
 If you need to check when you are connected to a server peer or not you can use the following method replacements;
+
 ```
-client.onConnect = () => { /* Your code here */ };
+client.onConnect = (remotePeerId: string) => { /* Your code here */ };
 client.onDisconnect = () => { /* Your code here */ };
 ```

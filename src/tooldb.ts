@@ -88,13 +88,17 @@ export default class ToolDb extends EventEmitter {
 
   public subscribeData = toolDbSubscribe;
 
-  // Emitted when there are no more server peers connected to
+  /**
+   * Emitted when there are no more server peers connected to
+   */
   public onDisconnect = () => {
     //
   };
 
-  // Emitted when a server peer responds with "pong"
-  public onConnect = () => {
+  /**
+   * Emitted when a server peer responds with "pong"
+   */
+  public onConnect = (remotePeerId: string) => {
     //
   };
 
