@@ -8,6 +8,8 @@ import {
   exportKey,
   generateKeyPair,
   PutMessage,
+  sha1,
+  textRandom,
   ToolDbMessage,
   VerificationData,
   verifyMessage,
@@ -284,16 +286,14 @@ export default class ToolDb extends EventEmitter {
 
             exportKey("spki", key.publicKey).then((skpub) => {
               this._options.id = encodeKeyString(skpub as ArrayBuffer);
-              if (this._options.debug) {
-                console.log("My ID is:", this._options.id);
-              }
+              this.emit("init", this._options._id);
             });
           }
         })
         .catch(console.warn);
-    } // else {
-    // this._options.id = sha1(`${textRandom(100)}-${new Date().getTime()}`);
-    // }
+    } else {
+      this.emit("init", this._options._id);
+    }
 
     // These could be made to be customizable by setting the variables as public
     this._network = new this.options.networkAdapter(this);
