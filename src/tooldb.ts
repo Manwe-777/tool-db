@@ -96,7 +96,7 @@ export default class ToolDb extends EventEmitter {
   };
 
   // Emitted when a server peer responds with "pong"
-  public onConnect = () => {
+  public onConnect = (id: string) => {
     //
   };
 
