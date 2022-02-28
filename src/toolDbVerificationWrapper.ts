@@ -12,18 +12,31 @@ export default function toolDbVerificationWrapper(
         this._customVerificator.forEach((listener) => {
           if (listener && data.k && data.k.startsWith(listener.key)) {
             skipCustom = false;
-            listener
-              .fn(data)
-              .then((verified: boolean) => {
-                if (verified) {
-                  resolve(VerifyResult.Verified);
-                } else {
-                  resolve(VerifyResult.CustomVerificationFailed);
+
+            // Get the previously stored value of this key
+            this.store.get(data.k, (err, prev) => {
+              let previousData = undefined;
+              if (prev) {
+                try {
+                  previousData = JSON.parse(prev);
+                } catch (e) {
+                  // do nothing
                 }
-              })
-              .catch((e) => {
-                resolve(VerifyResult.CustomVerificationFailed);
-              });
+              }
+
+              listener
+                .fn(data, previousData)
+                .then((verified: boolean) => {
+                  if (verified) {
+                    resolve(VerifyResult.Verified);
+                  } else {
+                    resolve(VerifyResult.CustomVerificationFailed);
+                  }
+                })
+                .catch((e) => {
+                  resolve(VerifyResult.CustomVerificationFailed);
+                });
+            });
           }
         });
 

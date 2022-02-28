@@ -1,7 +1,13 @@
 jest.mock("../getCrypto.ts");
 import Automerge from "automerge";
 
-import { base64ToBinaryDocument, textRandom, ToolDb } from "..";
+import {
+  base64ToBinaryDocument,
+  BaseMessage,
+  textRandom,
+  ToolDb,
+  VerificationData,
+} from "..";
 import leveldb from "../utils/leveldb";
 jest.setTimeout(15000);
 
