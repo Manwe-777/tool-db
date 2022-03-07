@@ -3,7 +3,7 @@
 
 import elliptic from "elliptic";
 
-export * from "./types/graph";
+export * from "./types/tooldb";
 export * from "./types/message";
 
 global.Buffer = global.Buffer || require("buffer").Buffer;

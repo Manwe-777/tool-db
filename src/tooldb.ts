@@ -7,6 +7,8 @@ import {
   exportKeyAsHex,
   generateKeyPair,
   PutMessage,
+  sha1,
+  textRandom,
   ToolDbMessage,
   VerificationData,
   verifyMessage,
@@ -53,7 +55,10 @@ export interface Listener {
 
 interface Verificator<T> {
   key: string;
-  fn: (msg: VerificationData<T> & BaseMessage) => Promise<boolean>;
+  fn: (
+    msg: VerificationData<T> & BaseMessage,
+    previousData: T | undefined
+  ) => Promise<boolean>;
 }
 
 export default class ToolDb extends EventEmitter {
@@ -87,13 +92,17 @@ export default class ToolDb extends EventEmitter {
 
   public subscribeData = toolDbSubscribe;
 
-  // Emitted when there are no more server peers connected to
+  /**
+   * Emitted when there are no more server peers connected to
+   */
   public onDisconnect = () => {
     //
   };
 
-  // Emitted when a server peer responds with "pong"
-  public onConnect = () => {
+  /**
+   * Emitted when a server peer responds with "pong"
+   */
+  public onConnect = (remotePeerId: string) => {
     //
   };
 
@@ -202,7 +211,10 @@ export default class ToolDb extends EventEmitter {
 
   public addCustomVerification = <T = any>(
     key: string,
-    fn: (msg: VerificationData & BaseMessage) => Promise<boolean>
+    fn: (
+      msg: VerificationData & BaseMessage,
+      previous: T | undefined
+    ) => Promise<boolean>
   ) => {
     const newListener: Verificator<T> = {
       key,
@@ -284,6 +296,7 @@ export default class ToolDb extends EventEmitter {
             if (this._options.publicKey) {
               exportKeyAsHex(this._options.publicKey).then((pubkey) => {
                 this._options.id = pubkey;
+                this.emit("init", this._options.id);
                 if (this._options.debug) {
                   console.log("My ID is:", this._options.id);
                 }
@@ -292,9 +305,9 @@ export default class ToolDb extends EventEmitter {
           }
         })
         .catch(console.warn);
-    } // else {
-    // this._options.id = sha1(`${textRandom(100)}-${new Date().getTime()}`);
-    // }
+    } else {
+      this.emit("init", this._options._id);
+    }
 
     // These could be made to be customizable by setting the variables as public
     this._network = new this.options.networkAdapter(this);

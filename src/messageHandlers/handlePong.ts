@@ -9,7 +9,7 @@ export default function handlePong(
   message: PongMessage,
   remotePeerId: string
 ) {
-  this.onConnect();
+  this.onConnect(this.options.id);
 
   if (this.options.server && this.options.privateKey) {
     const timestamp = new Date().getTime();

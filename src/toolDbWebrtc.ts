@@ -27,6 +27,7 @@ const announceSecs = 30;
 const maxAnnounceSecs = 120;
 
 const defaultTrackerUrls = [
+  "wss://tooldb-tracker.herokuapp.com/",
   "wss://tracker.openwebtorrent.com",
   "wss://tracker.btorrent.xyz",
   "wss://tracker.webtorrent.io",
@@ -142,7 +143,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
           this.tooldb.clientOnMessage(msg, id);
         }
         if (msg.type === "pong" || msg.type === "ping") {
-          this.tooldb.onConnect();
+          this.tooldb.onConnect(id);
         }
       } catch (e) {
         //
@@ -266,9 +267,11 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     this.offerPool = this.makeOffers();
 
     this.trackerUrls.forEach(async (url: string) => {
+      // console.log("begin tracker connection " + url);
       const socket = await this.makeSocket(url, this.infoHash);
-      // console.log("socket", url, Object.keys(socket || {}), socket?.readyState);
-      if (socket) {
+      // console.log(" ok tracker " + url);
+      // console.log("socket", url, socket);
+      if (socket && socket.readyState === 1) {
         // console.log("announce to " + url);
         this.announce(socket, this.infoHash);
       }

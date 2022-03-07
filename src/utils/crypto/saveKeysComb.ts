@@ -1,4 +1,4 @@
-import { ParsedKeys } from "../../types/graph";
+import { ParsedKeys } from "../../types/tooldb";
 import encodeKeyString from "./encodeKeyString";
 import exportKey from "./exportKey";
 

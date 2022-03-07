@@ -24,13 +24,34 @@ export interface VerificationDataLegacy<T = any> {
 }
 
 export interface VerificationData<T = any> {
-  a: string; // adress
-  k: string; // Key/id
-  n: number; // nonce
-  h: string; // hash of JSON.stringify(value) + nonce
-  t: number; // Timestamp this was created
-  s: string; // signature
-  v: T; // value
+  /**
+   * Key/id
+   */
+  k: string;
+  /**
+   * Adress
+   */
+  a: string;
+  /**
+   * Nonce
+   */
+  n: number;
+  /**
+   * Hash of JSON.stringify(value) + nonce
+   */
+  h: string;
+  /**
+   * Timestamp this was created
+   */
+  t: number;
+  /**
+   * Signature
+   */
+  s: string;
+  /**
+   * Value
+   */
+  v: T;
 }
 
 export type MessageType =
@@ -51,8 +72,14 @@ export type MessageType =
 
 export interface BaseMessage {
   type: MessageType;
-  id: string; // unique random id for the message, to ack back
-  to: string[]; // who was this message sent to already
+  /**
+   * Unique random id for the message, to ack back
+   */
+  id: string;
+  /**
+   * Who was this message sent to already
+   */
+  to: string[];
 }
 
 export interface JoinMessage extends BaseMessage {
@@ -94,7 +121,10 @@ export interface SubscribeMessage extends BaseMessage {
 
 export interface GetMessage extends BaseMessage {
   type: "get";
-  key: string; // key we want to get
+  /**
+   * key we want to get
+   */
+  key: string;
 }
 
 export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {

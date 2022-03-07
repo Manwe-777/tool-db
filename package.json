@@ -1,13 +1,14 @@
 {
   "name": "tool-db",
-  "version": "1.4.2",
+  "version": "1.4.5",
   "private": false,
   "description": "A decentralized database model for federated p2p networks.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "eslint:fix": "eslint --fix . --ext .ts",
-    "build": "tsc",
+    "bundle": "browserify ./dist/index.js --standalone tooldb > ./bundle.js",
+    "build": "tsc && npm run bundle",
     "publish": "np",
     "prepublish": "npm run build",
     "test": "jest --clearCache && jest ./src --detectOpenHandles",
@@ -38,6 +39,7 @@
     "@types/simple-peer": "^9.11.4",
     "@types/ws": "^7.4.7",
     "@typescript-eslint/eslint-plugin": "^4.29.1",
+    "browserify": "^17.0.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-prettier": "^8.3.0",
@@ -52,6 +54,9 @@
     "ts-node": "^10.2.0",
     "typescript": "^4.1.2",
     "typescript-eslint": "0.0.1-alpha.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   },
   "watch": {
     "build": {
