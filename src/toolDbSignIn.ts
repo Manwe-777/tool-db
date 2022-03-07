@@ -8,7 +8,7 @@ import catchReturn from "./utils/catchReturn";
 import sha256 from "./utils/sha256";
 import hexToUint8 from "./utils/encoding/hexToUint8";
 import hexToArrayBuffer from "./utils/encoding/hexToArrayBuffer";
-import { UserRootData } from "./types/graph";
+import { UserRootData } from "./types/tooldb";
 
 export default function toolDbSignIn(
   this: ToolDb,
