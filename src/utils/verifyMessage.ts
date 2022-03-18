@@ -1,13 +1,7 @@
 import sha256 from "./sha256";
 import { VerifyResult, VerificationData } from "../types/message";
 
-import {
-  ToolDb,
-  importKey,
-  verifyData,
-  recoverPubKey,
-  hexToArrayBuffer,
-} from "..";
+import { ToolDb } from "..";
 
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
@@ -67,9 +61,7 @@ export default async function verifyMessage<T>(
     if (data && data.a !== msg.a) return VerifyResult.CantOverwrite;
   }
 
-  const adress = msg.a;
-
-  if (adressNamespace && adressNamespace !== adress) {
+  if (adressNamespace && adressNamespace !== msg.a) {
     // console.warn("Provided pub keys do not match");
     return VerifyResult.PubKeyMismatch;
   }
@@ -84,17 +76,14 @@ export default async function verifyMessage<T>(
       return VerifyResult.NoProofOfWork;
     }
 
-    if (sha256(`${strData}${adress}${msg.t}${msg.n}`) !== msg.h) {
+    if (sha256(`${strData}${msg.a}${msg.t}${msg.n}`) !== msg.h) {
       // console.warn("Specified hash does not generate a valid pow");
       return VerifyResult.InvalidHashNonce;
     }
   }
 
-  const pubKey = await importKey(hexToArrayBuffer(msg.a), "raw", "ECDSA", [
-    "verify",
-  ]);
-
-  const verified = await verifyData(msg.h, hexToArrayBuffer(msg.s), pubKey);
+  const pubKey = this.web3.eth.accounts.recover(msg.h, msg.s);
+  const verified = pubKey === msg.a;
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;

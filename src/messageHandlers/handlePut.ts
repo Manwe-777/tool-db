@@ -10,6 +10,7 @@ export default function handlePut(
   toolDbVerificationWrapper.call(this, message).then((value) => {
     // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
+      this.emit("verified", message);
       // relay to other servers !!!
       this.network.sendToAll(message, true);
 

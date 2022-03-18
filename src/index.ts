@@ -30,7 +30,7 @@ if (typeof window === "undefined") {
 export { default as proofOfWork } from "./utils/proofOfWork";
 export { default as sha1 } from "./utils/sha1";
 export { default as sha256 } from "./utils/sha256";
-export { default as signData } from "./utils/signData";
+
 export { default as generateIv } from "./utils/generateIv";
 export { default as randomAnimal } from "./utils/randomAnimal";
 export { default as textRandom } from "./utils/textRandom";
@@ -55,8 +55,6 @@ export { default as uint8ToBase64 } from "./utils/encoding/uint8ToBase64";
 export { default as uint8ArrayToHex } from "./utils/encoding/uint8ArrayToHex";
 export { default as toBase64 } from "./utils/encoding/toBase64";
 
-export { default as recoverPubKey } from "./utils/crypto/recoverPubKey";
-export { default as exportKeyAsHex } from "./utils/crypto/exportKeyAsHex";
 export { default as decodeKeyString } from "./utils/crypto/decodeKeyString";
 export { default as decryptData } from "./utils/crypto/decryptData";
 export { default as decryptWithPass } from "./utils/crypto/decryptWithPass";
@@ -64,14 +62,7 @@ export { default as deriveSecret } from "./utils/crypto/deriveSecret";
 export { default as encodeKeyString } from "./utils/crypto/encodeKeyString";
 export { default as encryptData } from "./utils/crypto/encryptData";
 export { default as encryptWithPass } from "./utils/crypto/encryptWithPass";
-export { default as exportKey } from "./utils/crypto/exportKey";
 export { default as generateKeyFromPassword } from "./utils/crypto/generateKeyFromPassword";
-export { default as generateKeyPair } from "./utils/crypto/generateKeyPair";
-export { default as generateKeysComb } from "./utils/crypto/generateKeysComb";
-export { default as importKey } from "./utils/crypto/importKey";
-export { default as loadKeysComb } from "./utils/crypto/loadKeysComb";
-export { default as saveKeysComb } from "./utils/crypto/saveKeysComb";
-export { default as verifyData } from "./utils/crypto/verifyData";
 
 export { default as toolDbNetwork } from "./toolDbNetwork";
 export { default as toolDbWebrtc } from "./toolDbWebrtc";

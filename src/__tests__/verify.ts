@@ -1,24 +1,10 @@
 import elliptic from "elliptic";
-import { VerificationData, VerifyResult } from "../types/message";
+import { VerifyResult } from "../types/message";
 
 import catchReturn from "../utils/catchReturn";
-import verifyPeer from "../utils/verifyPeer";
-import getPeerSignature from "../utils/getPeerSignature";
 
-import recoverPubKey from "../utils/crypto/recoverPubKey";
-import exportKeyAsHex from "../utils/crypto/exportKeyAsHex";
+import { PutMessage, ToolDb } from "..";
 
-import {
-  arrayBufferToHex,
-  exportKey,
-  generateKeyPair,
-  hexToArrayBuffer,
-  sha256,
-  signData,
-  ToolDb,
-} from "..";
-
-import { Peer } from "../types/tooldb";
 import leveldb from "../utils/leveldb";
 
 jest.mock("../getCrypto.ts");
@@ -35,6 +21,7 @@ beforeAll((done) => {
     port: 8888,
     storageAdapter: leveldb,
     storageName: "test-verify-a",
+    adressSlice: -42,
   });
 
   done();
@@ -45,13 +32,16 @@ afterAll((done) => {
   setTimeout(done, 1000);
 });
 
-const putOk: VerificationData<string> = {
-  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
-  h: "423a5bfac6d5af6c83930e18c53df722b661bb78ea5e4ac9e02057ed65f35104",
+const putOk: PutMessage<string> = {
+  type: "put",
+  id: "smMnmXNkfm",
+  to: ["329466B79DFD4304DDEB"],
   k: "test",
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
   n: 0,
-  s: "62fe76e5c4c959f7a910070ebb003aea0af4edb15577e174ade9e225d4a432f9d38b76442e54f5d25fb33d075f863f92af4e5b78fbec6b63acb67fbe07992781",
-  t: 1643989186242,
+  t: 1647640220476,
+  h: "0d4d06c94612cbebd39b6bf3ccc54f666590612dce89f07b75b9482063006e7d",
+  s: "0x0857c2e6a256d9a866500be860288510b8b84f0d4e35f75cda97531492e4ba670fe7e9b2bca6abe4a1d270002947493ac261657b3ea6640127af7dab783d5fb61c",
   v: "value",
 };
 
@@ -61,51 +51,22 @@ it("Can verify PUT", () => {
   });
 });
 
-it("Can recover public key from message", async () => {
-  // Convert the public key to hex
-  const publicHexed = putOk.a;
-  //
-  const signature = hexToArrayBuffer(putOk.s);
-  const message = putOk.h;
-
-  // Message needs to be hashed because webcrypto does it internally
-  const pubKey = recoverPubKey(sha256(message), signature, publicHexed);
-
-  expect(pubKey).toBe(publicHexed);
-});
-
-it("Can recover public key from signed data", (done) => {
-  generateKeyPair("ECDSA", true).then((keys) => {
-    const message = "test";
-    exportKeyAsHex(keys.publicKey).then((publicHexed) => {
-      signData(message, keys.privateKey).then((s) => {
-        const signature = s;
-        const pubKeyRecovered = recoverPubKey(
-          sha256(message),
-          signature,
-          publicHexed
-        );
-
-        expect(pubKeyRecovered).toBe(publicHexed.toLowerCase());
-        done();
-      });
-    });
-  });
-});
-
 it("Can catch invalid POW", () => {
   return ClientA.verifyMessage(putOk, 5).then((result) => {
     expect(result).toEqual(VerifyResult.NoProofOfWork);
   });
 });
 
-const putSig: VerificationData<string> = {
-  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
-  h: "0000f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
+const putSig: PutMessage<string> = {
+  type: "put",
+  id: "Duupf8duTF",
+  to: ["329466B79DFD4304DDEB"],
   k: "test",
-  n: 373,
-  s: "66c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
-  t: 1643989211311,
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 8312,
+  t: 1647640402279,
+  h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
+  s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e6b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
   v: "value",
 };
 
@@ -115,13 +76,16 @@ it("Can catch tampered messages (signature)", () => {
   });
 });
 
-const tamperedNonce: VerificationData<string> = {
-  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
-  h: "0000f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
+const tamperedNonce: PutMessage<string> = {
+  type: "put",
+  id: "Duupf8duTF",
+  to: ["329466B79DFD4304DDEB"],
   k: "test",
-  n: 0,
-  s: "77c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
-  t: 1643989211311,
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 82,
+  t: 1647640402279,
+  h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
+  s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e5b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
   v: "value",
 };
 
@@ -178,13 +142,16 @@ it("Can print errors", async () => {
   expect(await rejectPromise).toBe(undefined);
 });
 
-const putTime: VerificationData<string> = {
-  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
-  h: "0000f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
+const putTime: PutMessage<string> = {
+  type: "put",
+  id: "Duupf8duTF",
+  to: ["329466B79DFD4304DDEB"],
   k: "test",
-  n: 373,
-  s: "77c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
-  t: 1999989211311,
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 8312,
+  t: 2647640402279,
+  h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
+  s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e5b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
   v: "value",
 };
 
@@ -194,29 +161,16 @@ it("Can catch tampered messages (time)", () => {
   });
 });
 
-const putPow: VerificationData<string> = {
-  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
-  h: "2fe0f0f6299c8b5540c30570541c3d7aea381ab394771d6f6ce5902ba18856b7",
-  k: "test",
-  n: 373,
-  s: "77c363049bec2cd78c6e2aed3b00380a9546e171e5006d2e78b1567f91781e331089aebec0963bbc2f1d0204184490f2d5a852be432fc361f9fadac162f34629",
-  t: 1643989211311,
-  v: "value",
-};
-
-// it("Can catch tampered messages (pow)", () => {
-//   return ClientA.verifyMessage(putPow).then((result) => {
-//     expect(result).toEqual(VerifyResult.NoProofOfWork);
-//   });
-// });
-
-const privatePut: VerificationData<string> = {
-  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
-  h: "00056bc08cd8765ee792f6c67c6c04d52be1583d75508910da00169c0f3c063a",
-  k: ":0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64.test",
-  n: 733,
-  s: "70ecc005fe2d57df8c9fbb61ed6203faa9933de15eebdd3d52b5dee5f4a424bdeb4714f0cb63047432d7d71d142469c0e5f3c4b08384d82c6f5bc9cac824344a",
-  t: 1643989274250,
+const privatePut: PutMessage<string> = {
+  type: "put",
+  id: "XZ9WhHxd5Q",
+  to: ["329466B79DFD4304DDEB"],
+  k: ":0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD.test",
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 9245,
+  t: 1647640485709,
+  h: "000a38b897728bc1a47be95ffdc0643b346a10e4159ac8c8fb4d33bd78e541d7",
+  s: "0x1e3ca6c48f5ae7d55104217d7e38860ac31693ce80a56aca4c6ca0bd22c372e909a96d67470a26c15834c76c30a0b775d33a57854912dea9d03342dcd28334bb1c",
   v: "value",
 };
 
@@ -226,13 +180,16 @@ it("Can verify namespaced PUT", () => {
   });
 });
 
-const privatePutPubkey: VerificationData<string> = {
-  a: "0404f4f51849cbcea54eafbf9e4bbdacf0d6659faa50df529248c0360230daa754f7a43928da18cfe389687ee169825a68fa682d29d6337d1b1f619336bdf80f64",
-  h: "00056bc08cd8765ee792f6c67c6c04d52be1583d75508910da00169c0f3c063a",
-  k: ":04ff0be846286d06f6b9297457261a1c51ad4db7d07af83792bdeb50db281a0d2b5d06f83059cf2c8bf75c7cae248d586d83319f4c04bf32880acc583996423b0f.test",
-  n: 733,
-  s: "70ecc005fe2d57df8c9fbb61ed6203faa9933de15eebdd3d52b5dee5f4a424bdeb4714f0cb63047432d7d71d142469c0e5f3c4b08384d82c6f5bc9cac824344a",
-  t: 1643989274250,
+const privatePutPubkey: PutMessage<string> = {
+  type: "put",
+  id: "XZ9WhHxd5Q",
+  to: ["329466B79DFD4304DDEB"],
+  k: ":0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD.test",
+  a: "0x1E80E2B44676624ff6712BeC97A22A42413a266f",
+  n: 9245,
+  t: 1647640485709,
+  h: "000a38b897728bc1a47be95ffdc0643b346a10e4159ac8c8fb4d33bd78e541d7",
+  s: "0x1e3ca6c48f5ae7d55104217d7e38860ac31693ce80a56aca4c6ca0bd22c372e909a96d67470a26c15834c76c30a0b775d33a57854912dea9d03342dcd28334bb1c",
   v: "value",
 };
 
@@ -240,39 +197,4 @@ it("Can catch pubkey replacement", () => {
   return ClientA.verifyMessage(privatePutPubkey).then((result) => {
     expect(result).toEqual(VerifyResult.PubKeyMismatch);
   });
-});
-
-it("Can verify peers", async () => {
-  const keys = await generateKeyPair("ECDSA", true);
-
-  const hexPubkey = await exportKey("raw", keys.publicKey).then((skpub) =>
-    arrayBufferToHex(skpub as ArrayBuffer)
-  );
-
-  const timestamp = new Date().getTime();
-
-  const signature = await getPeerSignature(
-    keys.privateKey,
-    "topic",
-    timestamp,
-    "host",
-    8080
-  );
-
-  expect(signature).toBeDefined();
-
-  if (!signature) return;
-
-  const peerData: Peer = {
-    topic: "topic",
-    timestamp: timestamp,
-    host: "host",
-    port: 8080,
-    adress: hexPubkey,
-    sig: signature,
-  };
-
-  const verified = await verifyPeer(peerData).catch(console.error);
-
-  expect(verified).toBeTruthy();
 });

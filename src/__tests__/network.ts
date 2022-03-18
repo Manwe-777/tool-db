@@ -22,7 +22,7 @@ beforeAll((done) => {
     storageName: "test-node-a",
     storageAdapter: leveldb,
   });
-  nodeA.onConnect = () => checkIfOk(nodeA.options.id);
+  nodeA.onConnect = () => checkIfOk(nodeA.options.peerAccount.address);
 
   nodeB = new ToolDb({
     server: true,
@@ -33,7 +33,7 @@ beforeAll((done) => {
     storageName: "test-node-b",
     storageAdapter: leveldb,
   });
-  nodeB.onConnect = () => checkIfOk(nodeB.options.id);
+  nodeB.onConnect = () => checkIfOk(nodeB.options.peerAccount.address);
 
   Alice = new ToolDb({
     server: false,
@@ -42,7 +42,7 @@ beforeAll((done) => {
     storageAdapter: leveldb,
   });
   Alice.anonSignIn();
-  Alice.onConnect = () => checkIfOk(Alice.options.id);
+  Alice.onConnect = () => checkIfOk(Alice.options.peerAccount.address);
 
   Bob = new ToolDb({
     server: false,
@@ -51,7 +51,7 @@ beforeAll((done) => {
     storageAdapter: leveldb,
   });
   Bob.anonSignIn();
-  Bob.onConnect = () => checkIfOk(Bob.options.id);
+  Bob.onConnect = () => checkIfOk(Bob.options.peerAccount.address);
 
   const connected = [];
   const checkIfOk = (id: string) => {

@@ -1,23 +1,15 @@
-import { exportKeyAsHex, randomAnimal } from ".";
+import { randomAnimal } from ".";
 import ToolDb from "./tooldb";
 
 export default function toolDbKeysSignIn(
   this: ToolDb,
-  keys: {
-    signKeys: CryptoKeyPair;
-    encryptionKeys: CryptoKeyPair;
-  },
+  privateKey: string,
   username?: string
-): Promise<{
-  signKeys: CryptoKeyPair;
-  encryptionKeys: CryptoKeyPair;
-}> {
-  return exportKeyAsHex(keys.signKeys.publicKey as CryptoKey).then((pubKey) => {
-    this.user = {
-      keys: keys,
-      name: username || `Anonymous ${randomAnimal()}`,
-      adress: pubKey,
-    };
-    return keys;
-  });
+): void {
+  const newAccount = this.web3.eth.accounts.privateKeyToAccount(privateKey);
+
+  this.user = {
+    account: newAccount,
+    name: username || `Anonymous ${randomAnimal()}`,
+  };
 }

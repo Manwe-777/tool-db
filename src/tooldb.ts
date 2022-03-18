@@ -1,14 +1,12 @@
 import { FreezeObject } from "automerge";
 import EventEmitter from "events";
+import w3 from "web3";
+import { Account } from "web3-core";
 
 import {
   BaseMessage,
   CrdtMessage,
-  exportKeyAsHex,
-  generateKeyPair,
   PutMessage,
-  sha1,
-  textRandom,
   ToolDbMessage,
   VerificationData,
   verifyMessage,
@@ -21,7 +19,7 @@ import toolDbSignUp from "./toolDbSignUp";
 import toolDbNetwork from "./toolDbNetwork";
 import toolDbCrdtGet from "./toolDbCrdtGet";
 import toolDbCrdtPut from "./toolDbCrdtPut";
-import toolDbGetPubKey from "./toolDbGetPubKey";
+
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
@@ -65,6 +63,8 @@ export default class ToolDb extends EventEmitter {
   private _network;
   private _store: ToolDbStore;
   private _peers: Peer[] = [];
+
+  public web3: w3;
 
   private _documents: Record<string, FreezeObject<any>> = {};
 
@@ -118,8 +118,6 @@ export default class ToolDb extends EventEmitter {
 
   public queryKeys = toolDbQueryKeys;
 
-  public getPubKey = toolDbGetPubKey;
-
   public signIn = toolDbSignIn;
 
   public anonSignIn = toolDbAnonSignIn;
@@ -155,7 +153,7 @@ export default class ToolDb extends EventEmitter {
   };
 
   public getUserNamespacedKey(key: string) {
-    return ":" + (this.user?.adress || "") + "." + key;
+    return ":" + (this.user?.account.address || "") + "." + key;
   }
 
   /**
@@ -232,12 +230,8 @@ export default class ToolDb extends EventEmitter {
   public user = undefined as
     | undefined
     | {
-        keys: {
-          signKeys: CryptoKeyPair;
-          encryptionKeys: CryptoKeyPair;
-        };
+        account: Account;
         name: string;
-        adress: string;
       };
 
   private _options: ToolDbOptions = {
@@ -255,10 +249,8 @@ export default class ToolDb extends EventEmitter {
     networkAdapter: toolDbNetwork,
     storageName: "tooldb",
     storageAdapter: typeof window === "undefined" ? leveldb : indexedb,
-    id: "",
     topic: "tool-db-default",
-    publicKey: undefined,
-    privateKey: undefined,
+    peerAccount: undefined as any,
   };
 
   get options() {
@@ -286,28 +278,11 @@ export default class ToolDb extends EventEmitter {
 
     this._options = { ...this.options, ...options };
 
-    if (this._options.id === "") {
-      generateKeyPair("ECDSA", false)
-        .then((key) => {
-          if (key.publicKey && key.privateKey) {
-            this._options.publicKey = key.publicKey;
-            this._options.privateKey = key.privateKey;
+    this.web3 = new w3(w3.givenProvider);
 
-            if (this._options.publicKey) {
-              exportKeyAsHex(this._options.publicKey).then((pubkey) => {
-                this._options.id = pubkey;
-                this.emit("init", this._options.id);
-                if (this._options.debug) {
-                  console.log("My ID is:", this._options.id);
-                }
-              });
-            }
-          }
-        })
-        .catch(console.warn);
-    } else {
-      this.emit("init", this._options._id);
-    }
+    const account = this.web3.eth.accounts.create();
+    this.options.peerAccount = account;
+    this.emit("init", account.address);
 
     // These could be made to be customizable by setting the variables as public
     this._network = new this.options.networkAdapter(this);

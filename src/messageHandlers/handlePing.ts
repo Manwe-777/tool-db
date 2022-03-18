@@ -10,7 +10,7 @@ export default function handlePing(
   this.network.sendToClientId(remotePeerId, {
     type: "pong",
     isServer: this.options.server,
-    clientId: this.options.id,
+    clientId: this.options.peerAccount.address,
     to: [],
     id: message.id,
   } as PongMessage);

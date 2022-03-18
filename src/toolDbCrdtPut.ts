@@ -4,8 +4,6 @@ import ToolDb from "./tooldb";
 
 import proofOfWork from "./utils/proofOfWork";
 
-import signData from "./utils/signData";
-import arrayBufferToHex from "./utils/encoding/arrayBufferToHex";
 import uint8ArrayToHex from "./utils/encoding/uint8ArrayToHex";
 
 /**
@@ -37,40 +35,40 @@ export default function toolDbCrdtPut<T = any>(
 
     const encodedData = JSON.stringify(value.map(uint8ArrayToHex));
 
-    const dataString = `${encodedData}${this.user.adress}${timestamp}`;
+    const dataString = `${encodedData}${this.user.account.address}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
-        if (this.user?.keys) {
-          // Sign our value
-          signData(hash, this.user.keys.signKeys.privateKey as CryptoKey)
-            .then(async (signature) => {
-              // Compose the message
-              const data: VerificationData = {
-                k: userNamespaced ? `:${this.user?.adress}.${key}` : key,
-                a: this.user?.adress || "",
-                n: nonce,
-                t: timestamp,
-                h: hash,
-                s: arrayBufferToHex(signature),
-                v: encodedData,
-              };
+        if (this.user) {
+          const signature = this.web3.eth.accounts.sign(
+            hash,
+            this.user?.account.privateKey
+          );
 
-              if (this.options.debug) {
-                console.log("PUT CRDT > " + key, data);
-              }
+          // Compose the message
+          const data: VerificationData = {
+            k: userNamespaced ? `:${this.user?.account.address}.${key}` : key,
+            a: this.user?.account.address || "",
+            n: nonce,
+            t: timestamp,
+            h: hash,
+            s: signature.signature,
+            v: encodedData,
+          };
 
-              const finalMessage: CrdtPutMessage = {
-                type: "crdtPut",
-                id: textRandom(10),
-                to: [],
-                ...data,
-              };
-              this.network.sendToAll(finalMessage);
-              resolve(finalMessage);
-            })
-            .catch(reject);
+          if (this.options.debug) {
+            console.log("PUT CRDT > " + key, data);
+          }
+
+          const finalMessage: CrdtPutMessage = {
+            type: "crdtPut",
+            id: textRandom(10),
+            to: [],
+            ...data,
+          };
+          this.network.sendToAll(finalMessage);
+          resolve(finalMessage);
         }
       })
       .catch(reject);
