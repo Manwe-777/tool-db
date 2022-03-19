@@ -32,7 +32,7 @@ export default function toolDbSignIn(
           hexToUint8(_user.iv)
         ).then((decryptedSKpriv) => {
           if (decryptedSKpriv) {
-            const newAccount = this.keysSignIn(decryptedSKpriv);
+            const newAccount = this.keysSignIn(decryptedSKpriv, user);
             resolve(newAccount);
           }
         });
