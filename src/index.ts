@@ -55,12 +55,7 @@ export { default as uint8ToBase64 } from "./utils/encoding/uint8ToBase64";
 export { default as uint8ArrayToHex } from "./utils/encoding/uint8ArrayToHex";
 export { default as toBase64 } from "./utils/encoding/toBase64";
 
-export { default as decodeKeyString } from "./utils/crypto/decodeKeyString";
-export { default as decryptData } from "./utils/crypto/decryptData";
 export { default as decryptWithPass } from "./utils/crypto/decryptWithPass";
-export { default as deriveSecret } from "./utils/crypto/deriveSecret";
-export { default as encodeKeyString } from "./utils/crypto/encodeKeyString";
-export { default as encryptData } from "./utils/crypto/encryptData";
 export { default as encryptWithPass } from "./utils/crypto/encryptWithPass";
 export { default as generateKeyFromPassword } from "./utils/crypto/generateKeyFromPassword";
 

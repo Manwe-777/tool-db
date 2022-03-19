@@ -2,10 +2,12 @@ node_modules
 coverage
 dist
 test-alice
+test-alice-speed
 test-bob
 test-node-a
 test-node-b
 test-keys-a
 test-keys-b
+test-node-speed
 test-verify-a
 bundle.js

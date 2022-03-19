@@ -3,9 +3,11 @@ import { VerifyResult } from "../types/message";
 
 import catchReturn from "../utils/catchReturn";
 
-import { PutMessage, ToolDb } from "..";
+import { Peer, PutMessage, ToolDb } from "..";
 
 import leveldb from "../utils/leveldb";
+import getPeerSignature from "../utils/getPeerSignature";
+import verifyPeer from "../utils/verifyPeer";
 
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
@@ -21,7 +23,6 @@ beforeAll((done) => {
     port: 8888,
     storageAdapter: leveldb,
     storageName: "test-verify-a",
-    adressSlice: -42,
   });
 
   done();
@@ -197,4 +198,33 @@ it("Can catch pubkey replacement", () => {
   return ClientA.verifyMessage(privatePutPubkey).then((result) => {
     expect(result).toEqual(VerifyResult.PubKeyMismatch);
   });
+});
+
+it("Can verify peers", async () => {
+  const timestamp = new Date().getTime();
+
+  const signature = await getPeerSignature(
+    ClientA.options.peerAccount,
+    "topic",
+    timestamp,
+    "host",
+    8080
+  );
+
+  expect(signature).toBeDefined();
+
+  if (!signature) return;
+
+  const peerData: Peer = {
+    topic: "topic",
+    timestamp: timestamp,
+    host: "host",
+    port: 8080,
+    adress: ClientA.options.peerAccount.address,
+    sig: signature.signature,
+  };
+
+  const verified = await verifyPeer(ClientA.web3, peerData);
+
+  expect(verified).toBeTruthy();
 });

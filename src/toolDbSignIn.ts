@@ -32,13 +32,7 @@ export default function toolDbSignIn(
           hexToUint8(_user.iv)
         ).then((decryptedSKpriv) => {
           if (decryptedSKpriv) {
-            const newAccount =
-              this.web3.eth.accounts.privateKeyToAccount(decryptedSKpriv);
-
-            this.user = {
-              account: newAccount,
-              name: user,
-            };
+            const newAccount = this.keysSignIn(decryptedSKpriv);
             resolve(newAccount);
           }
         });
