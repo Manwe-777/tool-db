@@ -13,6 +13,7 @@ export default function handleGet(
         const oldData = {
           type: "put",
           ...JSON.parse(data),
+          to: [],
           id: message.id,
         } as PutMessage;
         this.network.sendToClientId(remotePeerId, oldData);

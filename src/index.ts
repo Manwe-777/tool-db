@@ -1,8 +1,6 @@
 /* eslint-disable no-undef */
 /* eslint-disable global-require */
 
-import elliptic from "elliptic";
-
 export * from "./types/tooldb";
 export * from "./types/message";
 
@@ -22,9 +20,6 @@ if (typeof atob === "undefined") {
 
 if (typeof window === "undefined") {
   global.crypto = require("crypto").webcrypto;
-  (global as any).ecp256 = new elliptic.ec("p256");
-} else {
-  (window as any).ecp256 = new elliptic.ec("p256");
 }
 
 export { default as proofOfWork } from "./utils/proofOfWork";

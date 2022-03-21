@@ -424,6 +424,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     crossServerOnly = false,
     isRelay = false
   ) {
+    // if (this.tooldb.options.debug) {
+    // console.log("> sendToAll", msg);
+    // }
+
     const to = _.uniq([
       ...msg.to,
       this.tooldb.options.peerAccount.address.slice(-20),
@@ -434,10 +438,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       .forEach((id) => {
         const peer = this.peerMap[id];
         if (peer.connected) {
-          if (this.tooldb.options.debug) {
-            // console.log("Sent out to: ", id);
-            // console.log("OUT > ", { ...msg, to });
-          }
+          // if (this.tooldb.options.debug) {
+          // console.log("Sent out to: ", id);
+          // console.log("OUT > ", { ...msg, to });
+          // }
           peer.send(JSON.stringify({ ...msg, to }));
         } else {
           peer.destroy();
@@ -447,16 +451,25 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   }
 
   public sendToClientId(clientId: string, msg: ToolDbMessage) {
+    // if (this.tooldb.options.debug) {
+    // console.log("> sendToClientId", clientId, msg);
+    // }
+
+    const to = _.uniq([
+      ...[msg.to || []],
+      this.tooldb.options.peerAccount.address.slice(-20),
+    ]);
+
     Object.keys(this.peerMap)
       .filter((id) => id === clientId)
+      .filter((id) => !to.includes(id))
       .forEach((id) => {
         const peer = this.peerMap[id];
-
         if (peer.connected) {
-          const to = _.uniq([
-            ...[msg.to || []],
-            this.tooldb.options.peerAccount.address.slice(-20),
-          ]);
+          // if (this.tooldb.options.debug) {
+          // console.log("Sent out to client ID ", id);
+          // console.log("OUT > ", { ...msg, to });
+          // }
           peer.send(JSON.stringify({ ...msg, to }));
         } else {
           peer.destroy();

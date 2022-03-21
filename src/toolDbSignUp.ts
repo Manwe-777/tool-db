@@ -30,6 +30,7 @@ export default async function toolDbSignUp(
             (encryptedPrivateKey) => {
               if (encryptedPrivateKey) {
                 const userData: UserRootData = {
+                  address: account.address,
                   privateKey: arrayBufferToHex(encryptedPrivateKey),
                   iv: uint8ArrayToHex(iv),
                   pass: sha256(password),
@@ -56,6 +57,14 @@ export default async function toolDbSignUp(
                       s: signature.signature,
                       v: userData,
                     };
+
+                    this.store.put(
+                      userRoot,
+                      JSON.stringify(signupMessage),
+                      (err, data) => {
+                        //
+                      }
+                    );
 
                     if (this.options.debug) {
                       console.log("SIGNUP PUT > " + userRoot, signupMessage);

@@ -43,7 +43,7 @@ export default function toolDbPut<T = any>(
           );
 
           const finalKey = userNamespaced
-            ? `:${this.user?.account.address}.${key}`
+            ? `:${this.user.account.address}.${key}`
             : key;
           // Compose the message
           const data: VerificationData = {

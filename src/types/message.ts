@@ -66,9 +66,7 @@ export type MessageType =
   | "crdtGet"
   | "crdt"
   | "join"
-  | "servers"
-  | "tx"
-  | "stake";
+  | "servers";
 
 export interface BaseMessage {
   type: MessageType;
@@ -146,19 +144,6 @@ export interface CrdtMessage extends BaseMessage {
   doc: string;
 }
 
-export interface StakeMessage extends BaseMessage {
-  type: "stake";
-  amount: number;
-  sig: string;
-}
-
-export interface TxMessage extends BaseMessage {
-  type: "tx";
-  amount: number;
-  target: string;
-  sig: string;
-}
-
 export type ToolDbMessage =
   | JoinMessage
   | ServersMessage
@@ -171,6 +156,4 @@ export type ToolDbMessage =
   | PutMessage
   | CrdtPutMessage
   | CrdtGetMessage
-  | CrdtMessage
-  | StakeMessage
-  | TxMessage;
+  | CrdtMessage;

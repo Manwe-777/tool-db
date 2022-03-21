@@ -8,6 +8,7 @@ import { Peer, PutMessage, ToolDb } from "..";
 import leveldb from "../utils/leveldb";
 import getPeerSignature from "../utils/getPeerSignature";
 import verifyPeer from "../utils/verifyPeer";
+import textRandom from "../utils/textRandom";
 
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
@@ -15,8 +16,6 @@ jest.setTimeout(10000);
 let ClientA: ToolDb | undefined;
 
 beforeAll((done) => {
-  (global as any).ecp256 = new elliptic.ec("p256");
-
   ClientA = new ToolDb({
     server: true,
     host: "127.0.0.1",
@@ -24,6 +23,7 @@ beforeAll((done) => {
     storageAdapter: leveldb,
     storageName: "test-verify-a",
   });
+  ClientA.anonSignIn();
 
   done();
 });
@@ -228,3 +228,25 @@ it("Can verify peers", async () => {
 
   expect(verified).toBeTruthy();
 });
+
+// This test fails because we are testing on a local node
+// if it were a test against a remote node it will work
+// But now I am not sure if I should add verification to local PUTs as well?
+// Maybe partial verification without signature checks to make it fast?
+// it("Can verify unique namespace", (done) => {
+//   const testKey = "test-key-" + textRandom(16);
+
+//   return ClientA.putData(testKey, "value_1").then((firstPut) => {
+//     ClientA.verifyMessage(firstPut).then((firstVerfied) => {
+//       expect(firstVerfied).toEqual(VerifyResult.Verified);
+//       ClientA.anonSignIn();
+
+//       return ClientA.putData(testKey, "value_2").then((secPut) => {
+//         ClientA.verifyMessage(secPut).then((secVerified) => {
+//           expect(secVerified).toEqual(VerifyResult.CantOverwrite);
+//           done();
+//         });
+//       });
+//     });
+//   });
+// });

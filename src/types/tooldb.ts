@@ -139,6 +139,7 @@ export interface Keys {
 export type GenericObject = { [key: string]: any };
 
 export interface UserRootData {
+  address: string;
   privateKey: string;
   iv: string;
   pass: string;
