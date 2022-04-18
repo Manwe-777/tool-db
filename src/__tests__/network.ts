@@ -61,7 +61,7 @@ beforeAll((done) => {
       if (connected.length === 3) {
         let signedIn = false;
         while (!signedIn) {
-          if (Alice.user && Bob.user) {
+          if (Alice.getPubKey() && Bob.getPubKey()) {
             signedIn = true;
           }
         }
@@ -79,8 +79,8 @@ afterAll((done) => {
 });
 
 it("A and B are signed in", () => {
-  expect(Alice.user).toBeDefined();
-  expect(Bob.user).toBeDefined();
+  expect(Alice.getPubKey()).toBeDefined();
+  expect(Bob.getPubKey()).toBeDefined();
 });
 
 it("A can put and get", () => {
@@ -128,8 +128,8 @@ it("A can sign up and B can sign in", () => {
       setTimeout(() => {
         Bob.signIn(testUsername, testPassword).then((res) => {
           expect(res).toBeDefined();
-          expect(Bob.user).toBeDefined();
-          expect(Bob.user.name).toBe(testUsername);
+          expect(Bob.getPubKey()).toBeDefined();
+          expect(Bob.getUsername()).toBe(testUsername);
 
           // test for failed sign in
           setTimeout(() => {
