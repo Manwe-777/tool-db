@@ -26,7 +26,7 @@ export default function toolDbCrdtPut<T = any>(
       return;
     }
 
-    if (!this.user) {
+    if (!this.getPubKey()) {
       reject(new Error("You need to log in before you can PUT."));
       return;
     }
@@ -35,21 +35,17 @@ export default function toolDbCrdtPut<T = any>(
 
     const encodedData = JSON.stringify(value.map(uint8ArrayToHex));
 
-    const dataString = `${encodedData}${this.user.account.address}${timestamp}`;
+    const dataString = `${encodedData}${this.getPubKey()}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
-        if (this.user) {
-          const signature = this.web3.eth.accounts.sign(
-            hash,
-            this.user?.account.privateKey
-          );
-
+        const signature = this.signData(hash);
+        if (signature && this.getPubKey()) {
           // Compose the message
           const data: VerificationData = {
-            k: userNamespaced ? `:${this.user?.account.address}.${key}` : key,
-            a: this.user?.account.address || "",
+            k: userNamespaced ? `:${this.getPubKey()}.${key}` : key,
+            a: this.getPubKey() || "",
             n: nonce,
             t: timestamp,
             h: hash,

@@ -123,9 +123,7 @@ client.anonSignIn().then();
 
 To retrieve your public key; (only if logged in)
 ```
-client.getPubKey().then(pubKey);
-// or
-client.user?.pubKey
+client.getPubKey();
 ```
 
 You can check if you are correctly logged in by checking if the user field exists or not;

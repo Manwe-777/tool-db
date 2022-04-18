@@ -139,6 +139,31 @@ export default class ToolDb extends EventEmitter {
   public handleQuery = handleQuery;
   public handleSubscribe = handleSubscribe;
 
+  public setUser(account: Account | undefined, name: string): void {
+    this._user = account
+      ? {
+          account: account,
+          name: name,
+        }
+      : undefined;
+  }
+
+  public signData(data: string) {
+    if (this._user) {
+      const signature = this.web3.eth.accounts.sign(
+        data,
+        this._user.account.privateKey
+      );
+
+      return signature;
+    }
+    return undefined;
+  }
+
+  public getPubKey(): string | undefined {
+    return this._user?.account.address;
+  }
+
   /**
    * id listeners listen for a specific message ID just once
    */
@@ -153,7 +178,7 @@ export default class ToolDb extends EventEmitter {
   };
 
   public getUserNamespacedKey(key: string) {
-    return ":" + (this.user?.account.address || "") + "." + key;
+    return ":" + (this.getPubKey() || "") + "." + key;
   }
 
   /**
@@ -227,7 +252,7 @@ export default class ToolDb extends EventEmitter {
     this._customVerificator[id] = null;
   };
 
-  public user = undefined as
+  private _user = undefined as
     | undefined
     | {
         account: Account;

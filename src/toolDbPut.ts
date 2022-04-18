@@ -23,32 +23,26 @@ export default function toolDbPut<T = any>(
       return;
     }
 
-    if (!this.user) {
+    if (!this.getPubKey()) {
       reject(new Error("You need to log in before you can PUT."));
       return;
     }
 
     const timestamp = new Date().getTime();
-    const dataString = `${JSON.stringify(value)}${
-      this.user.account.address
-    }${timestamp}`;
+    const dataString = `${JSON.stringify(
+      value
+    )}${this.getPubKey()}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
-        if (this.user) {
-          const signature = this.web3.eth.accounts.sign(
-            hash,
-            this.user.account.privateKey
-          );
-
-          const finalKey = userNamespaced
-            ? `:${this.user.account.address}.${key}`
-            : key;
+        const signature = this.signData(hash);
+        if (signature && this.getPubKey()) {
+          const finalKey = userNamespaced ? `:${this.getPubKey()}.${key}` : key;
           // Compose the message
           const data: VerificationData = {
             k: finalKey,
-            a: this.user?.account.address || "",
+            a: this.getPubKey() || "",
             n: nonce,
             t: timestamp,
             h: hash,
