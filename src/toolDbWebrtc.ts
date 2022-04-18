@@ -24,7 +24,7 @@ type IOffers = Record<
 
 const offerPoolSize = 5;
 const announceSecs = 30;
-const maxAnnounceSecs = 120;
+const maxAnnounceSecs = 86400;
 
 const defaultTrackerUrls = [
   "wss://tooldb-tracker.herokuapp.com/",
