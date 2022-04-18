@@ -1,5 +1,7 @@
 import Automerge from "automerge";
-import { CrdtGetMessage, CrdtMessage, ToolDb, uint8ToBase64 } from "..";
+import { ToolDb } from "..";
+import { CrdtMessage, CrdtGetMessage } from "../types/message";
+import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
 
 export default function handleCrdtGet(
   this: ToolDb,
@@ -14,7 +16,7 @@ export default function handleCrdtGet(
         id: message.id,
         key: message.key,
         to: [],
-        doc: uint8ToBase64(saved),
+        doc: uint8ArrayToHex(saved),
       } as CrdtMessage);
     } else {
       if (this.options.debug) {

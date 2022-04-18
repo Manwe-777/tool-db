@@ -1,13 +1,10 @@
 import Automerge from "automerge";
-import {
-  base64ToBinaryChange,
-  CrdtMessage,
-  CrdtPutMessage,
-  ToolDb,
-  uint8ToBase64,
-  VerifyResult,
-} from "..";
+import { ToolDb } from "..";
+import { VerifyResult, CrdtMessage, CrdtPutMessage } from "../types/message";
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
+import hexToBase64 from "../utils/encoding/hexToBase64";
+import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
+import base64ToBinaryChange from "../utils/encoding/base64ToBinaryChange";
 
 export default function handleCrdtPut(
   this: ToolDb,
@@ -16,8 +13,9 @@ export default function handleCrdtPut(
 ) {
   // key = aggregated, final value
   // key.crdt = automerge doc with changes
-  // const writeStart = new Date().getTime();
+  const writeStart = new Date().getTime();
   toolDbVerificationWrapper.call(this, message).then((value) => {
+    // console.log("CRDT verification: ", (new Date().getTime() - writeStart) / 1000);
     // console.log("CRDT Verification wrapper result: ", value);
     if (value === VerifyResult.Verified) {
       const key = message.k;
@@ -27,7 +25,7 @@ export default function handleCrdtPut(
       } catch (e) {
         //
       }
-      const changes = data.map(base64ToBinaryChange);
+      const changes = data.map(hexToBase64).map(base64ToBinaryChange);
 
       this.loadCrdtDocument(key).then((currentDoc) => {
         // if (currentDoc) {
@@ -50,7 +48,7 @@ export default function handleCrdtPut(
             [newDoc] = Automerge.applyChanges(Automerge.init(), changes);
           } catch (ee) {
             if (this.options.debug) {
-              console.log(ee);
+              console.warn(ee);
             }
           }
         }
@@ -68,11 +66,15 @@ export default function handleCrdtPut(
         this.documents[key] = newDoc;
 
         // OOHH THE TYPECAST PAIN
-        // This works but the hacking is awful, we need a better solution for storing the crdts
-        const savedDoc = Automerge.save(newDoc) as any;
+        // Convert the crdt document to hex before saving
+        const savedDoc = uint8ArrayToHex(Automerge.save(newDoc));
         this.store.put(`${key}.crdt`, savedDoc, (err, data) => {
           // const writeEnd = new Date().getTime();
-          // console.log("CRDT write: ", (writeEnd - writeStart) / 1000);
+          // console.log(
+          //   "CRDT write: ",
+          //   `${key}.crdt`,
+          //   (writeEnd - writeStart) / 1000
+          // );
         });
 
         const crdtMessage: CrdtMessage = {
@@ -80,7 +82,7 @@ export default function handleCrdtPut(
           key: key,
           id: message.id,
           to: [],
-          doc: uint8ToBase64(savedDoc),
+          doc: savedDoc,
         };
         this.triggerKeyListener(key, crdtMessage);
 

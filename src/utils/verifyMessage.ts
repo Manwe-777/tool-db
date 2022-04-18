@@ -1,10 +1,7 @@
 import sha256 from "./sha256";
 import { VerifyResult, VerificationData } from "../types/message";
-import decodeKeyString from "./crypto/decodeKeyString";
-import importKey from "./crypto/importKey";
-import verifyData from "./crypto/verifyData";
 
-import { base64ToArrayBuffer, ToolDb } from "..";
+import { ToolDb } from "..";
 
 /**
  * Verifies a message validity (PoW, pubKey, timestamp, signatures)
@@ -24,7 +21,7 @@ export default async function verifyMessage<T>(
     msg.t === undefined ||
     msg.k === undefined ||
     msg.h === undefined ||
-    msg.p === undefined ||
+    msg.a === undefined ||
     msg.s === undefined
   ) {
     return VerifyResult.InvalidData;
@@ -38,12 +35,13 @@ export default async function verifyMessage<T>(
   }
 
   // This is a user namespace
-  let publicKeyNamespace: false | string = false;
+  let adressNamespace: false | string = false;
   if (msg.k.slice(0, 1) == ":") {
-    publicKeyNamespace = msg.k.split(".")[0].slice(1);
+    adressNamespace = msg.k.split(".")[0].slice(1);
   }
 
   // This namespace can only be written if data does not exist previously
+  // This violates the offline first principle..?
   if (msg.k.slice(0, 2) == "==") {
     const key = msg.k;
     const data = await new Promise<VerificationData<T> | null>((resolve) => {
@@ -60,12 +58,10 @@ export default async function verifyMessage<T>(
         }
       });
     });
-    if (data && data.p !== msg.p) return VerifyResult.CantOverwrite;
+    if (data && data.a !== msg.a) return VerifyResult.CantOverwrite;
   }
 
-  const pubKeyString = msg.p;
-
-  if (publicKeyNamespace && publicKeyNamespace !== pubKeyString) {
+  if (adressNamespace && adressNamespace !== msg.a) {
     // console.warn("Provided pub keys do not match");
     return VerifyResult.PubKeyMismatch;
   }
@@ -80,22 +76,14 @@ export default async function verifyMessage<T>(
       return VerifyResult.NoProofOfWork;
     }
 
-    if (sha256(`${strData}${pubKeyString}${msg.t}${msg.n}`) !== msg.h) {
+    if (sha256(`${strData}${msg.a}${msg.t}${msg.n}`) !== msg.h) {
       // console.warn("Specified hash does not generate a valid pow");
       return VerifyResult.InvalidHashNonce;
     }
   }
 
-  const pubKey = await importKey(
-    decodeKeyString(pubKeyString),
-    "spki",
-    "ECDSA",
-    ["verify"]
-  );
-
-  // console.log("Message verification: ", msg.hash, pubKeyString, msg);
-
-  const verified = await verifyData(msg.h, base64ToArrayBuffer(msg.s), pubKey);
+  const pubKey = this.web3.eth.accounts.recover(msg.h, msg.s);
+  const verified = pubKey === msg.a;
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;

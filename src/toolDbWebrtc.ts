@@ -24,7 +24,7 @@ type IOffers = Record<
 
 const offerPoolSize = 5;
 const announceSecs = 30;
-const maxAnnounceSecs = 120;
+const maxAnnounceSecs = 86400;
 
 const defaultTrackerUrls = [
   "wss://tooldb-tracker.herokuapp.com/",
@@ -161,6 +161,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     peer.send(
       JSON.stringify({
         type: "ping",
+        clientId: this._tooldb.options.peerAccount.address,
+        to: [this._tooldb.options.peerAccount.address],
+        isServer: this._tooldb.options.server,
+        id: textRandom(10),
       } as PingMessage)
     );
   };
@@ -238,7 +242,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         action: "announce",
         info_hash: infoHash,
         numwant: offerPoolSize,
-        peer_id: encodeURIComponent(this.tooldb.options.id).slice(-20),
+        peer_id: this.tooldb.options.peerAccount.address.slice(-20),
         offers: await Promise.all(
           Object.entries(this.offerPool).map(async ([id, { offerP }]) => {
             const offer = await offerP;
@@ -313,7 +317,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     if (
       val.peer_id &&
-      val.peer_id === encodeURIComponent(this.tooldb.options.id).slice(-20)
+      val.peer_id === this.tooldb.options.peerAccount.address.slice(-20)
     ) {
       // console.warn("Peer ids mismatch", val.peer_id, selfId);
       return;
@@ -337,7 +341,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
             answer,
             action: "announce",
             info_hash: this.infoHash,
-            peer_id: encodeURIComponent(this.tooldb.options.id).slice(-20),
+            peer_id: this.tooldb.options.peerAccount.address.slice(-20),
             to_peer_id: val.peer_id,
             offer_id: val.offer_id,
           })
@@ -420,9 +424,13 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     crossServerOnly = false,
     isRelay = false
   ) {
+    // if (this.tooldb.options.debug) {
+    // console.log("> sendToAll", msg);
+    // }
+
     const to = _.uniq([
       ...msg.to,
-      encodeURIComponent(this.tooldb.options.id).slice(-20),
+      this.tooldb.options.peerAccount.address.slice(-20),
     ]);
 
     Object.keys(this.peerMap)
@@ -430,10 +438,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       .forEach((id) => {
         const peer = this.peerMap[id];
         if (peer.connected) {
-          if (this.tooldb.options.debug) {
-            // console.log("Sent out to: ", id);
-            // console.log("OUT > ", { ...msg, to });
-          }
+          // if (this.tooldb.options.debug) {
+          // console.log("Sent out to: ", id);
+          // console.log("OUT > ", { ...msg, to });
+          // }
           peer.send(JSON.stringify({ ...msg, to }));
         } else {
           peer.destroy();
@@ -443,16 +451,25 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   }
 
   public sendToClientId(clientId: string, msg: ToolDbMessage) {
+    // if (this.tooldb.options.debug) {
+    // console.log("> sendToClientId", clientId, msg);
+    // }
+
+    const to = _.uniq([
+      ...[msg.to || []],
+      this.tooldb.options.peerAccount.address.slice(-20),
+    ]);
+
     Object.keys(this.peerMap)
       .filter((id) => id === clientId)
+      .filter((id) => !to.includes(id))
       .forEach((id) => {
         const peer = this.peerMap[id];
-
         if (peer.connected) {
-          const to = _.uniq([
-            ...[msg.to || []],
-            encodeURIComponent(this.tooldb.options.id).slice(-20),
-          ]);
+          // if (this.tooldb.options.debug) {
+          // console.log("Sent out to client ID ", id);
+          // console.log("OUT > ", { ...msg, to });
+          // }
           peer.send(JSON.stringify({ ...msg, to }));
         } else {
           peer.destroy();

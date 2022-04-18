@@ -1,13 +1,14 @@
-import { arrayBufferToBase64, sha256, signData, toBase64 } from "..";
+import sha256 from "./sha256";
+
+import { Account } from "web3-core";
 
 export default function getPeerSignature(
-  privateKey: CryptoKey,
+  account: Account,
   topic: string,
   timestamp: number,
   host: string,
   port: number
 ) {
   const dataToSign = sha256(`${topic}-${timestamp}-${host}:${port}`);
-
-  return signData(dataToSign, privateKey, "SHA-1").then(arrayBufferToBase64);
+  return account.sign(dataToSign);
 }

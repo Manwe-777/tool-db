@@ -1,3 +1,4 @@
+import { Account } from "web3-core";
 import { Server as HTTPServer } from "http";
 import { Server as HTTPSServer } from "https";
 import { ToolDb, ToolDbMessage } from "..";
@@ -29,7 +30,7 @@ export interface Peer {
   timestamp: number;
   host: string;
   port: number;
-  pubkey: string;
+  adress: string;
   sig: string;
 }
 
@@ -113,24 +114,14 @@ export interface ToolDbOptions {
    */
   storageAdapter: ToolDbStorageAdapter;
   /**
-   * Our client ID (defaults to a generated publicKey)
-   */
-  id: string;
-  /**
    * The namespace/topic of our app (default is "tool-db-default")
    */
   topic: string;
   /**
-   * Public and private (ECDSA) keys of our client.
-   * In the default network adapter these are used to sign
+   * Peer's ETH account (generated at init, random)
    */
-  publicKey: CryptoKey | undefined;
-  /**
-   * our messages as we join and leave the network,
-   * public key should match the client ID (as a base64 exported string)
-   */
-  privateKey: CryptoKey | undefined;
-  [extra: string]: any;
+  peerAccount: Account;
+  // [extra: string]: any;
 }
 
 export interface ParsedKeys {
@@ -148,12 +139,8 @@ export interface Keys {
 export type GenericObject = { [key: string]: any };
 
 export interface UserRootData {
-  keys: {
-    skpub: string;
-    skpriv: string;
-    ekpub: string;
-    ekpriv: string;
-  };
+  address: string;
+  privateKey: string;
   iv: string;
   pass: string;
 }

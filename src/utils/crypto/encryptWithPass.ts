@@ -1,14 +1,13 @@
-import arrayBufferToString from "../arrayBufferToString";
 import catchReturn from "../catchReturn";
 import generateKeyFromPassword from "./generateKeyFromPassword";
-import stringToArrayBuffer from "../stringToArrayBuffer";
+import stringToArrayBuffer from "../encoding/stringToArrayBuffer";
 import getCrypto from "../../getCrypto";
 
 export default function encryptWithPass(
   secretmessage: string,
   password: string,
   vector: Uint8Array
-): Promise<string | undefined> {
+): Promise<ArrayBuffer | undefined> {
   const crypto = getCrypto();
   return generateKeyFromPassword(password)
     .then((keyObject) => {
@@ -19,9 +18,6 @@ export default function encryptWithPass(
           keyObject,
           stringToArrayBuffer(secretmessage)
         )
-        .then((result) => {
-          return arrayBufferToString(result);
-        })
         .catch(catchReturn);
     })
     .catch(catchReturn);

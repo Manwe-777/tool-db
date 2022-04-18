@@ -1,5 +1,6 @@
 import { textRandom } from ".";
 import ToolDb from "./tooldb";
+import hexToUint8 from "./utils/encoding/hexToUint8";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -13,13 +14,15 @@ export default function toolDbCrdtGet(
   key: string,
   userNamespaced = false,
   timeoutMs = 1000
-): Promise<string | null> {
+): Promise<Uint8Array | null> {
   return new Promise((resolve, reject) => {
-    if (userNamespaced && this.user?.pubKey === undefined) {
+    if (userNamespaced && this.user?.account.address === undefined) {
       reject(new Error("You are not authorized yet!"));
       return;
     }
-    const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
+    const finalKey = userNamespaced
+      ? `:${this.user?.account.address}.${key}`
+      : key;
     if (this.options.debug) {
       console.log("CRDT GET > " + finalKey);
     }
@@ -28,10 +31,14 @@ export default function toolDbCrdtGet(
 
     const cancelTimeout = setTimeout(() => {
       this.loadCrdtDocument(finalKey).then((data: any) => {
+        if (this.options.debug) {
+          console.log("CRDT DATA > ", data);
+        }
         if (data) {
           try {
             this.removeIdListener(msgId);
-            resolve(data);
+            const document = hexToUint8(data);
+            resolve(document);
           } catch (e) {
             resolve(null);
           }
@@ -48,7 +55,8 @@ export default function toolDbCrdtGet(
 
       clearTimeout(cancelTimeout);
       if (msg.type === "crdt") {
-        resolve(msg.doc);
+        const document = hexToUint8(msg.doc);
+        resolve(document);
       }
     });
 

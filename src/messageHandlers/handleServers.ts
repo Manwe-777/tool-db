@@ -1,5 +1,6 @@
-import { ServersMessage, ToolDb } from "..";
+import { ToolDb } from "..";
 import verifyPeer from "../utils/verifyPeer";
+import { ServersMessage } from "../types/message";
 
 export default function handleServers(
   this: ToolDb,
@@ -7,17 +8,17 @@ export default function handleServers(
   remotePeerId: string
 ) {
   message.servers.forEach((peer) => {
-    verifyPeer(peer).then((verified) => {
-      // Add this peer to our list of peers
-      if (verified) {
-        const filteredPeers = this.peers.findIndex(
-          (p) => p.pubkey === peer.pubkey
-        );
-        if (filteredPeers === -1) {
-          // Add this peer to the list
-          this.peers.push(peer);
-        }
+    const verified = verifyPeer(this.web3, peer);
+
+    // Add this peer to our list of peers
+    if (verified) {
+      const filteredPeers = this.peers.findIndex(
+        (p) => p.adress === peer.adress
+      );
+      if (filteredPeers === -1) {
+        // Add this peer to the list
+        this.peers.push(peer);
       }
-    });
+    }
   });
 }

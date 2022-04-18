@@ -1,11 +1,11 @@
-import arrayBufferToString from "../arrayBufferToString";
+import arrayBufferToString from "../encoding/arrayBufferToString";
 import catchReturn from "../catchReturn";
 import generateKeyFromPassword from "./generateKeyFromPassword";
-import stringToArrayBuffer from "../stringToArrayBuffer";
+
 import getCrypto from "../../getCrypto";
 
 export default function decryptWithPass(
-  data: string,
+  data: ArrayBuffer,
   password: string,
   vector: Uint8Array
 ): Promise<string | undefined> {
@@ -13,11 +13,7 @@ export default function decryptWithPass(
   return generateKeyFromPassword(password)
     .then((keyObject) => {
       return crypto.subtle
-        .decrypt(
-          { name: "AES-GCM", iv: vector },
-          keyObject,
-          stringToArrayBuffer(data)
-        )
+        .decrypt({ name: "AES-GCM", iv: vector }, keyObject, data)
         .then((result) => arrayBufferToString(result))
         .catch(catchReturn);
     })

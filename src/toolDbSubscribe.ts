@@ -1,6 +1,7 @@
-import { CrdtMessage, textRandom, uint8ToBase64 } from ".";
+import { CrdtMessage, textRandom } from ".";
 import ToolDb from "./tooldb";
 import Automerge from "automerge";
+import uint8ArrayToHex from "./utils/encoding/uint8ArrayToHex";
 
 /**
  * Subscribe to all PUT updates for this key.
@@ -14,11 +15,13 @@ export default function toolDbSubscribe(
   userNamespaced = false
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (userNamespaced && this.user?.pubKey === undefined) {
+    if (userNamespaced && this.user?.account.address === undefined) {
       reject(new Error("You are not authorized yet!"));
       return;
     }
-    const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
+    const finalKey = userNamespaced
+      ? `:${this.user?.account.address}.${key}`
+      : key;
     if (this.options.debug) {
       console.log("Subscribe > " + finalKey);
     }
@@ -45,7 +48,7 @@ export default function toolDbSubscribe(
           key: finalKey,
           id: textRandom(10),
           to: [],
-          doc: uint8ToBase64(savedDoc),
+          doc: uint8ArrayToHex(savedDoc),
         };
         this.triggerKeyListener(finalKey, msg);
       }

@@ -1,5 +1,6 @@
-import { PutMessage, ToolDb, VerifyResult } from "..";
+import { ToolDb } from "..";
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
+import { PutMessage, VerifyResult } from "../types/message";
 
 export default function handlePut(
   this: ToolDb,
@@ -9,6 +10,7 @@ export default function handlePut(
   toolDbVerificationWrapper.call(this, message).then((value) => {
     // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
+      this.emit("verified", message);
       // relay to other servers !!!
       this.network.sendToAll(message, true);
 

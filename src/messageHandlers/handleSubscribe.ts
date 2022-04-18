@@ -1,11 +1,8 @@
 import Automerge from "automerge";
-import {
-  CrdtMessage,
-  SubscribeMessage,
-  textRandom,
-  ToolDb,
-  uint8ToBase64,
-} from "..";
+import { ToolDb } from "..";
+import { CrdtMessage, SubscribeMessage } from "../types/message";
+import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
+import textRandom from "../utils/textRandom";
 
 export default function handleSubscribe(
   this: ToolDb,
@@ -48,7 +45,7 @@ export default function handleSubscribe(
         key: message.key,
         to: [],
         id: textRandom(10),
-        doc: uint8ToBase64(savedDoc),
+        doc: uint8ArrayToHex(savedDoc),
       };
       this.network.sendToClientId(remotePeerId, msg);
     }

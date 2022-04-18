@@ -15,11 +15,13 @@ export default function toolDbGet<T = any>(
   timeoutMs = 1000
 ): Promise<T | null> {
   return new Promise((resolve, reject) => {
-    if (userNamespaced && this.user?.pubKey === undefined) {
+    if (userNamespaced && this.user?.account.address === undefined) {
       reject(new Error("You are not authorized yet!"));
       return;
     }
-    const finalKey = userNamespaced ? `:${this.user?.pubKey}.${key}` : key;
+    const finalKey = userNamespaced
+      ? `:${this.user?.account.address}.${key}`
+      : key;
     if (this.options.debug) {
       console.log("GET > " + finalKey);
     }

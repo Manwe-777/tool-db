@@ -1,15 +1,11 @@
 jest.mock("../getCrypto.ts");
+import elliptic from "elliptic";
 import Automerge from "automerge";
 
-import {
-  base64ToBinaryDocument,
-  BaseMessage,
-  textRandom,
-  ToolDb,
-  VerificationData,
-} from "..";
+import { textRandom, ToolDb } from "..";
 import leveldb from "../utils/leveldb";
-jest.setTimeout(15000);
+
+jest.setTimeout(20000);
 
 let nodeA: ToolDb | undefined;
 let nodeB: ToolDb | undefined;
@@ -17,6 +13,8 @@ let Alice: ToolDb | undefined;
 let Bob: ToolDb | undefined;
 
 beforeAll((done) => {
+  (global as any).ecp256 = new elliptic.ec("p256");
+
   nodeA = new ToolDb({
     server: true,
     host: "127.0.0.1",
@@ -24,7 +22,7 @@ beforeAll((done) => {
     storageName: "test-node-a",
     storageAdapter: leveldb,
   });
-  nodeA.onConnect = () => checkIfOk(nodeA.options.id);
+  nodeA.onConnect = () => checkIfOk(nodeA.options.peerAccount.address);
 
   nodeB = new ToolDb({
     server: true,
@@ -35,7 +33,7 @@ beforeAll((done) => {
     storageName: "test-node-b",
     storageAdapter: leveldb,
   });
-  nodeB.onConnect = () => checkIfOk(nodeB.options.id);
+  nodeB.onConnect = () => checkIfOk(nodeB.options.peerAccount.address);
 
   Alice = new ToolDb({
     server: false,
@@ -43,7 +41,8 @@ beforeAll((done) => {
     storageName: "test-alice",
     storageAdapter: leveldb,
   });
-  Alice.onConnect = () => checkIfOk(Alice.options.id);
+  Alice.anonSignIn();
+  Alice.onConnect = () => checkIfOk(Alice.options.peerAccount.address);
 
   Bob = new ToolDb({
     server: false,
@@ -51,7 +50,8 @@ beforeAll((done) => {
     storageName: "test-bob",
     storageAdapter: leveldb,
   });
-  Bob.onConnect = () => checkIfOk(Bob.options.id);
+  Bob.anonSignIn();
+  Bob.onConnect = () => checkIfOk(Bob.options.peerAccount.address);
 
   const connected = [];
   const checkIfOk = (id: string) => {
@@ -59,6 +59,12 @@ beforeAll((done) => {
       connected.push(id);
 
       if (connected.length === 3) {
+        let signedIn = false;
+        while (!signedIn) {
+          if (Alice.user && Bob.user) {
+            signedIn = true;
+          }
+        }
         done();
       }
     }
@@ -72,25 +78,43 @@ afterAll((done) => {
   setTimeout(done, 1000);
 });
 
+it("A and B are signed in", () => {
+  expect(Alice.user).toBeDefined();
+  expect(Bob.user).toBeDefined();
+});
+
+it("A can put and get", () => {
+  return new Promise<void>((resolve) => {
+    const testKey = "test-key-" + textRandom(16);
+    const testValue = "Cool value";
+
+    Alice.putData(testKey, testValue).then((msg) => {
+      expect(msg).toBeDefined();
+      setTimeout(() => {
+        Alice.getData(testKey).then((data) => {
+          expect(data).toBe(testValue);
+          resolve();
+        });
+      }, 1000);
+    });
+  });
+});
+
 it("A and B can communicate trough the swarm", () => {
   return new Promise<void>((resolve) => {
     const testKey = "test-key-" + textRandom(16);
     const testValue = "Awesome value";
 
-    Alice.anonSignIn()
-      .then(() => Bob.anonSignIn())
-      .then(() => {
-        Alice.putData(testKey, testValue).then((msg) => {
-          expect(msg).toBeDefined();
+    Alice.putData(testKey, testValue).then((msg) => {
+      expect(msg).toBeDefined();
 
-          setTimeout(() => {
-            Bob.getData(testKey).then((data) => {
-              expect(data).toBe(testValue);
-              resolve();
-            });
-          }, 1000);
+      setTimeout(() => {
+        Bob.getData(testKey).then((data) => {
+          expect(data).toBe(testValue);
+          resolve();
         });
-      });
+      }, 1500);
+    });
   });
 });
 
@@ -100,16 +124,20 @@ it("A can sign up and B can sign in", () => {
     const testPassword = "im a password";
 
     Alice.signUp(testUsername, testPassword).then((result) => {
+      expect(result).toBeDefined();
       setTimeout(() => {
         Bob.signIn(testUsername, testPassword).then((res) => {
+          expect(res).toBeDefined();
           expect(Bob.user).toBeDefined();
           expect(Bob.user.name).toBe(testUsername);
 
           // test for failed sign in
-          Bob.signIn(testUsername, testPassword + " ").catch((e) => {
-            expect(e).toBe("Invalid password");
-            resolve();
-          });
+          setTimeout(() => {
+            Bob.signIn(testUsername, testPassword + " ").catch((e) => {
+              expect(e).toBe("Invalid password");
+              resolve();
+            });
+          }, 1000);
         });
       }, 1000);
     });
@@ -146,10 +174,10 @@ it("CRDTs", () => {
     });
 
     const changes = Automerge.getChanges(origDoc, newDoc);
-    Alice.putCrdt(crdtKey, changes).then((put) => {
+    Alice.putCrdt(crdtKey, changes).then(async (put) => {
       setTimeout(() => {
         Bob.getCrdt(crdtKey).then((data) => {
-          const doc = Automerge.load(base64ToBinaryDocument(data)) as any;
+          const doc = Automerge.load(data as any) as any;
           expect(doc.test).toBe(crdtValue);
           expect(doc.arr).toStrictEqual(["arr", "test"]);
           resolve();

@@ -1,11 +1,11 @@
-import { base64ToArrayBuffer } from "..";
-import arrayBufferToBase64 from "../utils/arrayBufferToBase64";
-import arrayBufferToString from "../utils/arrayBufferToString";
-import base64ToUint8 from "../utils/base64ToUint8";
-import fromBase64 from "../utils/fromBase64";
-import stringToArrayBuffer from "../utils/stringToArrayBuffer";
-import toBase64 from "../utils/toBase64";
-import uint8ToBase64 from "../utils/uint8ToBase64";
+import base64ToArrayBuffer from "../utils/encoding/base64ToArrayBuffer";
+import arrayBufferToString from "../utils/encoding/arrayBufferToString";
+import base64ToUint8 from "../utils/encoding/base64ToUint8";
+import fromBase64 from "../utils/encoding/fromBase64";
+import stringToArrayBuffer from "../utils/encoding/stringToArrayBuffer";
+import toBase64 from "../utils/encoding/toBase64";
+import uint8ToBase64 from "../utils/encoding/uint8ToBase64";
+import arrayBufferToBase64 from "../utils/encoding/arrayBufferToBase64";
 
 const TestValue = "SomeVeryTest-yValue2";
 

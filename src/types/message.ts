@@ -13,15 +13,25 @@ export enum VerifyResult {
   Verified = "Verified",
 }
 
+export interface VerificationDataLegacy<T = any> {
+  p: string; // base64 public key
+  k: string; // Key/id
+  n: number; // nonce
+  h: string; // hash of JSON.stringify(value) + nonce
+  t: number; // Timestamp this was created
+  s: string; // signature
+  v: T; // value
+}
+
 export interface VerificationData<T = any> {
   /**
    * Key/id
    */
   k: string;
   /**
-   * Public key
+   * Adress
    */
-  p: string;
+  a: string;
   /**
    * Nonce
    */

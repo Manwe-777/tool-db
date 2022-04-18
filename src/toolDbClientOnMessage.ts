@@ -10,9 +10,9 @@ export default function toolDbClientOnMessage(
     this.processedIds[message.type] = [];
   }
   if (this.processedIds[message.type].includes(message.id)) {
-    // console.warn(
-    //   `Already processed this message > ${message.type} from ${remotePeerId}`
-    // );
+    console.warn(
+      `Already processed this message > ${message.type} from ${remotePeerId}`
+    );
     return;
   }
 
@@ -34,7 +34,10 @@ export default function toolDbClientOnMessage(
     }
   }
 
-  if (message === undefined || message.type === undefined) {
+  if (
+    (message === undefined || message.type === undefined) &&
+    this.options.debug
+  ) {
     console.warn("Message is invalid!", message, typeof message);
     return;
   }

@@ -1,14 +1,7 @@
-import {
-  arrayBufferToBase64,
-  PutMessage,
-  textRandom,
-  VerificationData,
-} from ".";
+import { PutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
 
 import proofOfWork from "./utils/proofOfWork";
-
-import signData from "./utils/signData";
 
 /**
  * Triggers a PUT request to other peers.
@@ -37,49 +30,49 @@ export default function toolDbPut<T = any>(
 
     const timestamp = new Date().getTime();
     const dataString = `${JSON.stringify(value)}${
-      this.user.pubKey
+      this.user.account.address
     }${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
-        if (this.user?.keys) {
-          // Sign our value
-          signData(hash, this.user.keys.signKeys.privateKey as CryptoKey)
-            .then(async (signature) => {
-              const finalKey = userNamespaced
-                ? `:${this.user?.pubKey}.${key}`
-                : key;
-              // Compose the message
-              const data: VerificationData = {
-                k: finalKey,
-                p: this.user?.pubKey || "",
-                n: nonce,
-                t: timestamp,
-                h: hash,
-                s: arrayBufferToBase64(signature),
-                v: value,
-              };
+        if (this.user) {
+          const signature = this.web3.eth.accounts.sign(
+            hash,
+            this.user.account.privateKey
+          );
 
-              this.store.put(finalKey, JSON.stringify(data), (err, data) => {
-                //
-              });
+          const finalKey = userNamespaced
+            ? `:${this.user.account.address}.${key}`
+            : key;
+          // Compose the message
+          const data: VerificationData = {
+            k: finalKey,
+            a: this.user?.account.address || "",
+            n: nonce,
+            t: timestamp,
+            h: hash,
+            s: signature.signature,
+            v: value,
+          };
 
-              if (this.options.debug) {
-                console.log("PUT > " + key, data);
-              }
+          this.store.put(finalKey, JSON.stringify(data), (err, data) => {
+            //
+          });
 
-              const finalMessage: PutMessage = {
-                type: "put",
-                id: textRandom(10),
-                to: [],
-                ...data,
-              };
-              this.network.sendToAll(finalMessage);
+          if (this.options.debug) {
+            console.log("PUT > " + key, data);
+          }
 
-              resolve(finalMessage);
-            })
-            .catch(reject);
+          const finalMessage: PutMessage = {
+            type: "put",
+            id: textRandom(10),
+            to: [],
+            ...data,
+          };
+          this.network.sendToAll(finalMessage);
+
+          resolve(finalMessage);
         }
       })
       .catch(reject);

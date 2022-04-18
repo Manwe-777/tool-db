@@ -1,26 +1,14 @@
-import { VerificationData, VerifyResult } from "../types/message";
+import elliptic from "elliptic";
+import { VerifyResult } from "../types/message";
 
 import catchReturn from "../utils/catchReturn";
-import verifyPeer from "../utils/verifyPeer";
-import getPeerSignature from "../utils/getPeerSignature";
-import arrayBufferToHex from "../utils/arrayBufferToHex";
 
-import base64KeyToHex from "../utils/crypto/base64KeyToHex";
-import recoverPubKey from "../utils/crypto/recoverPubKey";
+import { Peer, PutMessage, ToolDb } from "..";
 
-import {
-  base64ToArrayBuffer,
-  encodeKeyString,
-  exportKey,
-  generateKeyPair,
-  sha256,
-  signData,
-  ToolDb,
-} from "..";
-
-import { Peer } from "../types/tooldb";
 import leveldb from "../utils/leveldb";
-import getCrypto from "../getCrypto";
+import getPeerSignature from "../utils/getPeerSignature";
+import verifyPeer from "../utils/verifyPeer";
+import textRandom from "../utils/textRandom";
 
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
@@ -35,6 +23,8 @@ beforeAll((done) => {
     storageAdapter: leveldb,
     storageName: "test-verify-a",
   });
+  ClientA.anonSignIn();
+
   done();
 });
 
@@ -43,62 +33,22 @@ afterAll((done) => {
   setTimeout(done, 1000);
 });
 
-const putOk: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
-};
-
-const recoverTest: VerificationData<string> = {
+const putOk: PutMessage<string> = {
+  type: "put",
+  id: "smMnmXNkfm",
+  to: ["329466B79DFD4304DDEB"],
   k: "test",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/wvoRihtBva5KXRXJhocUa1Nt9B6+DeSvetQ2ygaDStdBvgwWc8si/dcfK4kjVhtgzGfTAS/MogKzFg5lkI7Dw==",
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
   n: 0,
-  t: 1643731511429,
-  h: "38780383388f8fca79ac216f48ac529dacea3058498c55ecd52ef625af74b2ae",
-  s: "CwVbOMK3Zi/Dv8KVw6rDuMOQbyw8GcKnbhx8wpnDo8Oqw48tw5TDgQzCh3jDgDbDqsKLTQJdw79Xw7Rjwo8yPhM5I8O8UMK8wrjDt8Kjw7gCwrQiwqobeMO+wqTDoUU=",
+  t: 1647640220476,
+  h: "0d4d06c94612cbebd39b6bf3ccc54f666590612dce89f07b75b9482063006e7d",
+  s: "0x0857c2e6a256d9a866500be860288510b8b84f0d4e35f75cda97531492e4ba670fe7e9b2bca6abe4a1d270002947493ac261657b3ea6640127af7dab783d5fb61c",
   v: "value",
 };
 
 it("Can verify PUT", () => {
-  return ClientA.verifyMessage(recoverTest).then((result) => {
+  return ClientA.verifyMessage(putOk).then((result) => {
     expect(result).toEqual(VerifyResult.Verified);
-  });
-});
-
-it("Can recover public key from message", async () => {
-  // Convert the public key to hex
-  const publicHexed = await base64KeyToHex(recoverTest.p);
-  //
-  const signature = base64ToArrayBuffer(recoverTest.s);
-  const message = recoverTest.h;
-
-  // Message needs to be hashed because webcrypto does it internally
-  const pubKeyRecovered = recoverPubKey(sha256(message), signature);
-
-  const matches = pubKeyRecovered.filter((k) => k === publicHexed);
-  expect(matches[0]).toBe(publicHexed);
-});
-
-it("Can recover public key from signed data", (done) => {
-  const crypto = getCrypto();
-
-  generateKeyPair("ECDSA", true).then((keys) => {
-    const message = "test";
-    crypto.subtle.exportKey("raw", keys.publicKey).then((pk) => {
-      const publicHexed = arrayBufferToHex(pk);
-      signData(message, keys.privateKey).then((s) => {
-        const signature = s;
-        const pubKeyRecovered = recoverPubKey(sha256(message), signature);
-
-        const matches = pubKeyRecovered.filter((k) => k === publicHexed);
-        expect(matches[0]).toBe(publicHexed);
-        done();
-      });
-    });
   });
 });
 
@@ -108,14 +58,17 @@ it("Can catch invalid POW", () => {
   });
 });
 
-const putSig: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z2fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+const putSig: PutMessage<string> = {
+  type: "put",
+  id: "Duupf8duTF",
+  to: ["329466B79DFD4304DDEB"],
+  k: "test",
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 8312,
+  t: 1647640402279,
+  h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
+  s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e6b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
+  v: "value",
 };
 
 it("Can catch tampered messages (signature)", () => {
@@ -124,18 +77,21 @@ it("Can catch tampered messages (signature)", () => {
   });
 });
 
-const tamperedMsg: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca92",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+const tamperedNonce: PutMessage<string> = {
+  type: "put",
+  id: "Duupf8duTF",
+  to: ["329466B79DFD4304DDEB"],
+  k: "test",
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 82,
+  t: 1647640402279,
+  h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
+  s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e5b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
+  v: "value",
 };
 
 it("Can catch tampered POW", () => {
-  return ClientA.verifyMessage(tamperedMsg, 3).then((result) => {
+  return ClientA.verifyMessage(tamperedNonce, 3).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidHashNonce);
   });
 });
@@ -156,7 +112,7 @@ it("Can catch messages with missing data", () => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
 
-  const delD: any = delete { ...putOk }.p;
+  const delD: any = delete { ...putOk }.a;
   const pd = ClientA.verifyMessage(delD).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidData);
   });
@@ -187,14 +143,17 @@ it("Can print errors", async () => {
   expect(await rejectPromise).toBe(undefined);
 });
 
-const putTime: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 2628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
+const putTime: PutMessage<string> = {
+  type: "put",
+  id: "Duupf8duTF",
+  to: ["329466B79DFD4304DDEB"],
+  k: "test",
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 8312,
+  t: 2647640402279,
+  h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
+  s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e5b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
+  v: "value",
 };
 
 it("Can catch tampered messages (time)", () => {
@@ -203,62 +162,17 @@ it("Can catch tampered messages (time)", () => {
   });
 });
 
-const putPow: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "00a6fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
-};
-
-// it("Can catch tampered messages (pow)", () => {
-//   return ClientA.verifyMessage(putPow).then((result) => {
-//     expect(result).toEqual(VerifyResult.NoProofOfWork);
-//   });
-// });
-
-const putNonce: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 111,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "AzB4NzijkW",
-};
-
-// it("Can catch tampered messages (nonce)", () => {
-//   return ClientA.verifyMessage(putNonce).then((result) => {
-//     expect(result).toEqual(VerifyResult.InvalidHashNonce);
-//   });
-// });
-
-const putValue: VerificationData<string> = {
-  k: "value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA83bEyvgibCqXdF8dbgJmnal2gudXmC9AAMbDXzVzz5gJ5Fmr1hLpgqAo1gfuuyarIhX0GF1JoaueYmg5p7CBQ==",
-  n: 679,
-  t: 1628918110150,
-  h: "0006fab5af92343498c132f3d01bde06ce401c624f503148ecd1ecdf01adca91",
-  s: "Z1fCtW5rw6fCrW41GDDCuTVYw4zDl0XDu8K5I0ENDyDDo08Ywp/DkcO4wrLCv0oGwrzDjsORYzMbwoLDrn5CEcObSsKICAjCssOvMkbDoTjDrmMCJ8KvwpJRwpk=",
-  v: "hackerman",
-};
-
-// it("Can catch tampered messages (value)", () => {
-//   return ClientA.verifyMessage(putValue).then((result) => {
-//     expect(result).toEqual(VerifyResult.InvalidHashNonce);
-//   });
-// });
-
-const privatePut: VerificationData<{ test: string }> = {
-  k: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==.value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
-  n: 1268,
-  t: 1628919444909,
-  h: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
-  s: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
-  v: { test: "a1AMXh4hZhI2lc5ONBa5" },
+const privatePut: PutMessage<string> = {
+  type: "put",
+  id: "XZ9WhHxd5Q",
+  to: ["329466B79DFD4304DDEB"],
+  k: ":0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD.test",
+  a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
+  n: 9245,
+  t: 1647640485709,
+  h: "000a38b897728bc1a47be95ffdc0643b346a10e4159ac8c8fb4d33bd78e541d7",
+  s: "0x1e3ca6c48f5ae7d55104217d7e38860ac31693ce80a56aca4c6ca0bd22c372e909a96d67470a26c15834c76c30a0b775d33a57854912dea9d03342dcd28334bb1c",
+  v: "value",
 };
 
 it("Can verify namespaced PUT", () => {
@@ -267,14 +181,17 @@ it("Can verify namespaced PUT", () => {
   });
 });
 
-const privatePutPubkey: VerificationData<{ test: string }> = {
-  k: ":MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Gw==.value",
-  p: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyc/RndWhhh6D1yBXkTtS9dT0sTwB/xwdRUra0AsEKCy0nfx52kOw2UkXWjen61R9YLHgJOATEYk+1OTuTPd8Fw==",
-  n: 1268,
-  t: 1628919444909,
-  h: "0008bb47223e110194cb23d172ac714bf8323c1b5676f8db87611050832a018c",
-  s: "GcOBWcOLewbDu3HCvMKQAiAWw7XCi3LCrMOVw53Dk3zDn8K/WsKzO8K8MC82S8O9w6MFOcKKwrrCk8K+w7MBVULCh8Oew7nDryoTNhtGwqpHacOvXMOywpXDr3AkEnU=",
-  v: { test: "a1AMXh4hZhI2lc5ONBa5" },
+const privatePutPubkey: PutMessage<string> = {
+  type: "put",
+  id: "XZ9WhHxd5Q",
+  to: ["329466B79DFD4304DDEB"],
+  k: ":0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD.test",
+  a: "0x1E80E2B44676624ff6712BeC97A22A42413a266f",
+  n: 9245,
+  t: 1647640485709,
+  h: "000a38b897728bc1a47be95ffdc0643b346a10e4159ac8c8fb4d33bd78e541d7",
+  s: "0x1e3ca6c48f5ae7d55104217d7e38860ac31693ce80a56aca4c6ca0bd22c372e909a96d67470a26c15834c76c30a0b775d33a57854912dea9d03342dcd28334bb1c",
+  v: "value",
 };
 
 it("Can catch pubkey replacement", () => {
@@ -284,16 +201,10 @@ it("Can catch pubkey replacement", () => {
 });
 
 it("Can verify peers", async () => {
-  const keys = await generateKeyPair("ECDSA", true);
-
-  const pubkeyString = await exportKey("spki", keys.publicKey).then((skpub) =>
-    encodeKeyString(skpub as ArrayBuffer)
-  );
-
   const timestamp = new Date().getTime();
 
   const signature = await getPeerSignature(
-    keys.privateKey,
+    ClientA.options.peerAccount,
     "topic",
     timestamp,
     "host",
@@ -309,11 +220,33 @@ it("Can verify peers", async () => {
     timestamp: timestamp,
     host: "host",
     port: 8080,
-    pubkey: pubkeyString,
-    sig: signature,
+    adress: ClientA.options.peerAccount.address,
+    sig: signature.signature,
   };
 
-  const verified = await verifyPeer(peerData).catch(console.error);
+  const verified = await verifyPeer(ClientA.web3, peerData);
 
   expect(verified).toBeTruthy();
 });
+
+// This test fails because we are testing on a local node
+// if it were a test against a remote node it will work
+// But now I am not sure if I should add verification to local PUTs as well?
+// Maybe partial verification without signature checks to make it fast?
+// it("Can verify unique namespace", (done) => {
+//   const testKey = "test-key-" + textRandom(16);
+
+//   return ClientA.putData(testKey, "value_1").then((firstPut) => {
+//     ClientA.verifyMessage(firstPut).then((firstVerfied) => {
+//       expect(firstVerfied).toEqual(VerifyResult.Verified);
+//       ClientA.anonSignIn();
+
+//       return ClientA.putData(testKey, "value_2").then((secPut) => {
+//         ClientA.verifyMessage(secPut).then((secVerified) => {
+//           expect(secVerified).toEqual(VerifyResult.CantOverwrite);
+//           done();
+//         });
+//       });
+//     });
+//   });
+// });

@@ -1,10 +1,6 @@
-import {
-  PingMessage,
-  PongMessage,
-  ServersMessage,
-  textRandom,
-  ToolDb,
-} from "..";
+import { ToolDb } from "..";
+import { PingMessage, PongMessage, ServersMessage } from "../types/message";
+import textRandom from "../utils/textRandom";
 
 export default function handlePing(
   this: ToolDb,
@@ -14,7 +10,7 @@ export default function handlePing(
   this.network.sendToClientId(remotePeerId, {
     type: "pong",
     isServer: this.options.server,
-    clientId: this.options.id,
+    clientId: this.options.peerAccount.address,
     to: [],
     id: message.id,
   } as PongMessage);
