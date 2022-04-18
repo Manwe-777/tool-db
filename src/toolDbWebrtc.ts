@@ -143,7 +143,11 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
           this.tooldb.clientOnMessage(msg, id);
         }
         if (msg.type === "pong" || msg.type === "ping") {
-          this.tooldb.onConnect(id);
+          if (this.tooldb.isConnected) {
+            this.tooldb.onConnect();
+            this.tooldb.isConnected = true;
+          }
+          this.tooldb.onPeerConnect(id);
         }
       } catch (e) {
         //

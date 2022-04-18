@@ -92,17 +92,27 @@ export default class ToolDb extends EventEmitter {
 
   public subscribeData = toolDbSubscribe;
 
+  public isConnected = false;
+
   /**
-   * Emitted when there are no more server peers connected to
+   * Emitted after a disconnection, when there are no more peers connected to.
    */
   public onDisconnect = () => {
     //
   };
 
   /**
-   * Emitted when a server peer responds with "pong"
+   * Emitted the first time we are connected to a peer.
    */
-  public onConnect = (remotePeerId: string) => {
+  public onConnect = () => {
+    //
+  };
+
+  public onPeerDisconnect = (peerId: string) => {
+    //
+  };
+
+  public onPeerConnect = (peerId: string) => {
     //
   };
 
@@ -162,6 +172,10 @@ export default class ToolDb extends EventEmitter {
 
   public getPubKey(): string | undefined {
     return this._user?.account.address;
+  }
+
+  public getUsername(): string | undefined {
+    return this._user?.name;
   }
 
   /**

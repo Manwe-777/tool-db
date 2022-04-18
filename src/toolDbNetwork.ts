@@ -326,6 +326,7 @@ export default class toolDbNetwork {
         // There are no more peers to connect!
         if (Object.keys(this._connections).length === 0) {
           this._tooldb.onDisconnect();
+          this._tooldb.isConnected = false;
         }
       }
     }
