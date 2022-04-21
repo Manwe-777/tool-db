@@ -63,6 +63,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     console.warn(id, err);
     if (this.connectedPeers[id]) delete this.connectedPeers[id];
     if (this.peerMap[id]) delete this.peerMap[id];
+    if (Object.keys(this.peerMap).length === 0) {
+      this.tooldb.isConnected = false;
+      this.tooldb.onDisconnect();
+    }
   };
 
   private announceInterval;
@@ -194,6 +198,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         peer.end();
         peer.destroy();
         delete this.peerMap[id];
+        if (Object.keys(this.peerMap).length === 0) {
+          this.tooldb.isConnected = false;
+          this.tooldb.onDisconnect();
+        }
       }
     });
 
@@ -450,6 +458,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         } else {
           peer.destroy();
           delete this.peerMap[id];
+          if (Object.keys(this.peerMap).length === 0) {
+            this.tooldb.isConnected = false;
+            this.tooldb.onDisconnect();
+          }
         }
       });
   }
@@ -478,6 +490,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         } else {
           peer.destroy();
           delete this.peerMap[id];
+          if (Object.keys(this.peerMap).length === 0) {
+            this.tooldb.isConnected = false;
+            this.tooldb.onDisconnect();
+          }
         }
       });
   }

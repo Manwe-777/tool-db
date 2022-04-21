@@ -7,6 +7,11 @@ export default function handlePing(
   message: PingMessage,
   remotePeerId: string
 ) {
+  if (!this.isConnected) {
+    this.isConnected = true;
+    this.onConnect();
+  }
+
   this.network.sendToClientId(remotePeerId, {
     type: "pong",
     isServer: this.options.server,

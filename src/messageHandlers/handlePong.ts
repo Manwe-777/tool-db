@@ -10,6 +10,7 @@ export default function handlePong(
   remotePeerId: string
 ) {
   if (!this.isConnected) {
+    this.isConnected = true;
     this.onConnect();
   }
   this.onPeerConnect(this.options.peerAccount.address);
