@@ -346,6 +346,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       }
 
       if (Object.keys(this.peerMap).length >= maxPeers) {
+        if (this.offerPool) {
+          this.cleanPool();
+        }
         return;
       }
 
@@ -433,6 +436,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     // Do not announce if we hit our max peers cap
     if (Object.keys(this.peerMap).length < maxPeers) {
       this.announceAll();
+    } else {
+      if (this.offerPool) {
+        this.cleanPool();
+      }
     }
   }
 
