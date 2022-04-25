@@ -23,6 +23,7 @@ type IOffers = Record<
 >;
 
 const offerPoolSize = 5;
+const maxPeers = 4;
 const announceSecs = 30;
 const maxAnnounceSecs = 86400;
 
@@ -344,6 +345,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         return;
       }
 
+      if (Object.keys(this.peerMap).length >= maxPeers) {
+        return;
+      }
+
       this.handledOffers[val.offer_id] = true;
 
       const peer = this.initPeer(false, false, {});
@@ -424,7 +429,11 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     }, 200);
 
     this.infoHash = sha1(`tooldb:${this.tooldb.options.topic}`).slice(20);
-    this.announceAll();
+
+    // Do not announce if we hit our max peers cap
+    if (Object.keys(this.peerMap).length < maxPeers) {
+      this.announceAll();
+    }
   }
 
   public close(clientId: string): void {
