@@ -164,18 +164,16 @@ it("CRDTs", () => {
     const crdtValue = textRandom(24);
 
     const AliceDoc = new MapCrdt("Alice");
-    AliceDoc.SET("key", "value");
+    AliceDoc.SET("key", crdtValue);
 
     const BobDoc = new MapCrdt("Bob");
     BobDoc.SET("test", "foo");
 
-    const AliceChanges = AliceDoc.getChanges();
-
-    Alice.putCrdt(crdtKey, AliceChanges).then(async (put) => {
+    Alice.putCrdt(crdtKey, AliceDoc).then(async (put) => {
       setTimeout(() => {
         Bob.getCrdt<any>(crdtKey, BobDoc).then((data) => {
           expect(BobDoc.value).toStrictEqual({
-            key: "value",
+            key: crdtValue,
             test: "foo",
           });
           resolve();

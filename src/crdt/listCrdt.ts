@@ -1,9 +1,9 @@
 import BaseCrdt, { CRDT_LIST } from "./baseCrdt";
 
-export type MapOperations = "INS" | "DEL";
+export type ListOperations = "INS" | "DEL";
 
 export interface ChangeListBase<T> {
-  t: MapOperations; // Operation type
+  t: ListOperations; // Operation type
   i: string; // "index", author + n
 }
 
