@@ -11,6 +11,12 @@ It is the mix of a lot of cool concepts into one;
 - Key-value/document storage.
 - Works in the Browser and Nodejs seamlessly.
 
+For a more detailed documentation head here;
+
+[https://github.com/Manwe-777/tool-db-docs](https://github.com/Manwe-777/tool-db-docs)
+
+_(No live version just yet!, until the protocol is more finalized)_
+
 We push towards of the concept of federated servers, where we set up a p2p mesh network between any servers who want to join the swarm, and have those servers manage the connection and data sharing between them, while allowing client peers to connect to them to push updates to the database.
 This setup IS NOT a requirement! It is just what I think is the best and most reliable way of creating a p2p network for dApps using both desktop and web compatible technologies. Any peer has the capability of connecting to any other peer trough websockets, and modifiying the code to allow webRtc connections between web peers is absolutely possible.
 
