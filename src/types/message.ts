@@ -1,3 +1,4 @@
+import { MapChanges } from "../crdt/mapCrdt";
 import { Peer } from "./tooldb";
 
 export enum VerifyResult {
@@ -6,7 +7,7 @@ export enum VerifyResult {
   InvalidVerification = "InvalidVerification",
   CantOverwrite = "CantOverwrite",
   InvalidTimestamp = "InvalidTimestamp",
-  PubKeyMismatch = "PubKeyMismatch",
+  AddressMismatch = "AddressMismatch",
   NoProofOfWork = "NoProofOfWork",
   InvalidHashNonce = "InvalidHashNonce",
   InvalidSignature = "InvalidSignature",
@@ -129,19 +130,16 @@ export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {
   type: "put";
 }
 
-export interface CrdtPutMessage extends BaseMessage, VerificationData<string> {
+export interface CrdtPutMessage<T = any>
+  extends BaseMessage,
+    VerificationData<any> {
   type: "crdtPut";
+  crdt: string;
 }
 
-export interface CrdtGetMessage extends BaseMessage {
+export interface CrdtGetMessage<T = any> extends BaseMessage {
   type: "crdtGet";
   key: string;
-}
-
-export interface CrdtMessage extends BaseMessage {
-  type: "crdt";
-  key: string;
-  doc: string;
 }
 
 export type ToolDbMessage =
@@ -155,5 +153,4 @@ export type ToolDbMessage =
   | GetMessage
   | PutMessage
   | CrdtPutMessage
-  | CrdtGetMessage
-  | CrdtMessage;
+  | CrdtGetMessage;

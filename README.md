@@ -99,16 +99,8 @@ These are the options you can pass to the constructor:
   // A custom storage adapter function
   storageAdapter: ToolDbStorageAdapter;
 
-  // Our client ID (defaults to a generated publicKey)
-  id: string;
-
   // The namespace/topic of our app (default is "tool-db-default")
   topic: string;
-  
-  // Public and private (ECDSA) keys of our client. In the default network adapter these are used to sign
-  // our messages as we join and leave the network, public key should match the client ID (as a base64 exported string).
-  publicKey: CryptoKey | undefined;
-  privateKey: CryptoKey | undefined;
 }
 ```
 Notice you can use your own network and storage modules if you would like to implement custom solutions for peers discovery, connections, storage, etc, the default adapters will work both on nodejs and the browser.
@@ -121,9 +113,9 @@ client.signIn(user, pass).then(keys);
 client.anonSignIn().then();
 ```
 
-To retrieve your public key; (only if logged in)
+To retrieve your address; (only if logged in)
 ```
-client.getPubKey();
+client.getAddress();
 ```
 
 You can check if you are correctly logged in by checking if the user field exists or not;
@@ -147,7 +139,7 @@ You can use `client.getUserNamespacedKey(key)` to convert any key to a private n
 
 Note the third function (putCrdt); For p2p networks some times you want to have conflict resolution on certain documents, to do this we use [automerge](https://github.com/automerge/automerge). Please take a look at it to know how it works in detail! The only thing you need to know on Tool Db is that you have to send an `Automerge.BinaryChange[]` (you get it using `Automerge.change()`). The recieving peer will process the changes, compare it to its stored documents and generate a new document with JSON CRDT applied to it, then relay the final document back to you.
 
-To listen for a value changes you can set up a listener on a key. Beware the listener will check for all keys *starting with* the supplied key, so for example, if you use "value." as your listener if will execute on every key that starts with "value.". This is useful for checking against a public key or namespace.
+To listen for a value changes you can set up a listener on a key. Beware the listener will check for all keys *starting with* the supplied key, so for example, if you use "value." as your listener if will execute on every key that starts with "value.". This is useful for checking against an address or namespace.
 ```
 const listenerId = client.addKeyListener("value", console.log);
 client.removeKeyListener(listenerId);
@@ -179,7 +171,7 @@ client.queryKeys(keyPrefix, userNamespaced?, timeout?).then()
 ```
 
 Just like previous methods you can configure the namespace and timeout and returns a promise, but in this case the value is always an array with the found keys.
-Using for example ":" + publicKey as our prefix would return all keys stored for that specific user namespace; you can also create keys for very specific use cases like "post-1" and query again "post-" to get a list of all available posts.
+Using for example ":" + address as our prefix would return all keys stored for that specific user namespace; you can also create keys for very specific use cases like "post-1" and query again "post-" to get a list of all available posts.
 
 Keep in mind this can be an intensive thing to do if your indexes are too big, and not recommended to be used very frequently.
 

@@ -4,7 +4,7 @@ import ToolDb from "./tooldb";
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
  * @param key key of the data
- * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
+ * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our address and signatures.
  * @param timeout Max time to wait for remote.
  * @returns Promise<Data>
  */
@@ -15,11 +15,11 @@ export default function toolDbGet<T = any>(
   timeoutMs = 1000
 ): Promise<T | null> {
   return new Promise((resolve, reject) => {
-    if (userNamespaced && this.getPubKey() === undefined) {
+    if (userNamespaced && this.getAddress() === undefined) {
       reject(new Error("You are not authorized yet!"));
       return;
     }
-    const finalKey = userNamespaced ? `:${this.getPubKey()}.${key}` : key;
+    const finalKey = userNamespaced ? `:${this.getAddress()}.${key}` : key;
     if (this.options.debug) {
       console.log("GET > " + finalKey);
     }

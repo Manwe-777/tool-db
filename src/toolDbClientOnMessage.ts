@@ -75,10 +75,6 @@ export default function toolDbClientOnMessage(
       this.handleQuery(message, remotePeerId);
       break;
 
-    case "crdt":
-      this.handleCrdt(message, remotePeerId);
-      break;
-
     default:
       break;
   }

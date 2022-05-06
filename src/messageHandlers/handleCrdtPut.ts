@@ -1,97 +1,73 @@
-import Automerge from "automerge";
 import { ToolDb } from "..";
-import { VerifyResult, CrdtMessage, CrdtPutMessage } from "../types/message";
+import { VerifyResult, CrdtPutMessage } from "../types/message";
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
-import hexToBase64 from "../utils/encoding/hexToBase64";
-import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
-import base64ToBinaryChange from "../utils/encoding/base64ToBinaryChange";
+import MapCrdt from "../crdt/mapCrdt";
 
 export default function handleCrdtPut(
   this: ToolDb,
   message: CrdtPutMessage,
   remotePeerId: string
 ) {
-  // key = aggregated, final value
-  // key.crdt = automerge doc with changes
-  const writeStart = new Date().getTime();
   toolDbVerificationWrapper.call(this, message).then((value) => {
-    // console.log("CRDT verification: ", (new Date().getTime() - writeStart) / 1000);
-    // console.log("CRDT Verification wrapper result: ", value);
+    // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
-      const key = message.k;
-      let data: string[] = [];
-      try {
-        data = JSON.parse(message.v);
-      } catch (e) {
-        //
-      }
-      const changes = data.map(hexToBase64).map(base64ToBinaryChange);
+      this.emit("verified", message);
+      // relay to other servers !!!
+      this.network.sendToAll(message, true);
 
-      this.loadCrdtDocument(key).then((currentDoc) => {
-        // if (currentDoc) {
-        //   console.log(
-        //     "loaded",
-        //     key,
-        //     currentDoc,
-        //     Automerge.getHistory(currentDoc)
-        //   );
-        // }
+      this.store.get(message.k, (err, oldData?: string) => {
+        if (oldData) {
+          const parsedOldData: CrdtPutMessage = {
+            type: "crdtPut",
+            ...JSON.parse(oldData),
+          };
 
-        let newDoc = Automerge.init();
-        try {
-          [newDoc] = Automerge.applyChanges(
-            currentDoc || Automerge.init(),
-            changes
-          );
-        } catch (e) {
-          try {
-            [newDoc] = Automerge.applyChanges(Automerge.init(), changes);
-          } catch (ee) {
-            if (this.options.debug) {
-              console.warn(ee);
-            }
+          let newMessage = message;
+
+          // Merge old document with new data incoming and save it
+          // Add handles for all kinds of CRDT we add
+          if (parsedOldData.crdt === "MAP") {
+            const oldDoc = new MapCrdt(
+              this.getAddress() || "",
+              parsedOldData.v
+            );
+            oldDoc.mergeChanges(message.v);
+            const changesMerged = oldDoc.getChanges();
+            newMessage = {
+              ...message,
+              v: changesMerged,
+            };
           }
+
+          if (parsedOldData.t < message.t) {
+            const key = newMessage.k;
+            this.triggerKeyListener(key, newMessage);
+            this.store.put(
+              newMessage.k,
+              JSON.stringify(newMessage),
+              (err, data) => {
+                //
+              }
+            );
+          } else {
+            const key = message.k;
+            this.triggerKeyListener(key, parsedOldData);
+          }
+          // } else if (this.options.debug) {
+          //   console.log(
+          //     `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
+          //   );
+          // }
+        } else {
+          const key = message.k;
+          this.triggerKeyListener(key, message);
+          this.store.put(message.k, JSON.stringify(message), (err, data) => {
+            //
+          });
         }
-
-        // if (newDoc) {
-        //   console.log(
-        //     "new document changes:",
-        //     Automerge.getHistory(newDoc),
-        //     "final: ",
-        //     newDoc
-        //   );
-        // }
-
-        // persist
-        this.documents[key] = newDoc;
-
-        // OOHH THE TYPECAST PAIN
-        // Convert the crdt document to hex before saving
-        const savedDoc = uint8ArrayToHex(Automerge.save(newDoc));
-        this.store.put(`${key}.crdt`, savedDoc, (err, data) => {
-          // const writeEnd = new Date().getTime();
-          // console.log(
-          //   "CRDT write: ",
-          //   `${key}.crdt`,
-          //   (writeEnd - writeStart) / 1000
-          // );
-        });
-
-        const crdtMessage: CrdtMessage = {
-          type: "crdt",
-          key: key,
-          id: message.id,
-          to: [],
-          doc: savedDoc,
-        };
-        this.triggerKeyListener(key, crdtMessage);
-
-        // relay to other servers
-        // !!!
-        this.network.sendToAll(crdtMessage, true);
       });
     } else {
-      console.log("unverified message", value, message);
+      console.warn("unverified message: ", value, message);
     }
   });
 }
