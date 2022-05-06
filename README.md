@@ -185,27 +185,6 @@ client.subscribeData("key", userNamespaced?);
 
 This will relay back to you all Put and CrdtPut messages on that key.
 
-When subscribing to a CRDT document you will need to load the data like so;
-```
-window.toolDb.addKeyListener("documentKey", handleDocumentKeyCrdt);
-function handleDocumentKeyCrdt(msg) {
-  if (msg && msg.type === "crdt") {
-    // Load the document from the message (msg.doc)
-    const incomingDocument = Automerge.load(
-      base64ToBinaryDocument(msg.doc)
-    );
-
-    if (globalData.myCrdtDocument) {
-      // Merge the local doc vs the incoming one and store it somewhere locally
-      globalData.myCrdtDocument = Automerge.merge(globalData.myCrdtDocument, incomingDocument);
-    } else {
-      // New document! Just store it
-      globalData.myCrdtDocument = incomingDocument;
-    }
-  }
-}
-```
-
 ## Events
 
 If you need to check when you are connected to a server peer or not you can use the following method replacements;
