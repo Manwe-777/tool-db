@@ -1,11 +1,9 @@
-import { FreezeObject } from "automerge";
 import EventEmitter from "events";
 import w3 from "web3";
 import { Account } from "web3-core";
 
 import {
   BaseMessage,
-  CrdtMessage,
   PutMessage,
   ToolDbMessage,
   VerificationData,
@@ -30,25 +28,24 @@ import indexedb from "./utils/indexedb";
 import toolDbSubscribe from "./toolDbSubscribe";
 
 import toolDbQueryKeys from "./toolDbQueryKeys";
-import loadCrdtDocument from "./loadCrdtDocument";
 import toolDbKeysSignIn from "./toolDbKeysSignIn";
 
 import handleGet from "./messageHandlers/handleGet";
 import handlePut from "./messageHandlers/handlePut";
 import handlePing from "./messageHandlers/handlePing";
 import handlePong from "./messageHandlers/handlePong";
-import handleCrdt from "./messageHandlers/handleCrdt";
 import handleQuery from "./messageHandlers/handleQuery";
 import handleCrdtGet from "./messageHandlers/handleCrdtGet";
 import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 import { Peer, ToolDbOptions, ToolDbStore } from "./types/tooldb";
+import { CrdtPutMessage } from "./types/message";
 
 export interface Listener {
   key: string;
   timeout: number | null;
-  fn: (msg: PutMessage | CrdtMessage) => void;
+  fn: (msg: PutMessage | CrdtPutMessage) => void;
 }
 
 interface Verificator<T> {
@@ -65,8 +62,6 @@ export default class ToolDb extends EventEmitter {
   private _peers: Peer[] = [];
 
   public web3: w3;
-
-  private _documents: Record<string, FreezeObject<any>> = {};
 
   public clientOnMessage = toolDbClientOnMessage;
 
@@ -116,8 +111,6 @@ export default class ToolDb extends EventEmitter {
     //
   };
 
-  public loadCrdtDocument = loadCrdtDocument;
-
   public getData = toolDbGet;
 
   public putData = toolDbPut;
@@ -141,7 +134,6 @@ export default class ToolDb extends EventEmitter {
   // All message handlers go here
   public handlePing = handlePing;
   public handlePong = handlePong;
-  public handleCrdt = handleCrdt;
   public handleCrdtGet = handleCrdtGet;
   public handleCrdtPut = handleCrdtPut;
   public handleGet = handleGet;
@@ -170,7 +162,7 @@ export default class ToolDb extends EventEmitter {
     return undefined;
   }
 
-  public getPubKey(): string | undefined {
+  public getAddress(): string | undefined {
     return this._user?.account.address;
   }
 
@@ -192,7 +184,7 @@ export default class ToolDb extends EventEmitter {
   };
 
   public getUserNamespacedKey(key: string) {
-    return ":" + (this.getPubKey() || "") + "." + key;
+    return ":" + (this.getAddress() || "") + "." + key;
   }
 
   /**
@@ -202,7 +194,7 @@ export default class ToolDb extends EventEmitter {
 
   public addKeyListener = <T>(
     key: string,
-    fn: (msg: PutMessage<T> | CrdtMessage) => void
+    fn: (msg: PutMessage<T> | CrdtPutMessage) => void
   ) => {
     const newListener: Listener = {
       key,
@@ -211,7 +203,7 @@ export default class ToolDb extends EventEmitter {
     };
     this._keyListeners.push(newListener);
 
-    return this._keyListeners.length;
+    return this._keyListeners.length - 1;
   };
 
   public removeKeyListener = (id: number) => {
@@ -224,7 +216,7 @@ export default class ToolDb extends EventEmitter {
 
   public triggerKeyListener = (
     key: string,
-    message: PutMessage | CrdtMessage
+    message: PutMessage | CrdtPutMessage
   ) => {
     // console.warn(`triggerKeyListener ${key}`);
     this._keyListeners.forEach((listener) => {
@@ -306,10 +298,6 @@ export default class ToolDb extends EventEmitter {
 
   get store() {
     return this._store;
-  }
-
-  get documents() {
-    return this._documents;
   }
 
   constructor(options: Partial<ToolDbOptions> = {}) {

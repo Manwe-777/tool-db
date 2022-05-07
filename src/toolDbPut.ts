@@ -7,7 +7,7 @@ import proofOfWork from "./utils/proofOfWork";
  * Triggers a PUT request to other peers.
  * @param key key where we want to put the data at.
  * @param value Data we want to any (any type)
- * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
+ * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our address and signatures.
  * @returns Promise<Data | null>
  */
 export default function toolDbPut<T = any>(
@@ -23,7 +23,7 @@ export default function toolDbPut<T = any>(
       return;
     }
 
-    if (!this.getPubKey()) {
+    if (!this.getAddress()) {
       reject(new Error("You need to log in before you can PUT."));
       return;
     }
@@ -31,18 +31,20 @@ export default function toolDbPut<T = any>(
     const timestamp = new Date().getTime();
     const dataString = `${JSON.stringify(
       value
-    )}${this.getPubKey()}${timestamp}`;
+    )}${this.getAddress()}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
         const signature = this.signData(hash);
-        if (signature && this.getPubKey()) {
-          const finalKey = userNamespaced ? `:${this.getPubKey()}.${key}` : key;
+        if (signature && this.getAddress()) {
+          const finalKey = userNamespaced
+            ? `:${this.getAddress()}.${key}`
+            : key;
           // Compose the message
           const data: VerificationData = {
             k: finalKey,
-            a: this.getPubKey() || "",
+            a: this.getAddress() || "",
             n: nonce,
             t: timestamp,
             h: hash,

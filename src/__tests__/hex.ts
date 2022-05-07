@@ -1,15 +1,7 @@
-import base64ToHex from "../utils/encoding/base64ToHex";
 import hexToString from "../utils/encoding/hexToString";
 import stringToArrayBuffer from "../utils/encoding/stringToArrayBuffer";
 import arrayBufferToHex from "../utils/encoding/arrayBufferToHex";
 import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
-
-it("Converts base64 to hex", () => {
-  expect(base64ToHex("U29tZVZlcnlUZXN0LXlWYWx1ZTI=")).toEqual(
-    "536f6d6556657279546573742d7956616c756532"
-  );
-  expect(base64ToHex("CKI=")).toEqual("08a2");
-});
 
 it("Converts hex to string", () => {
   expect(hexToString("536f6d6556657279546573742d7956616c756532")).toEqual(

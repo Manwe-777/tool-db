@@ -1,8 +1,8 @@
 jest.mock("../getCrypto.ts");
 import elliptic from "elliptic";
-import Automerge from "automerge";
 
 import { textRandom, ToolDb } from "..";
+import MapCrdt from "../crdt/mapCrdt";
 import leveldb from "../utils/leveldb";
 
 jest.setTimeout(20000);
@@ -61,7 +61,7 @@ beforeAll((done) => {
       if (connected.length === 3) {
         let signedIn = false;
         while (!signedIn) {
-          if (Alice.getPubKey() && Bob.getPubKey()) {
+          if (Alice.getAddress() && Bob.getAddress()) {
             signedIn = true;
           }
         }
@@ -79,8 +79,8 @@ afterAll((done) => {
 });
 
 it("A and B are signed in", () => {
-  expect(Alice.getPubKey()).toBeDefined();
-  expect(Bob.getPubKey()).toBeDefined();
+  expect(Alice.getAddress()).toBeDefined();
+  expect(Bob.getAddress()).toBeDefined();
 });
 
 it("A can put and get", () => {
@@ -128,7 +128,7 @@ it("A can sign up and B can sign in", () => {
       setTimeout(() => {
         Bob.signIn(testUsername, testPassword).then((res) => {
           expect(res).toBeDefined();
-          expect(Bob.getPubKey()).toBeDefined();
+          expect(Bob.getAddress()).toBeDefined();
           expect(Bob.getUsername()).toBe(testUsername);
 
           // test for failed sign in
@@ -163,23 +163,19 @@ it("CRDTs", () => {
     const crdtKey = "crdt-test-" + textRandom(16);
     const crdtValue = textRandom(24);
 
-    const origDoc = Automerge.init();
-    const oneDoc = Automerge.change(origDoc, (doc: any) => {
-      doc.test = crdtValue;
-      doc.arr = ["arr"];
-    });
+    const AliceDoc = new MapCrdt("Alice");
+    AliceDoc.SET("key", crdtValue);
 
-    const newDoc = Automerge.change(oneDoc, (doc: any) => {
-      doc.arr.push("test");
-    });
+    const BobDoc = new MapCrdt("Bob");
+    BobDoc.SET("test", "foo");
 
-    const changes = Automerge.getChanges(origDoc, newDoc);
-    Alice.putCrdt(crdtKey, changes).then(async (put) => {
+    Alice.putCrdt(crdtKey, AliceDoc).then(async (put) => {
       setTimeout(() => {
-        Bob.getCrdt(crdtKey).then((data) => {
-          const doc = Automerge.load(data as any) as any;
-          expect(doc.test).toBe(crdtValue);
-          expect(doc.arr).toStrictEqual(["arr", "test"]);
+        Bob.getCrdt<any>(crdtKey, BobDoc).then((data) => {
+          expect(BobDoc.value).toStrictEqual({
+            key: crdtValue,
+            test: "foo",
+          });
           resolve();
         });
       }, 1000);
