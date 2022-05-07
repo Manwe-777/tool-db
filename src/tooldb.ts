@@ -203,7 +203,7 @@ export default class ToolDb extends EventEmitter {
     };
     this._keyListeners.push(newListener);
 
-    return this._keyListeners.length;
+    return this._keyListeners.length - 1;
   };
 
   public removeKeyListener = (id: number) => {
