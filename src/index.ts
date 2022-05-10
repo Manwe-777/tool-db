@@ -10,6 +10,11 @@ if (typeof window === "undefined") {
   global.crypto = require("crypto").webcrypto;
 }
 
+export { default as BaseCrdt } from "./crdt/baseCrdt";
+export { default as CounterCrdt } from "./crdt/counterCrdt";
+export { default as ListCrdt } from "./crdt/listCrdt";
+export { default as MapCrdt } from "./crdt/mapCrdt";
+
 export { default as proofOfWork } from "./utils/proofOfWork";
 export { default as sha1 } from "./utils/sha1";
 export { default as sha256 } from "./utils/sha256";
@@ -26,9 +31,6 @@ export { default as arrayBufferToHex } from "./utils/encoding/arrayBufferToHex";
 export { default as hexToArrayBuffer } from "./utils/encoding/hexToArrayBuffer";
 export { default as hexToString } from "./utils/encoding/hexToString";
 export { default as hexToUint8 } from "./utils/encoding/hexToUint8";
-
-export { default as BaseCrdt } from "./crdt/baseCrdt";
-export { default as MapCrdt } from "./crdt/mapCrdt";
 
 export { default as decryptWithPass } from "./utils/crypto/decryptWithPass";
 export { default as encryptWithPass } from "./utils/crypto/encryptWithPass";

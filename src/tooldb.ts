@@ -194,7 +194,7 @@ export default class ToolDb extends EventEmitter {
 
   public addKeyListener = <T>(
     key: string,
-    fn: (msg: PutMessage<T> | CrdtPutMessage) => void
+    fn: (msg: PutMessage<T> | CrdtPutMessage<T>) => void
   ) => {
     const newListener: Listener = {
       key,
