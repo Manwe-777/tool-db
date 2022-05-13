@@ -1,3 +1,4 @@
+import { MapChanges } from "../crdt/mapCrdt";
 import { Peer } from "./tooldb";
 
 export enum VerifyResult {
@@ -6,21 +7,11 @@ export enum VerifyResult {
   InvalidVerification = "InvalidVerification",
   CantOverwrite = "CantOverwrite",
   InvalidTimestamp = "InvalidTimestamp",
-  PubKeyMismatch = "PubKeyMismatch",
+  AddressMismatch = "AddressMismatch",
   NoProofOfWork = "NoProofOfWork",
   InvalidHashNonce = "InvalidHashNonce",
   InvalidSignature = "InvalidSignature",
   Verified = "Verified",
-}
-
-export interface VerificationDataLegacy<T = any> {
-  p: string; // base64 public key
-  k: string; // Key/id
-  n: number; // nonce
-  h: string; // hash of JSON.stringify(value) + nonce
-  t: number; // Timestamp this was created
-  s: string; // signature
-  v: T; // value
 }
 
 export interface VerificationData<T = any> {
@@ -129,19 +120,16 @@ export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {
   type: "put";
 }
 
-export interface CrdtPutMessage extends BaseMessage, VerificationData<string> {
+export interface CrdtPutMessage<T = any>
+  extends BaseMessage,
+    VerificationData<any> {
   type: "crdtPut";
+  crdt: string;
 }
 
-export interface CrdtGetMessage extends BaseMessage {
+export interface CrdtGetMessage<T = any> extends BaseMessage {
   type: "crdtGet";
   key: string;
-}
-
-export interface CrdtMessage extends BaseMessage {
-  type: "crdt";
-  key: string;
-  doc: string;
 }
 
 export type ToolDbMessage =
@@ -155,5 +143,4 @@ export type ToolDbMessage =
   | GetMessage
   | PutMessage
   | CrdtPutMessage
-  | CrdtGetMessage
-  | CrdtMessage;
+  | CrdtGetMessage;

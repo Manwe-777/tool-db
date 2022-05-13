@@ -1,22 +1,22 @@
-import { BinaryChange } from "automerge";
 import { CrdtPutMessage, textRandom, VerificationData } from ".";
 import ToolDb from "./tooldb";
 
 import proofOfWork from "./utils/proofOfWork";
 
-import uint8ArrayToHex from "./utils/encoding/uint8ArrayToHex";
+import { MapChanges } from "./crdt/mapCrdt";
+import BaseCrdt from "./crdt/baseCrdt";
 
 /**
  * Triggers a PUT request to other peers.
  * @param key key where we want to put the data at.
  * @param value Data we want to any (any type)
- * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our public key and signatures.
+ * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our address and signatures.
  * @returns Promise<Data | null>
  */
 export default function toolDbCrdtPut<T = any>(
   this: ToolDb,
   key: string,
-  value: BinaryChange[],
+  crdt: BaseCrdt<T, any, any>,
   userNamespaced = false
 ): Promise<CrdtPutMessage | null> {
   return new Promise((resolve, reject) => {
@@ -26,39 +26,42 @@ export default function toolDbCrdtPut<T = any>(
       return;
     }
 
-    if (!this.getPubKey()) {
+    if (!this.getAddress()) {
       reject(new Error("You need to log in before you can PUT."));
       return;
     }
 
     const timestamp = new Date().getTime();
 
-    const encodedData = JSON.stringify(value.map(uint8ArrayToHex));
+    const crdtChanges = crdt.getChanges();
 
-    const dataString = `${encodedData}${this.getPubKey()}${timestamp}`;
+    const encodedData = JSON.stringify(crdtChanges);
+
+    const dataString = `${encodedData}${this.getAddress()}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
         const signature = this.signData(hash);
-        if (signature && this.getPubKey()) {
+        if (signature && this.getAddress()) {
           // Compose the message
-          const data: VerificationData = {
-            k: userNamespaced ? `:${this.getPubKey()}.${key}` : key,
-            a: this.getPubKey() || "",
+          const data: VerificationData<MapChanges<T>[]> = {
+            k: userNamespaced ? `:${this.getAddress()}.${key}` : key,
+            a: this.getAddress() || "",
             n: nonce,
             t: timestamp,
             h: hash,
             s: signature.signature,
-            v: encodedData,
+            v: crdtChanges,
           };
 
           if (this.options.debug) {
             console.log("PUT CRDT > " + key, data);
           }
 
-          const finalMessage: CrdtPutMessage = {
+          const finalMessage: CrdtPutMessage<T> = {
             type: "crdtPut",
+            crdt: crdt.type,
             id: textRandom(10),
             to: [],
             ...data,

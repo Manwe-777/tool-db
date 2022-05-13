@@ -1,8 +1,5 @@
-import Automerge from "automerge";
 import { ToolDb } from "..";
-import { CrdtMessage, SubscribeMessage } from "../types/message";
-import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
-import textRandom from "../utils/textRandom";
+import { SubscribeMessage } from "../types/message";
 
 export default function handleSubscribe(
   this: ToolDb,
@@ -15,7 +12,7 @@ export default function handleSubscribe(
       this.subscriptions.push(subId);
 
       this.addKeyListener(message.key, (msg) => {
-        if ((msg.type === "put" || msg.type === "crdt") && remotePeerId) {
+        if ((msg.type === "put" || msg.type === "crdtPut") && remotePeerId) {
           // We do not reply to the socket directly
           // instead we use the client id, in case the socket reconnects
           this.network.sendToClientId(remotePeerId, msg);
@@ -33,21 +30,6 @@ export default function handleSubscribe(
       } catch (e) {
         // do nothing
       }
-    }
-  });
-
-  this.loadCrdtDocument(message.key, false).then((doc) => {
-    // console.log("Load crdt from subscribe", message.key, doc);
-    if (doc) {
-      const savedDoc = Automerge.save(doc);
-      const msg: CrdtMessage = {
-        type: "crdt",
-        key: message.key,
-        to: [],
-        id: textRandom(10),
-        doc: uint8ArrayToHex(savedDoc),
-      };
-      this.network.sendToClientId(remotePeerId, msg);
     }
   });
 }

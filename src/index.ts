@@ -6,21 +6,14 @@ export * from "./types/message";
 
 global.Buffer = global.Buffer || require("buffer").Buffer;
 
-if (typeof btoa === "undefined") {
-  global.btoa = (str) => {
-    return Buffer.from(str, "binary").toString("base64");
-  };
-}
-
-if (typeof atob === "undefined") {
-  global.atob = (b64Encoded) => {
-    return Buffer.from(b64Encoded, "base64").toString("binary");
-  };
-}
-
 if (typeof window === "undefined") {
   global.crypto = require("crypto").webcrypto;
 }
+
+export { default as BaseCrdt } from "./crdt/baseCrdt";
+export { default as CounterCrdt } from "./crdt/counterCrdt";
+export { default as ListCrdt } from "./crdt/listCrdt";
+export { default as MapCrdt } from "./crdt/mapCrdt";
 
 export { default as proofOfWork } from "./utils/proofOfWork";
 export { default as sha1 } from "./utils/sha1";
@@ -33,22 +26,11 @@ export { default as stringToArrayBuffer } from "./utils/encoding/stringToArrayBu
 export { default as verifyMessage } from "./utils/verifyMessage";
 export { default as verifyPeer } from "./utils/verifyPeer";
 
-export { default as arrayBufferToBase64 } from "./utils/encoding/arrayBufferToBase64";
 export { default as arrayBufferToString } from "./utils/encoding/arrayBufferToString";
 export { default as arrayBufferToHex } from "./utils/encoding/arrayBufferToHex";
-export { default as base64ToArrayBuffer } from "./utils/encoding/base64ToArrayBuffer";
-export { default as base64ToBinaryChange } from "./utils/encoding/base64ToBinaryChange";
-export { default as base64ToBinaryDocument } from "./utils/encoding/base64ToBinaryDocument";
-export { default as base64ToUint8 } from "./utils/encoding/base64ToUint8";
-export { default as base64ToHex } from "./utils/encoding/base64ToHex";
 export { default as hexToArrayBuffer } from "./utils/encoding/hexToArrayBuffer";
-export { default as hexToBase64 } from "./utils/encoding/hexToBase64";
 export { default as hexToString } from "./utils/encoding/hexToString";
 export { default as hexToUint8 } from "./utils/encoding/hexToUint8";
-export { default as fromBase64 } from "./utils/encoding/fromBase64";
-export { default as uint8ToBase64 } from "./utils/encoding/uint8ToBase64";
-export { default as uint8ArrayToHex } from "./utils/encoding/uint8ArrayToHex";
-export { default as toBase64 } from "./utils/encoding/toBase64";
 
 export { default as decryptWithPass } from "./utils/crypto/decryptWithPass";
 export { default as encryptWithPass } from "./utils/crypto/encryptWithPass";
@@ -57,7 +39,6 @@ export { default as generateKeyFromPassword } from "./utils/crypto/generateKeyFr
 export { default as toolDbNetwork } from "./toolDbNetwork";
 export { default as toolDbWebrtc } from "./toolDbWebrtc";
 
-export { default as handleCrdt } from "./messageHandlers/handleCrdt";
 export { default as handleCrdtGet } from "./messageHandlers/handleCrdtGet";
 export { default as handleCrdtPut } from "./messageHandlers/handleCrdtPut";
 export { default as handleGet } from "./messageHandlers/handleGet";

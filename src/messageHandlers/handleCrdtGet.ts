@@ -1,23 +1,26 @@
-import Automerge from "automerge";
 import { ToolDb } from "..";
-import { CrdtMessage, CrdtGetMessage } from "../types/message";
-import uint8ArrayToHex from "../utils/encoding/uint8ArrayToHex";
+import { CrdtGetMessage, CrdtPutMessage } from "../types/message";
 
 export default function handleCrdtGet(
   this: ToolDb,
   message: CrdtGetMessage,
   remotePeerId: string
 ) {
-  this.loadCrdtDocument(message.key, false).then((currentDoc) => {
-    if (currentDoc) {
-      const saved = Automerge.save(currentDoc || Automerge.init());
-      this.network.sendToClientId(remotePeerId, {
-        type: "crdt",
-        id: message.id,
-        key: message.key,
-        to: [],
-        doc: uint8ArrayToHex(saved),
-      } as CrdtMessage);
+  this.store.get(message.key, (err, data) => {
+    if (data) {
+      try {
+        // Use the id of the get so the other client knows we are replying
+        const oldData = {
+          type: "putCrdt",
+          ...JSON.parse(data),
+          to: [],
+          id: message.id,
+        } as CrdtPutMessage;
+        this.network.sendToClientId(remotePeerId, oldData);
+      } catch (e) {
+        // socket.send(data);
+        // do nothing
+      }
     } else {
       if (this.options.debug) {
         console.log("Local key not found, relay", JSON.stringify(message));

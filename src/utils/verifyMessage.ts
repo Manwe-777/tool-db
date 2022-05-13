@@ -4,7 +4,7 @@ import { VerifyResult, VerificationData } from "../types/message";
 import { ToolDb } from "..";
 
 /**
- * Verifies a message validity (PoW, pubKey, timestamp, signatures)
+ * Verifies a message validity (PoW, Address, timestamp, signatures)
  * @param msg AnyMessage
  * @param pow amount of proof of work required, number of leading zeroes (default is 0/no pow)
  * @returns boolean or undefined if the message type does not match
@@ -62,8 +62,8 @@ export default async function verifyMessage<T>(
   }
 
   if (adressNamespace && adressNamespace !== msg.a) {
-    // console.warn("Provided pub keys do not match");
-    return VerifyResult.PubKeyMismatch;
+    // console.warn("Provided address does not match");
+    return VerifyResult.AddressMismatch;
   }
 
   // Verify hash and nonce (adjust zeroes for difficulty of the network)
@@ -82,8 +82,8 @@ export default async function verifyMessage<T>(
     }
   }
 
-  const pubKey = this.web3.eth.accounts.recover(msg.h, msg.s);
-  const verified = pubKey === msg.a;
+  const address = this.web3.eth.accounts.recover(msg.h, msg.s);
+  const verified = address === msg.a;
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;

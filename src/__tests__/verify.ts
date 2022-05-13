@@ -181,7 +181,7 @@ it("Can verify namespaced PUT", () => {
   });
 });
 
-const privatePutPubkey: PutMessage<string> = {
+const privatePutAddress: PutMessage<string> = {
   type: "put",
   id: "XZ9WhHxd5Q",
   to: ["329466B79DFD4304DDEB"],
@@ -194,9 +194,9 @@ const privatePutPubkey: PutMessage<string> = {
   v: "value",
 };
 
-it("Can catch pubkey replacement", () => {
-  return ClientA.verifyMessage(privatePutPubkey).then((result) => {
-    expect(result).toEqual(VerifyResult.PubKeyMismatch);
+it("Can catch address replacement", () => {
+  return ClientA.verifyMessage(privatePutAddress).then((result) => {
+    expect(result).toEqual(VerifyResult.AddressMismatch);
   });
 });
 
