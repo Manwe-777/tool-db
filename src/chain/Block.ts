@@ -93,6 +93,11 @@ export default class Block {
     return this._nonce;
   }
 
+  set nonce(n: number) {
+    this._nonce = n;
+    this._hash = Block.blockHash(this);
+  }
+
   get difficulty() {
     return this._difficulty;
   }
@@ -141,9 +146,10 @@ export default class Block {
     const difficulty = new BN(block.difficulty, "hex");
     const ffff = new BN("ffff", "hex");
 
+    // bitcoin used a base of 208 !
     const _2_254 = new BN(2, "le").pow(new BN(254, "le"));
     // const _2_256 = new BN(2, "le").pow(new BN(256, "le"));
-    const _2_48 = new BN(2, "le").pow(new BN(48, "le"));
+    // const _2_48 = new BN(2, "le").pow(new BN(48, "le"));
     // const _2_32 = new BN(2, "le").pow(new BN(32, "le"));
 
     // (0xffff * 2**254) / D

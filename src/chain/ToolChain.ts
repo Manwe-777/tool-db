@@ -1,4 +1,3 @@
-import getTimestamp from "../utils/getTimestamp";
 import Block, { decodeBlock } from "./Block";
 import isValidChain from "./isValidChain";
 import { Transactions } from "./Tx";
@@ -41,21 +40,28 @@ export default class ToolChain {
     }
   }
 
+  /**
+   * Simple loop to mine new blocks
+   * This is not meant for real world usage!
+   */
   mineLoop() {
     const lastBlock = decodeBlock(this._chain[this._chain.length - 1]);
     const difficulty = this.calculateNewDifficulty();
     console.log("nonce:", this._noncetest);
 
+    const block = new Block(
+      this._chain.length,
+      new Date().getTime(),
+      lastBlock.hash,
+      Object.values(this.mempool),
+      this._noncetest,
+      difficulty
+    );
+
     for (let i = 0; i < 1000000; i += 1) {
       this._noncetest += 1;
-      const block = new Block(
-        this._chain.length,
-        new Date().getTime(),
-        lastBlock.hash,
-        Object.values(this.mempool),
-        this._noncetest,
-        difficulty
-      );
+
+      block.nonce = this._noncetest;
 
       if (Block.verifyBlockData(block)) {
         console.log(
@@ -68,6 +74,7 @@ export default class ToolChain {
           hash: block.hash,
           nonce: block.nonce,
           timestamp: block.timestamp,
+          data: block.data,
           difficulty: block.difficulty,
         });
         this._chain.push(block.encode());
@@ -133,39 +140,72 @@ export default class ToolChain {
     // Each block should be mined every 1 minute
     const BLOCK_TIME = 60 * 1000;
 
+    // Adapt POW every 10 minutes
+    const ADAPTIVE_POW_TIME = 60 * 1000 * 10;
+
+    // Get the first block in this epoch, with new difficulty
     const initBlockN =
       this._chain.length - 1 - ((this._chain.length - 1) % EPOCH);
-
     const initBlock = decodeBlock(this._chain[initBlockN]);
 
+    // Difficulty of the epoch
     const currentDifficulty = initBlock.difficulty;
 
+    // Last block timestamp
     const lastTime = decodeBlock(this._chain[this._chain.length - 1]).timestamp;
-    // let timesBetweenBlocks: number[] = [];
-    // this._chain.slice(-EPOCH).forEach((block) => {
-    //   const blockObj = decodeBlock(block);
-    //   if (lastTime) {
-    //     timesBetweenBlocks.push(blockObj.timestamp - lastTime);
-    //   }
-    //   lastTime = blockObj.timestamp;
-    // });
 
-    // const averageBlockTime =
-    //   timesBetweenBlocks.reduce((p: number, c: number) => p + c, 0) /
-    //   timesBetweenBlocks.length;
-
+    // Get the multiplier
     const elapsed = lastTime - initBlock.timestamp;
     const adjustment = (BLOCK_TIME * EPOCH) / elapsed;
 
-    console.warn(
-      initBlockN,
-      currentDifficulty,
-      elapsed,
-      this._chain.length % EPOCH
-    );
+    // console.warn(
+    //   initBlockN,
+    //   currentDifficulty,
+    //   elapsed,
+    //   this._chain.length % EPOCH
+    // );
 
+    // Dont divide by zero
+    if (elapsed === 0) return currentDifficulty;
+
+    // Convert to hex
     const diffBn = new BN(currentDifficulty, "hex");
 
+    // Multiply adjustment * 1000
+    // Not sure if there is a better way to make float multiplication in bn.js
+    const adjustmentBn = new BN(Math.round(adjustment * 1000), "le");
+    const _1000Bn = new BN(1000, "le");
+
+    // Divide by 1000 (float point fix)
+    let newDiff = diffBn.mul(adjustmentBn).div(_1000Bn);
+
+    /**
+     * Adaptive proof of work
+     * This will fix the instance in which a poweful miner, or a group of miners
+     * leave the network, either by a diff stranding attack or just coincidence.
+     * The difficulty will decreased based on the delay there is to create a new block
+     * Every "APoW time" will cause the difficulty to drop 50%
+     * The APoW time should be a lot more than the average block time, 10x should be good
+     */
+    const apowValue = Math.floor(elapsed / ADAPTIVE_POW_TIME);
+    if (apowValue > 0) {
+      // Adaptive POW adjustment
+      const _2Bn = new BN(2, "le");
+      // Divide by 2 for each factor of apow
+      // over 10 mins = x / 2
+      // over 20 mins = x / 2 / 2
+      // over 30 mins = x / 2 / 2 / 2 (etc)
+      for (let ii = 0; ii < apowValue; ii += 1) {
+        newDiff = newDiff.div(_2Bn);
+      }
+    }
+
+    const newDiffHex = newDiff.toString(16);
+
+    if (apowValue > 0) {
+      console.warn("APoW triggered: x", apowValue);
+      console.warn("Base adjustment multiplier:", adjustment);
+    }
     if (this._chain.length % EPOCH === 0) {
       console.warn(
         "elapsed:",
@@ -175,8 +215,9 @@ export default class ToolChain {
       console.warn("Adjustment multiplier:", adjustment);
     }
 
-    return this._chain.length % EPOCH === 0
-      ? diffBn.mul(new BN(adjustment, "le")).toString(16)
+    // Recalculate difficulty for every 60th block (one epoch) or if apow is triggered
+    return this._chain.length % EPOCH === 0 || apowValue > 0
+      ? newDiffHex
       : currentDifficulty;
   }
 
