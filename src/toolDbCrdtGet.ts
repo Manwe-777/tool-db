@@ -52,7 +52,7 @@ export default function toolDbCrdtGet<T = any>(
 
       clearTimeout(cancelTimeout);
       if (msg.type === "crdtPut") {
-        crdt.mergeChanges(msg.v);
+        crdt.mergeChanges(msg.data.v);
         resolve(msg);
       }
     });

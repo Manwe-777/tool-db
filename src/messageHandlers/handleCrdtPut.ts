@@ -8,14 +8,15 @@ export default function handleCrdtPut(
   message: CrdtPutMessage,
   remotePeerId: string
 ) {
-  toolDbVerificationWrapper.call(this, message).then((value) => {
+  toolDbVerificationWrapper.call(this, message.data).then((value) => {
     // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
+      this.emit("crdtput", message);
       this.emit("verified", message);
       // relay to other servers !!!
       this.network.sendToAll(message, true);
 
-      this.store.get(message.k, (err, oldData?: string) => {
+      this.store.get(message.data.k, (err, oldData?: string) => {
         if (oldData) {
           const parsedOldData: CrdtPutMessage = {
             type: "crdtPut",
@@ -29,28 +30,28 @@ export default function handleCrdtPut(
           if (parsedOldData.crdt === "MAP") {
             const oldDoc = new MapCrdt(
               this.getAddress() || "",
-              parsedOldData.v
+              parsedOldData.data.v
             );
-            oldDoc.mergeChanges(message.v);
+            oldDoc.mergeChanges(message.data.v);
             const changesMerged = oldDoc.getChanges();
             newMessage = {
               ...message,
-              v: changesMerged,
             };
+            newMessage.data.v = changesMerged;
           }
 
-          if (parsedOldData.t < message.t) {
-            const key = newMessage.k;
+          if (parsedOldData.data.t < message.data.t) {
+            const key = newMessage.data.k;
             this.triggerKeyListener(key, newMessage);
             this.store.put(
-              newMessage.k,
+              newMessage.data.k,
               JSON.stringify(newMessage),
               (err, data) => {
                 //
               }
             );
           } else {
-            const key = message.k;
+            const key = message.data.k;
             this.triggerKeyListener(key, parsedOldData);
           }
           // } else if (this.options.debug) {
@@ -59,11 +60,15 @@ export default function handleCrdtPut(
           //   );
           // }
         } else {
-          const key = message.k;
+          const key = message.data.k;
           this.triggerKeyListener(key, message);
-          this.store.put(message.k, JSON.stringify(message), (err, data) => {
-            //
-          });
+          this.store.put(
+            message.data.k,
+            JSON.stringify(message),
+            (err, data) => {
+              //
+            }
+          );
         }
       });
     } else {

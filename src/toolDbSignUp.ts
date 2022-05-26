@@ -74,7 +74,7 @@ export default async function toolDbSignUp(
                       type: "put",
                       id: textRandom(10),
                       to: [],
-                      ...signupMessage,
+                      data: signupMessage,
                     } as PutMessage;
 
                     this.network.sendToAll(finalMsg);

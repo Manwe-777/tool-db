@@ -64,7 +64,7 @@ export default function toolDbPut<T = any>(
             type: "put",
             id: textRandom(10),
             to: [],
-            ...data,
+            data,
           };
           this.network.sendToAll(finalMessage);
 

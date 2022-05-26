@@ -6,6 +6,7 @@ export default function handleCrdtGet(
   message: CrdtGetMessage,
   remotePeerId: string
 ) {
+  this.emit("crdtget", message);
   this.store.get(message.key, (err, data) => {
     if (data) {
       try {

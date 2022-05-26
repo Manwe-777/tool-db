@@ -1,111 +1,95 @@
-import { sha256 } from "..";
-import { Account } from "web3-core";
+import ToolChain from "./ToolChain";
 
-import getTimestamp from "../utils/getTimestamp";
+type TxType = "tx" | "put" | "name";
 
-export interface TxJson {
-  from: string;
-  to: string;
+import w3 from "web3";
+import sha256 from "../utils/sha256";
+
+export interface TxBase {
   timestamp: number;
-  amount: number;
-  nonce: number;
-  datahash: string;
-  txid: string;
+  type: TxType;
+  /**
+   * Adress that sent the transaction, owner
+   */
+  adress: string;
+  /**
+   * ID/Hash, should be unique per transaction (a hash of the owner + timestamp + type)
+   */
+  id: string;
+  /**
+   * Signature of the id, signed by the owner
+   */
   sig: string;
+  /**
+   * Nonce, or ordinal number of transaction for this adress
+   */
+  nonce: number;
+  /**
+   * Amount of tokens for the miner
+   */
+  fee: number;
 }
 
-export default class Tx {
-  private _timestamp = getTimestamp();
+export interface TxSend extends TxBase {
+  type: "tx";
+  to: string;
+  amount: number;
+}
 
-  private _txid: string;
-  private _datahash: string;
+export interface TxPut extends TxBase {
+  type: "put";
+  key: string;
+  data: any;
+}
 
-  private _nonce: number;
+export interface TxName extends TxBase {
+  type: "name";
+  name: string;
+}
 
-  private _data: string = "";
+export type Transactions = TxSend | TxPut | TxName;
 
-  private _signature: string;
+const web3 = new w3(w3.givenProvider);
 
-  private _sender: string;
+/**
+ * Validate a new transaction against the latest state of the chain
+ */
+export function validateNewTransaction(tx: Transactions, chain: ToolChain) {
+  if (tx.fee > chain.balances[tx.adress]) return false;
 
-  private _receiver: string;
-  private _ammount: number;
+  if (tx.nonce <= chain.nonces[tx.adress] || -1) return false;
 
-  constructor(from: Account, to: string, data: string, ammount: number) {
-    this._timestamp = getTimestamp();
-
-    this._nonce = 1;
-
-    this._datahash = sha256(data);
-    this._txid = sha256("" + from + to + this._datahash + this._nonce);
-    this._sender = from.address;
-
-    this._receiver = to;
-    this._ammount = ammount;
-
-    this._data = data;
-
-    this._signature = from.sign(this._txid).signature;
+  if (tx.type === "tx") {
+    if (tx.fee + tx.amount > chain.balances[tx.adress]) return false;
   }
 
-  get timestamp() {
-    return this._timestamp;
+  return validateTransactionData(tx);
+}
+
+/**
+ * Validate a transaction's data, regardless of the chain state
+ */
+export function validateTransactionData(tx: Transactions) {
+  const hash = sha256(tx.adress + tx.timestamp + tx.type);
+  if (hash !== tx.id) return false;
+
+  const verify = web3.eth.accounts.recover(tx.adress, tx.sig);
+  if (!verify) return false;
+
+  if (tx.type === "put") {
+    if (tx.key.length > 128) return false;
+
+    let s = "";
+    try {
+      s = JSON.stringify(tx.data);
+    } catch (e) {
+      return false;
+    }
+
+    if (s.length > 2048) return false;
   }
 
-  get ammount() {
-    return this._ammount;
-  }
-
-  get data() {
-    return this._data;
-  }
-
-  get sender() {
-    return this._sender;
-  }
-
-  get receiver() {
-    return this._receiver;
-  }
-
-  get verify() {
-    return this._receiver;
-  }
-
-  get txid() {
-    return this._txid;
-  }
-
-  toJson(): TxJson {
-    return {
-      from: this._sender,
-      to: this._receiver,
-      amount: this._ammount,
-      timestamp: this._timestamp,
-      nonce: this._nonce,
-      datahash: this._datahash,
-      txid: this._txid,
-      sig: this._signature,
-    };
-  }
-
-  static sortTx(a: Tx, b: Tx) {
-    if (a.timestamp < b.timestamp) return -1;
-    if (a.timestamp > b.timestamp) return 1;
-    if (a.txid < b.txid) return -1;
-    if (a.txid > b.txid) return 1;
-    return 0;
-  }
-
-  static sortTxJson(a: TxJson, b: TxJson) {
-    if (a.timestamp < b.timestamp) return -1;
-    if (a.timestamp > b.timestamp) return 1;
-    if (a.txid < b.txid) return -1;
-    if (a.txid > b.txid) return 1;
-    return 0;
-  }
-
-  static fn() {
-    return "";
+  if (tx.type === "name") {
+    if (tx.name.length > 64) return false;
   }
 }

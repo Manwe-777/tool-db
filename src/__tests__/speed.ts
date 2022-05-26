@@ -23,7 +23,7 @@ it("Can verify messages fast enough", async () => {
   for (let i = 0; i < 100; i += 1) {
     await Alice.putData("fasttestkey-" + i, i).then((msg) => {
       const start = new Date().getTime();
-      return Alice.verifyMessage(msg).then(() => {
+      return Alice.verifyMessage(msg.data).then(() => {
         const end = new Date().getTime();
         results.push(end - start);
       });

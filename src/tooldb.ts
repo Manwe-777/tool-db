@@ -51,7 +51,7 @@ export interface Listener {
 interface Verificator<T> {
   key: string;
   fn: (
-    msg: VerificationData<T> & BaseMessage,
+    msg: VerificationData<T>,
     previousData: T | undefined
   ) => Promise<boolean>;
 }
@@ -240,10 +240,7 @@ export default class ToolDb extends EventEmitter {
 
   public addCustomVerification = <T = any>(
     key: string,
-    fn: (
-      msg: VerificationData & BaseMessage,
-      previous: T | undefined
-    ) => Promise<boolean>
+    fn: (msg: VerificationData<T>, previous: T | undefined) => Promise<boolean>
   ) => {
     const newListener: Verificator<T> = {
       key,

@@ -23,6 +23,7 @@ export default function toolDbGet<T = any>(
     if (this.options.debug) {
       console.log("GET > " + finalKey);
     }
+    this.emit("get", finalKey);
 
     const msgId = textRandom(10);
 
@@ -48,7 +49,7 @@ export default function toolDbGet<T = any>(
 
       clearTimeout(cancelTimeout);
       if (msg.type === "put") {
-        resolve(msg.v);
+        resolve(msg.data.v);
       }
     });
 

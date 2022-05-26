@@ -1,14 +1,12 @@
-import elliptic from "elliptic";
 import { VerifyResult } from "../types/message";
 
 import catchReturn from "../utils/catchReturn";
 
-import { Peer, PutMessage, ToolDb } from "..";
+import { Peer, ToolDb, VerificationData } from "..";
 
 import leveldb from "../utils/leveldb";
 import getPeerSignature from "../utils/getPeerSignature";
 import verifyPeer from "../utils/verifyPeer";
-import textRandom from "../utils/textRandom";
 
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
@@ -33,10 +31,7 @@ afterAll((done) => {
   setTimeout(done, 1000);
 });
 
-const putOk: PutMessage<string> = {
-  type: "put",
-  id: "smMnmXNkfm",
-  to: ["329466B79DFD4304DDEB"],
+const putOk: VerificationData<string> = {
   k: "test",
   a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
   n: 0,
@@ -47,7 +42,7 @@ const putOk: PutMessage<string> = {
 };
 
 it("Can verify PUT", () => {
-  return ClientA.verifyMessage(putOk).then((result) => {
+  return ClientA.verifyMessage<string>(putOk).then((result) => {
     expect(result).toEqual(VerifyResult.Verified);
   });
 });
@@ -58,10 +53,7 @@ it("Can catch invalid POW", () => {
   });
 });
 
-const putSig: PutMessage<string> = {
-  type: "put",
-  id: "Duupf8duTF",
-  to: ["329466B79DFD4304DDEB"],
+const putSig: VerificationData<string> = {
   k: "test",
   a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
   n: 8312,
@@ -77,10 +69,7 @@ it("Can catch tampered messages (signature)", () => {
   });
 });
 
-const tamperedNonce: PutMessage<string> = {
-  type: "put",
-  id: "Duupf8duTF",
-  to: ["329466B79DFD4304DDEB"],
+const tamperedNonce: VerificationData<string> = {
   k: "test",
   a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
   n: 82,
@@ -143,10 +132,7 @@ it("Can print errors", async () => {
   expect(await rejectPromise).toBe(undefined);
 });
 
-const putTime: PutMessage<string> = {
-  type: "put",
-  id: "Duupf8duTF",
-  to: ["329466B79DFD4304DDEB"],
+const putTime: VerificationData<string> = {
   k: "test",
   a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
   n: 8312,
@@ -162,10 +148,7 @@ it("Can catch tampered messages (time)", () => {
   });
 });
 
-const privatePut: PutMessage<string> = {
-  type: "put",
-  id: "XZ9WhHxd5Q",
-  to: ["329466B79DFD4304DDEB"],
+const privatePut: VerificationData<string> = {
   k: ":0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD.test",
   a: "0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD",
   n: 9245,
@@ -181,10 +164,7 @@ it("Can verify namespaced PUT", () => {
   });
 });
 
-const privatePutAddress: PutMessage<string> = {
-  type: "put",
-  id: "XZ9WhHxd5Q",
-  to: ["329466B79DFD4304DDEB"],
+const privatePutAddress: VerificationData<string> = {
   k: ":0xadd182F22D7ceaE234a99c7c89c93c664bA3ECaD.test",
   a: "0x1E80E2B44676624ff6712BeC97A22A42413a266f",
   n: 9245,

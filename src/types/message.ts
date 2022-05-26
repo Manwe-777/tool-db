@@ -1,4 +1,3 @@
-import { MapChanges } from "../crdt/mapCrdt";
 import { Peer } from "./tooldb";
 
 export enum VerifyResult {
@@ -116,15 +115,15 @@ export interface GetMessage extends BaseMessage {
   key: string;
 }
 
-export interface PutMessage<T = any> extends BaseMessage, VerificationData<T> {
+export interface PutMessage<T = any> extends BaseMessage {
   type: "put";
+  data: VerificationData<T>;
 }
 
-export interface CrdtPutMessage<T = any>
-  extends BaseMessage,
-    VerificationData<any> {
+export interface CrdtPutMessage<T = any> extends BaseMessage {
   type: "crdtPut";
   crdt: string;
+  data: VerificationData<T>;
 }
 
 export interface CrdtGetMessage<T = any> extends BaseMessage {

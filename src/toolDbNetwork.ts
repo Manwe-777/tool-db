@@ -257,10 +257,10 @@ export default class toolDbNetwork {
         if (msg.type === "put" || msg.type === "crdtPut") {
           if (
             conn.toolDbId &&
-            !this.tooldb.processedOutHashes[conn.toolDbId].includes(msg.h)
+            !this.tooldb.processedOutHashes[conn.toolDbId].includes(msg.data.h)
           ) {
             conn.send(JSON.stringify({ ...msg, to }));
-            this.tooldb.processedOutHashes[conn.toolDbId].push(msg.h);
+            this.tooldb.processedOutHashes[conn.toolDbId].push(msg.data.h);
           }
         } else {
           conn.send(JSON.stringify({ ...msg, to }));
@@ -279,10 +279,10 @@ export default class toolDbNetwork {
       if (msg.type === "put" || msg.type === "crdtPut") {
         if (
           clientId &&
-          !this.tooldb.processedOutHashes[clientId].includes(msg.h)
+          !this.tooldb.processedOutHashes[clientId].includes(msg.data.h)
         ) {
           socket.send(JSON.stringify({ ...msg, to }));
-          this.tooldb.processedOutHashes[clientId].push(msg.h);
+          this.tooldb.processedOutHashes[clientId].push(msg.data.h);
         }
       } else {
         socket.send(JSON.stringify({ ...msg, to }));
