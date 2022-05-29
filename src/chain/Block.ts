@@ -95,6 +95,7 @@ export default class Block {
 
   set nonce(n: number) {
     this._nonce = n;
+    this._timestamp = getTimestamp();
     this._hash = Block.blockHash(this);
   }
 
@@ -103,7 +104,9 @@ export default class Block {
   }
 
   static genesis() {
-    const initDifficulty = new BN("ffffffff", "hex");
+    const ffff = new BN("ffff", "hex");
+    const _2_254 = new BN(2, "le").pow(new BN(224, "le"));
+    const offset = ffff.mul(_2_254).div(new BN(1, "le")).div(new BN(2, "le"));
 
     return new this(
       0,
@@ -111,7 +114,7 @@ export default class Block {
       "000000000000000000000000000000000000000000000000000000000000000000000000000000",
       [],
       0,
-      initDifficulty.toString(16)
+      offset.toString(16)
     );
   }
 
@@ -129,6 +132,17 @@ export default class Block {
     return sha256(`${nonce}${height}${merkleRoot}`).toString();
   }
 
+  static verifyBlockNonce(block: Block) {
+    let isValid = true;
+
+    const hashAsNumber = new BN(block.hash, "hex");
+
+    const difficulty = new BN(block.difficulty, "hex");
+
+    if (hashAsNumber.gte(difficulty)) isValid = false;
+    return isValid;
+  }
+
   static verifyBlockData(block: Block) {
     let isValid = true;
 
@@ -139,29 +153,6 @@ export default class Block {
 
     const hash = Block.blockHash(block);
     if (hash !== block.hash) isValid = false;
-
-    const hashAsNumber = new BN(block.hash, "hex");
-    // console.log("hash number", hashAsNumber.toString(16));
-
-    const difficulty = new BN(block.difficulty, "hex");
-    const ffff = new BN("ffff", "hex");
-
-    // bitcoin used a base of 208 !
-    const _2_254 = new BN(2, "le").pow(new BN(254, "le"));
-    // const _2_256 = new BN(2, "le").pow(new BN(256, "le"));
-    // const _2_48 = new BN(2, "le").pow(new BN(48, "le"));
-    // const _2_32 = new BN(2, "le").pow(new BN(32, "le"));
-
-    // (0xffff * 2**254) / D
-    const offset = ffff.mul(_2_254).div(difficulty);
-    // console.log("offset", offset.toString(16));
-
-    // D * 2**256 / (0xffff * 2**254)   or   D * 2**48 / 0xffff
-    // const hashrate = difficulty.mul(_2_48).div(ffff);
-    // console.log("hashrate", hashrate.toString(16));
-
-    if (hashAsNumber.gte(offset)) isValid = false;
-
-    return isValid;
+    return Block.verifyBlockNonce(block);
   }
 }

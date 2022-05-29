@@ -3,6 +3,7 @@ import isValidChain from "./isValidChain";
 import { Transactions } from "./Tx";
 
 import BN from "bn.js";
+import getTimestamp from "../utils/getTimestamp";
 
 function sortTxs(a: Transactions, b: Transactions) {
   if (a.adress === b.adress) {
@@ -31,6 +32,8 @@ export default class ToolChain {
 
   constructor(enableMiner: boolean) {
     this._chain = [Block.genesis().encode()];
+
+    console.log(decodeBlock(this._chain[this._chain.length - 1]).difficulty);
 
     if (enableMiner) {
       // give it 10ms to breathe..
@@ -63,7 +66,7 @@ export default class ToolChain {
 
       block.nonce = this._noncetest;
 
-      if (Block.verifyBlockData(block)) {
+      if (Block.verifyBlockNonce(block)) {
         console.log(
           "Time elapsed: " +
             (block.timestamp - lastBlock.timestamp) / 1000 +
@@ -75,9 +78,11 @@ export default class ToolChain {
           nonce: block.nonce,
           timestamp: block.timestamp,
           data: block.data,
+          merkle: block.merkleRoot,
           difficulty: block.difficulty,
         });
         this._chain.push(block.encode());
+        this.calculateState();
         i = 10000000;
         this._noncetest = 0;
       }
@@ -89,6 +94,10 @@ export default class ToolChain {
       const blockObj = decodeBlock(block);
       blockObj.data.sort(sortTxs).forEach((tx) => {
         this._noncesState[tx.adress] = tx.nonce;
+
+        if (this.mempool[tx.id]) {
+          delete this.mempool[tx.id];
+        }
 
         if (tx.type === "tx") {
           if (this._balancesState[tx.adress]) {
@@ -134,14 +143,14 @@ export default class ToolChain {
   }
 
   calculateNewDifficulty() {
-    // 60 block per adjustment
-    const EPOCH = 60;
+    // 1440 block per adjustment (aprox 24hs)
+    const EPOCH = 1440;
 
-    // Each block should be mined every 1 minute
+    // Each block should be mined every 60 seconds
     const BLOCK_TIME = 60 * 1000;
 
-    // Adapt POW every 10 minutes
-    const ADAPTIVE_POW_TIME = 60 * 1000 * 10;
+    // Adapt POW after 10 minutes
+    const ADAPTIVE_POW_TIME = BLOCK_TIME * 10;
 
     // Get the first block in this epoch, with new difficulty
     const initBlockN =
@@ -169,25 +178,22 @@ export default class ToolChain {
     if (elapsed === 0) return currentDifficulty;
 
     // Convert to hex
-    const diffBn = new BN(currentDifficulty, "hex");
+    const currentDiffBn = new BN(currentDifficulty, "hex");
+    const adjustmentBn = new BN(adjustment, "le");
 
-    // Multiply adjustment * 1000
-    // Not sure if there is a better way to make float multiplication in bn.js
-    const adjustmentBn = new BN(Math.round(adjustment * 1000), "le");
-    const _1000Bn = new BN(1000, "le");
-
-    // Divide by 1000 (float point fix)
-    let newDiff = diffBn.mul(adjustmentBn).div(_1000Bn);
+    let newDiff = currentDiffBn.div(adjustmentBn);
 
     /**
      * Adaptive proof of work
      * This will fix the instance in which a poweful miner, or a group of miners
      * leave the network, either by a diff stranding attack or just coincidence.
      * The difficulty will decreased based on the delay there is to create a new block
-     * Every "APoW time" will cause the difficulty to drop 50%
+     * Every "APoW time" after the last block will cause the difficulty to drop 50%
      * The APoW time should be a lot more than the average block time, 10x should be good
      */
-    const apowValue = Math.floor(elapsed / ADAPTIVE_POW_TIME);
+    const apowValue = Math.floor(
+      (getTimestamp() - lastTime) / ADAPTIVE_POW_TIME
+    );
     if (apowValue > 0) {
       // Adaptive POW adjustment
       const _2Bn = new BN(2, "le");

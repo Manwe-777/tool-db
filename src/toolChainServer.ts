@@ -16,11 +16,13 @@ function routes(app: express.Express, toolChain: ToolChain) {
 
   app.post("/tx", (req, res) => {
     if (req.body) {
-      if (validateNewTransaction(req.body, toolChain)) {
+      const valid = validateNewTransaction(req.body, toolChain);
+      if (valid) {
         toolChain.mempool[req.body.id] = req.body;
         res.status(200).json({ message: "ok" });
+        console.log("incoming tx id", req.body.id);
       } else {
-        res.status(400).json({ message: "Invalid transaction" });
+        res.status(400).json({ message: "Invalid transaction", err: valid });
       }
     }
   });
@@ -49,8 +51,8 @@ export default class ToolChainServer {
     }
 
     const app = express();
-    app.use(bodyParser);
-    app.use(express.json());
+    app.use(bodyParser.json());
+    // app.use(express.json());
     routes(app, this.toolChain);
     app.listen(this._port, () => {
       console.log("listening on port " + this._port);
