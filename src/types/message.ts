@@ -109,10 +109,7 @@ export interface SubscribeMessage extends BaseMessage {
 
 export interface GetMessage extends BaseMessage {
   type: "get";
-  /**
-   * key we want to get
-   */
-  key: string;
+  key: string; // key we want to get
 }
 
 export interface PutMessage<T = any> extends BaseMessage {
