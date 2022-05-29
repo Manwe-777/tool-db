@@ -167,12 +167,9 @@ export default class ToolChain {
     const elapsed = lastTime - initBlock.timestamp;
     const adjustment = (BLOCK_TIME * EPOCH) / elapsed;
 
-    // console.warn(
-    //   initBlockN,
-    //   currentDifficulty,
-    //   elapsed,
-    //   this._chain.length % EPOCH
-    // );
+    console.warn(
+      `Avg block every ${Math.round(elapsed / EPOCH / 1000)} seconds`
+    );
 
     // Dont divide by zero
     if (elapsed === 0) return currentDifficulty;
@@ -221,7 +218,7 @@ export default class ToolChain {
       console.warn("Adjustment multiplier:", adjustment);
     }
 
-    // Recalculate difficulty for every 60th block (one epoch) or if apow is triggered
+    // Recalculate difficulty for every 1440th block (one epoch) or if apow is triggered
     return this._chain.length % EPOCH === 0 || apowValue > 0
       ? newDiffHex
       : currentDifficulty;
