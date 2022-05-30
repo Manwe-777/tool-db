@@ -17,16 +17,13 @@ export default function handlePut(
 
       this.store.get(message.data.k, (err, oldData?: string) => {
         if (oldData) {
-          const parsedOldData: PutMessage = {
-            type: "put",
-            ...JSON.parse(oldData),
-          };
-          if (parsedOldData.data.t < message.data.t) {
+          const parsedOldData = JSON.parse(oldData);
+          if (parsedOldData.t < message.data.t) {
             const key = message.data.k;
-            this.triggerKeyListener(key, message);
+            this.triggerKeyListener(key, message.data);
             this.store.put(
               message.data.k,
-              JSON.stringify(message),
+              JSON.stringify(message.data),
               (err, data) => {
                 //
               }
@@ -42,10 +39,10 @@ export default function handlePut(
           // }
         } else {
           const key = message.data.k;
-          this.triggerKeyListener(key, message);
+          this.triggerKeyListener(key, message.data);
           this.store.put(
             message.data.k,
-            JSON.stringify(message),
+            JSON.stringify(message.data),
             (err, data) => {
               //
             }

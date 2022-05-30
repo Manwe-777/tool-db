@@ -42,6 +42,10 @@ export interface VerificationData<T = any> {
    * Value
    */
   v: T;
+  /**
+   * CRDT type (null for regular values)
+   */
+  c: string | null;
 }
 
 export type MessageType =
@@ -119,7 +123,6 @@ export interface PutMessage<T = any> extends BaseMessage {
 
 export interface CrdtPutMessage<T = any> extends BaseMessage {
   type: "crdtPut";
-  crdt: string;
   data: VerificationData<T>;
 }
 

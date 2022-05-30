@@ -42,10 +42,10 @@ import handleSubscribe from "./messageHandlers/handleSubscribe";
 import { Peer, ToolDbOptions, ToolDbStore } from "./types/tooldb";
 import { CrdtPutMessage } from "./types/message";
 
-export interface Listener {
+export interface Listener<T = any> {
   key: string;
   timeout: number | null;
-  fn: (msg: PutMessage | CrdtPutMessage) => void;
+  fn: (msg: VerificationData<T>) => void;
 }
 
 interface Verificator<T> {
@@ -194,7 +194,7 @@ export default class ToolDb extends EventEmitter {
 
   public addKeyListener = <T>(
     key: string,
-    fn: (msg: PutMessage<T> | CrdtPutMessage<T>) => void
+    fn: (msg: VerificationData<T>) => void
   ) => {
     const newListener: Listener = {
       key,
@@ -214,9 +214,9 @@ export default class ToolDb extends EventEmitter {
     this._keyListeners[id] = null;
   };
 
-  public triggerKeyListener = (
+  public triggerKeyListener = <T = any>(
     key: string,
-    message: PutMessage | CrdtPutMessage
+    message: VerificationData<T>
   ) => {
     // console.warn(`triggerKeyListener ${key}`);
     this._keyListeners.forEach((listener) => {

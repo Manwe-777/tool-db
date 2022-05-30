@@ -50,6 +50,7 @@ export default function toolDbPut<T = any>(
             h: hash,
             s: signature.signature,
             v: value,
+            c: null,
           };
 
           this.store.put(finalKey, JSON.stringify(data), (err, data) => {

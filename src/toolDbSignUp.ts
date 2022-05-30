@@ -56,6 +56,7 @@ export default async function toolDbSignUp(
                       h: hash,
                       s: signature.signature,
                       v: userData,
+                      c: null,
                     };
 
                     this.store.put(

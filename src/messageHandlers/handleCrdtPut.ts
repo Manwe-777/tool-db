@@ -18,10 +18,7 @@ export default function handleCrdtPut(
 
       this.store.get(message.data.k, (err, oldData?: string) => {
         if (oldData) {
-          const parsedOldData: CrdtPutMessage = {
-            type: "crdtPut",
-            ...JSON.parse(oldData),
-          };
+          const parsedOldData = JSON.parse(oldData);
 
           let newMessage = message;
 
@@ -30,7 +27,7 @@ export default function handleCrdtPut(
           if (parsedOldData.crdt === "MAP") {
             const oldDoc = new MapCrdt(
               this.getAddress() || "",
-              parsedOldData.data.v
+              parsedOldData.v
             );
             oldDoc.mergeChanges(message.data.v);
             const changesMerged = oldDoc.getChanges();
@@ -40,12 +37,12 @@ export default function handleCrdtPut(
             newMessage.data.v = changesMerged;
           }
 
-          if (parsedOldData.data.t < message.data.t) {
+          if (parsedOldData.t < message.data.t) {
             const key = newMessage.data.k;
-            this.triggerKeyListener(key, newMessage);
+            this.triggerKeyListener(key, newMessage.data);
             this.store.put(
               newMessage.data.k,
-              JSON.stringify(newMessage),
+              JSON.stringify(newMessage.data),
               (err, data) => {
                 //
               }
@@ -61,10 +58,10 @@ export default function handleCrdtPut(
           // }
         } else {
           const key = message.data.k;
-          this.triggerKeyListener(key, message);
+          this.triggerKeyListener(key, message.data);
           this.store.put(
             message.data.k,
-            JSON.stringify(message),
+            JSON.stringify(message.data),
             (err, data) => {
               //
             }

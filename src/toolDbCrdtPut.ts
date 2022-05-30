@@ -53,6 +53,7 @@ export default function toolDbCrdtPut<T = any>(
             h: hash,
             s: signature.signature,
             v: crdtChanges,
+            c: crdt.type,
           };
 
           if (this.options.debug) {
@@ -61,7 +62,6 @@ export default function toolDbCrdtPut<T = any>(
 
           const finalMessage: CrdtPutMessage<any> = {
             type: "crdtPut",
-            crdt: crdt.type,
             id: textRandom(10),
             to: [],
             data,

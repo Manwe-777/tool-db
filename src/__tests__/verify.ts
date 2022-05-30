@@ -39,6 +39,7 @@ const putOk: VerificationData<string> = {
   h: "0d4d06c94612cbebd39b6bf3ccc54f666590612dce89f07b75b9482063006e7d",
   s: "0x0857c2e6a256d9a866500be860288510b8b84f0d4e35f75cda97531492e4ba670fe7e9b2bca6abe4a1d270002947493ac261657b3ea6640127af7dab783d5fb61c",
   v: "value",
+  c: null,
 };
 
 it("Can verify PUT", () => {
@@ -61,6 +62,7 @@ const putSig: VerificationData<string> = {
   h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
   s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e6b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
   v: "value",
+  c: null,
 };
 
 it("Can catch tampered messages (signature)", () => {
@@ -77,6 +79,7 @@ const tamperedNonce: VerificationData<string> = {
   h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
   s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e5b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
   v: "value",
+  c: null,
 };
 
 it("Can catch tampered POW", () => {
@@ -140,6 +143,7 @@ const putTime: VerificationData<string> = {
   h: "000669d4ee75d8610e55304a21c5acf9856011828a295c129ca95344696cf2e0",
   s: "0xd4dbeb203f11f55160e8620e014f12ab9bb046bcabbbe2f39993ae89ef32d4c53e5b35b638ea75a7a9275e49c98a1f65dd18f1435f14e4d53bebfd070981f5f81b",
   v: "value",
+  c: null,
 };
 
 it("Can catch tampered messages (time)", () => {
@@ -156,6 +160,7 @@ const privatePut: VerificationData<string> = {
   h: "000a38b897728bc1a47be95ffdc0643b346a10e4159ac8c8fb4d33bd78e541d7",
   s: "0x1e3ca6c48f5ae7d55104217d7e38860ac31693ce80a56aca4c6ca0bd22c372e909a96d67470a26c15834c76c30a0b775d33a57854912dea9d03342dcd28334bb1c",
   v: "value",
+  c: null,
 };
 
 it("Can verify namespaced PUT", () => {
@@ -172,6 +177,7 @@ const privatePutAddress: VerificationData<string> = {
   h: "000a38b897728bc1a47be95ffdc0643b346a10e4159ac8c8fb4d33bd78e541d7",
   s: "0x1e3ca6c48f5ae7d55104217d7e38860ac31693ce80a56aca4c6ca0bd22c372e909a96d67470a26c15834c76c30a0b775d33a57854912dea9d03342dcd28334bb1c",
   v: "value",
+  c: null,
 };
 
 it("Can catch address replacement", () => {
