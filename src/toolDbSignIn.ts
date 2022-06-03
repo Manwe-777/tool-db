@@ -1,12 +1,9 @@
 import ToolDb from "./tooldb";
 
-import decryptWithPass from "./utils/crypto/decryptWithPass";
+import { EncryptedKeystoreV3Json, Account } from "web3-core";
 
 import sha256 from "./utils/sha256";
-import hexToUint8 from "./utils/encoding/hexToUint8";
-import hexToArrayBuffer from "./utils/encoding/hexToArrayBuffer";
-import { UserRootData } from "./types/tooldb";
-import { Account } from "web3-core";
+import randomAnimal from "./utils/randomAnimal";
 
 export default function toolDbSignIn(
   this: ToolDb,
@@ -14,28 +11,20 @@ export default function toolDbSignIn(
   password: string
 ): Promise<Account | undefined> {
   return new Promise((resolve, reject) => {
-    this.getData<UserRootData>(`==${user}`, false, 5000)
+    this.getData<EncryptedKeystoreV3Json>(`==${user}`, false, 5000)
       .then((_user) => {
         if (!_user) {
           reject("Could not find user");
           return;
         }
 
-        if (sha256(password) !== _user.pass) {
-          reject("Invalid password");
-          return;
-        }
+        const newAccount = this.web3.eth.accounts.decrypt(
+          _user,
+          sha256(password)
+        );
+        this.setUser(newAccount, user || `Anonymous ${randomAnimal()}`);
 
-        decryptWithPass(
-          hexToArrayBuffer(_user.privateKey),
-          password,
-          hexToUint8(_user.iv)
-        ).then((decryptedSKpriv) => {
-          if (decryptedSKpriv) {
-            const newAccount = this.keysSignIn(decryptedSKpriv, user);
-            resolve(newAccount);
-          }
-        });
+        resolve(newAccount);
       })
       .catch(console.warn);
   });

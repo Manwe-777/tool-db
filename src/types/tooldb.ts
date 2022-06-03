@@ -123,22 +123,3 @@ export interface ToolDbOptions {
   peerAccount: Account;
   // [extra: string]: any;
 }
-
-export interface ParsedKeys {
-  skpub: string;
-  skpriv: string;
-  ekpub: string;
-  ekpriv: string;
-}
-
-export interface Keys {
-  pub: string;
-  priv: string;
-}
-
-export interface UserRootData {
-  address: string;
-  privateKey: string;
-  iv: string;
-  pass: string;
-}

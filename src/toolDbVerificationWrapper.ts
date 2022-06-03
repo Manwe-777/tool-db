@@ -1,4 +1,4 @@
-import { BaseMessage, ToolDb, VerificationData, VerifyResult } from ".";
+import { ToolDb, VerificationData, VerifyResult } from ".";
 
 export default function toolDbVerificationWrapper(
   this: ToolDb,

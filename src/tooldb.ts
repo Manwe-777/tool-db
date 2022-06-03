@@ -2,13 +2,7 @@ import EventEmitter from "events";
 import w3 from "web3";
 import { Account } from "web3-core";
 
-import {
-  BaseMessage,
-  PutMessage,
-  ToolDbMessage,
-  VerificationData,
-  verifyMessage,
-} from ".";
+import { ToolDbMessage, VerificationData, verifyMessage } from ".";
 
 import toolDbGet from "./toolDbGet";
 import toolDbPut from "./toolDbPut";
@@ -40,7 +34,6 @@ import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 import { Peer, ToolDbOptions, ToolDbStore } from "./types/tooldb";
-import { CrdtPutMessage } from "./types/message";
 
 export interface Listener<T = any> {
   key: string;

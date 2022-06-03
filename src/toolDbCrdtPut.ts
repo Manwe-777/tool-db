@@ -3,7 +3,6 @@ import ToolDb from "./tooldb";
 
 import proofOfWork from "./utils/proofOfWork";
 
-import { MapChanges } from "./crdt/mapCrdt";
 import BaseCrdt from "./crdt/baseCrdt";
 
 /**
