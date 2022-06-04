@@ -50,6 +50,7 @@ export default function toolDbPut<T = any>(
             h: hash,
             s: signature.signature,
             v: value,
+            c: null,
           };
 
           this.store.put(finalKey, JSON.stringify(data), (err, data) => {
@@ -64,7 +65,7 @@ export default function toolDbPut<T = any>(
             type: "put",
             id: textRandom(10),
             to: [],
-            ...data,
+            data,
           };
           this.network.sendToAll(finalMessage);
 

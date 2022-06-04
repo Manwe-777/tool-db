@@ -12,7 +12,7 @@ export default function handleGet(
         // Use the id of the get so the other client knows we are replying
         const oldData = {
           type: "put",
-          ...JSON.parse(data),
+          data: JSON.parse(data),
           to: [],
           id: message.id,
         } as PutMessage;

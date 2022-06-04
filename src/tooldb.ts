@@ -2,13 +2,7 @@ import EventEmitter from "events";
 import w3 from "web3";
 import { Account } from "web3-core";
 
-import {
-  BaseMessage,
-  PutMessage,
-  ToolDbMessage,
-  VerificationData,
-  verifyMessage,
-} from ".";
+import { ToolDbMessage, VerificationData, verifyMessage } from ".";
 
 import toolDbGet from "./toolDbGet";
 import toolDbPut from "./toolDbPut";
@@ -40,18 +34,17 @@ import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 import { Peer, ToolDbOptions, ToolDbStore } from "./types/tooldb";
-import { CrdtPutMessage } from "./types/message";
 
-export interface Listener {
+export interface Listener<T = any> {
   key: string;
   timeout: number | null;
-  fn: (msg: PutMessage | CrdtPutMessage) => void;
+  fn: (msg: VerificationData<T>) => void;
 }
 
 interface Verificator<T> {
   key: string;
   fn: (
-    msg: VerificationData<T> & BaseMessage,
+    msg: VerificationData<T>,
     previousData: T | undefined
   ) => Promise<boolean>;
 }
@@ -194,7 +187,7 @@ export default class ToolDb extends EventEmitter {
 
   public addKeyListener = <T>(
     key: string,
-    fn: (msg: PutMessage<T> | CrdtPutMessage<T>) => void
+    fn: (msg: VerificationData<T>) => void
   ) => {
     const newListener: Listener = {
       key,
@@ -214,9 +207,9 @@ export default class ToolDb extends EventEmitter {
     this._keyListeners[id] = null;
   };
 
-  public triggerKeyListener = (
+  public triggerKeyListener = <T = any>(
     key: string,
-    message: PutMessage | CrdtPutMessage
+    message: VerificationData<T>
   ) => {
     // console.warn(`triggerKeyListener ${key}`);
     this._keyListeners.forEach((listener) => {
@@ -240,10 +233,7 @@ export default class ToolDb extends EventEmitter {
 
   public addCustomVerification = <T = any>(
     key: string,
-    fn: (
-      msg: VerificationData & BaseMessage,
-      previous: T | undefined
-    ) => Promise<boolean>
+    fn: (msg: VerificationData<T>, previous: T | undefined) => Promise<boolean>
   ) => {
     const newListener: Verificator<T> = {
       key,

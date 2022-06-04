@@ -1,18 +1,16 @@
 import ToolDb from "./tooldb";
 
+import { EncryptedKeystoreV3Json } from "web3-core";
+
 import {
   PutMessage,
   textRandom,
-  UserRootData,
   VerificationData,
-  arrayBufferToHex,
   encryptWithPass,
   generateIv,
   proofOfWork,
   sha256,
 } from ".";
-
-import uint8ArrayToHex from "./utils/encoding/uint8ArrayToHex";
 
 export default async function toolDbSignUp(
   this: ToolDb,
@@ -21,7 +19,7 @@ export default async function toolDbSignUp(
 ): Promise<PutMessage<any>> {
   const userRoot = `==${user}`;
   return new Promise((resolve, reject) => {
-    this.getData<UserRootData>(userRoot, false, 3000)
+    this.getData<EncryptedKeystoreV3Json>(userRoot, false, 3000)
       .then((data) => {
         if (data === null) {
           const account = this.web3.eth.accounts.create();
@@ -29,12 +27,7 @@ export default async function toolDbSignUp(
           encryptWithPass(account.privateKey, password, iv).then(
             (encryptedPrivateKey) => {
               if (encryptedPrivateKey) {
-                const userData: UserRootData = {
-                  address: account.address,
-                  privateKey: arrayBufferToHex(encryptedPrivateKey),
-                  iv: uint8ArrayToHex(iv),
-                  pass: sha256(password),
-                };
+                const userData = account.encrypt(sha256(password));
 
                 const timestamp = new Date().getTime();
                 const userDataString = `${JSON.stringify(userData)}${
@@ -48,15 +41,17 @@ export default async function toolDbSignUp(
                       account.privateKey
                     );
 
-                    const signupMessage: VerificationData<UserRootData> = {
-                      k: userRoot,
-                      a: account.address,
-                      n: nonce,
-                      t: timestamp,
-                      h: hash,
-                      s: signature.signature,
-                      v: userData,
-                    };
+                    const signupMessage: VerificationData<EncryptedKeystoreV3Json> =
+                      {
+                        k: userRoot,
+                        a: account.address,
+                        n: nonce,
+                        t: timestamp,
+                        h: hash,
+                        s: signature.signature,
+                        v: userData,
+                        c: null,
+                      };
 
                     this.store.put(
                       userRoot,
@@ -74,7 +69,7 @@ export default async function toolDbSignUp(
                       type: "put",
                       id: textRandom(10),
                       to: [],
-                      ...signupMessage,
+                      data: signupMessage,
                     } as PutMessage;
 
                     this.network.sendToAll(finalMsg);

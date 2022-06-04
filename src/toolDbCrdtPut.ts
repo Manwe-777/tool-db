@@ -3,7 +3,6 @@ import ToolDb from "./tooldb";
 
 import proofOfWork from "./utils/proofOfWork";
 
-import { MapChanges } from "./crdt/mapCrdt";
 import BaseCrdt from "./crdt/baseCrdt";
 
 /**
@@ -45,7 +44,7 @@ export default function toolDbCrdtPut<T = any>(
         const signature = this.signData(hash);
         if (signature && this.getAddress()) {
           // Compose the message
-          const data: VerificationData<MapChanges<T>[]> = {
+          const data: VerificationData<any> = {
             k: userNamespaced ? `:${this.getAddress()}.${key}` : key,
             a: this.getAddress() || "",
             n: nonce,
@@ -53,18 +52,18 @@ export default function toolDbCrdtPut<T = any>(
             h: hash,
             s: signature.signature,
             v: crdtChanges,
+            c: crdt.type,
           };
 
           if (this.options.debug) {
             console.log("PUT CRDT > " + key, data);
           }
 
-          const finalMessage: CrdtPutMessage<T> = {
+          const finalMessage: CrdtPutMessage<any> = {
             type: "crdtPut",
-            crdt: crdt.type,
             id: textRandom(10),
             to: [],
-            ...data,
+            data,
           };
           this.network.sendToAll(finalMessage);
           resolve(finalMessage);

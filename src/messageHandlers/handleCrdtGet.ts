@@ -6,13 +6,14 @@ export default function handleCrdtGet(
   message: CrdtGetMessage,
   remotePeerId: string
 ) {
+  this.emit("crdtget", message);
   this.store.get(message.key, (err, data) => {
     if (data) {
       try {
         // Use the id of the get so the other client knows we are replying
         const oldData = {
-          type: "putCrdt",
-          ...JSON.parse(data),
+          type: "crdtPut",
+          data: JSON.parse(data),
           to: [],
           id: message.id,
         } as CrdtPutMessage;

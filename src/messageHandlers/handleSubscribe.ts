@@ -1,5 +1,5 @@
 import { ToolDb } from "..";
-import { SubscribeMessage } from "../types/message";
+import { PutMessage, SubscribeMessage } from "../types/message";
 
 export default function handleSubscribe(
   this: ToolDb,
@@ -12,10 +12,16 @@ export default function handleSubscribe(
       this.subscriptions.push(subId);
 
       this.addKeyListener(message.key, (msg) => {
-        if ((msg.type === "put" || msg.type === "crdtPut") && remotePeerId) {
+        if (remotePeerId) {
           // We do not reply to the socket directly
           // instead we use the client id, in case the socket reconnects
-          this.network.sendToClientId(remotePeerId, msg);
+          const newMsg: PutMessage = {
+            data: msg,
+            id: message.id,
+            type: "put",
+            to: [],
+          };
+          this.network.sendToClientId(remotePeerId, newMsg);
         }
       });
     }
@@ -25,7 +31,12 @@ export default function handleSubscribe(
   this.store.get(message.key, (err, data) => {
     if (data) {
       try {
-        const oldData = { ...JSON.parse(data), id: message.id };
+        const oldData: PutMessage = {
+          data: JSON.parse(data),
+          id: message.id,
+          type: "put",
+          to: [],
+        };
         this.network.sendToClientId(remotePeerId, oldData);
       } catch (e) {
         // do nothing

@@ -7,27 +7,29 @@ export default function handlePut(
   message: PutMessage,
   remotePeerId: string
 ) {
-  toolDbVerificationWrapper.call(this, message).then((value) => {
+  toolDbVerificationWrapper.call(this, message.data).then((value) => {
     // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
+      this.emit("put", message);
       this.emit("verified", message);
       // relay to other servers !!!
       this.network.sendToAll(message, true);
 
-      this.store.get(message.k, (err, oldData?: string) => {
+      this.store.get(message.data.k, (err, oldData?: string) => {
         if (oldData) {
-          const parsedOldData: PutMessage = {
-            type: "put",
-            ...JSON.parse(oldData),
-          };
-          if (parsedOldData.t < message.t) {
-            const key = message.k;
-            this.triggerKeyListener(key, message);
-            this.store.put(message.k, JSON.stringify(message), (err, data) => {
-              //
-            });
+          const parsedOldData = JSON.parse(oldData);
+          if (parsedOldData.t < message.data.t) {
+            const key = message.data.k;
+            this.triggerKeyListener(key, message.data);
+            this.store.put(
+              message.data.k,
+              JSON.stringify(message.data),
+              (err, data) => {
+                //
+              }
+            );
           } else {
-            const key = message.k;
+            const key = message.data.k;
             this.triggerKeyListener(key, parsedOldData);
           }
           // } else if (this.options.debug) {
@@ -36,11 +38,15 @@ export default function handlePut(
           //   );
           // }
         } else {
-          const key = message.k;
-          this.triggerKeyListener(key, message);
-          this.store.put(message.k, JSON.stringify(message), (err, data) => {
-            //
-          });
+          const key = message.data.k;
+          this.triggerKeyListener(key, message.data);
+          this.store.put(
+            message.data.k,
+            JSON.stringify(message.data),
+            (err, data) => {
+              //
+            }
+          );
         }
       });
     } else {
