@@ -11,21 +11,25 @@ export default function toolDbSignIn(
   password: string
 ): Promise<Account | undefined> {
   return new Promise((resolve, reject) => {
-    this.getData<EncryptedKeystoreV3Json>(`==${user}`, false, 5000)
-      .then((_user) => {
+    this.getData<EncryptedKeystoreV3Json>(`==${user}`, false, 5000).then(
+      (_user) => {
         if (!_user) {
           reject("Could not find user");
           return;
         }
 
-        const newAccount = this.web3.eth.accounts.decrypt(
-          _user,
-          sha256(password)
-        );
-        this.setUser(newAccount, user || `Anonymous ${randomAnimal()}`);
+        try {
+          const newAccount = this.web3.eth.accounts.decrypt(
+            _user,
+            sha256(password)
+          );
+          this.setUser(newAccount, user || `Anonymous ${randomAnimal()}`);
 
-        resolve(newAccount);
-      })
-      .catch(console.warn);
+          resolve(newAccount);
+        } catch (e) {
+          reject(e);
+        }
+      }
+    );
   });
 }

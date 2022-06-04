@@ -134,7 +134,9 @@ it("A can sign up and B can sign in", () => {
           // test for failed sign in
           setTimeout(() => {
             Bob.signIn(testUsername, testPassword + " ").catch((e) => {
-              expect(e).toBe("Invalid password");
+              expect(e.message).toBe(
+                "Key derivation failed - possibly wrong password"
+              );
               resolve();
             });
           }, 1000);
