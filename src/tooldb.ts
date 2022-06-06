@@ -1,6 +1,7 @@
 import EventEmitter from "events";
 import w3 from "web3";
-import { Account } from "web3-core";
+
+import { EncryptedKeystoreV3Json, Account } from "web3-core";
 
 import { ToolDbMessage, VerificationData, verifyMessage } from ".";
 
@@ -34,6 +35,7 @@ import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 import { Peer, ToolDbOptions, ToolDbStore } from "./types/tooldb";
+import sha256 from "./utils/sha256";
 
 export interface Listener<T = any> {
   key: string;
@@ -143,16 +145,38 @@ export default class ToolDb extends EventEmitter {
       : undefined;
   }
 
-  public signData(data: string) {
-    if (this._user) {
-      const signature = this.web3.eth.accounts.sign(
-        data,
-        this._user.account.privateKey
-      );
+  public signData(data: string, privateKey?: string) {
+    const signature = this.web3.eth.accounts.sign(
+      data,
+      privateKey || this._user?.account.privateKey || ""
+    );
 
-      return signature;
+    return signature;
+  }
+
+  public recoverAddress(message: string, signature: string) {
+    return this.web3.eth.accounts.recover(message, signature);
+  }
+
+  public getAccountFromPrivate(privateKey: string) {
+    return this.web3.eth.accounts.privateKeyToAccount(privateKey);
+  }
+
+  public createAccount(): Account {
+    return this.web3.eth.accounts.create();
+  }
+
+  public encryptAccount(account: Account, password: string) {
+    return account.encrypt(sha256(password));
+  }
+
+  public decryptAccount(acc: EncryptedKeystoreV3Json, password: string) {
+    try {
+      const newAccount = this.web3.eth.accounts.decrypt(acc, password);
+      return newAccount;
+    } catch (e) {
+      throw e;
     }
-    return undefined;
   }
 
   public getAddress(): string | undefined {

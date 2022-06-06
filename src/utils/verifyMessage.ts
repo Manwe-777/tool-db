@@ -83,7 +83,7 @@ export default async function verifyMessage<T>(
     }
   }
 
-  const address = this.web3.eth.accounts.recover(msg.h, msg.s);
+  const address = this.recoverAddress(msg.h, msg.s);
   const verified = address === msg.a;
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 

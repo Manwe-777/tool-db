@@ -22,63 +22,52 @@ export default async function toolDbSignUp(
     this.getData<EncryptedKeystoreV3Json>(userRoot, false, 3000)
       .then((data) => {
         if (data === null) {
-          const account = this.web3.eth.accounts.create();
-          const iv = generateIv();
-          encryptWithPass(account.privateKey, password, iv).then(
-            (encryptedPrivateKey) => {
-              if (encryptedPrivateKey) {
-                const userData = account.encrypt(sha256(password));
+          const account = this.createAccount();
+          const userData = this.encryptAccount(account, sha256(password));
 
-                const timestamp = new Date().getTime();
-                const userDataString = `${JSON.stringify(userData)}${
-                  account.address
-                }${timestamp}`;
+          const timestamp = new Date().getTime();
+          const userDataString = `${JSON.stringify(userData)}${
+            account.address
+          }${timestamp}`;
 
-                proofOfWork(userDataString, 0)
-                  .then(({ hash, nonce }) => {
-                    const signature = this.web3.eth.accounts.sign(
-                      hash,
-                      account.privateKey
-                    );
+          proofOfWork(userDataString, 0)
+            .then(({ hash, nonce }) => {
+              const signature = this.signData(hash, account.privateKey);
 
-                    const signupMessage: VerificationData<EncryptedKeystoreV3Json> =
-                      {
-                        k: userRoot,
-                        a: account.address,
-                        n: nonce,
-                        t: timestamp,
-                        h: hash,
-                        s: signature.signature,
-                        v: userData,
-                        c: null,
-                      };
+              const signupMessage: VerificationData<EncryptedKeystoreV3Json> = {
+                k: userRoot,
+                a: account.address,
+                n: nonce,
+                t: timestamp,
+                h: hash,
+                s: signature.signature,
+                v: userData,
+                c: null,
+              };
 
-                    this.store.put(
-                      userRoot,
-                      JSON.stringify(signupMessage),
-                      (err, data) => {
-                        //
-                      }
-                    );
+              this.store.put(
+                userRoot,
+                JSON.stringify(signupMessage),
+                (err, data) => {
+                  //
+                }
+              );
 
-                    if (this.options.debug) {
-                      console.log("SIGNUP PUT > " + userRoot, signupMessage);
-                    }
-
-                    const finalMsg = {
-                      type: "put",
-                      id: textRandom(10),
-                      to: [],
-                      data: signupMessage,
-                    } as PutMessage;
-
-                    this.network.sendToAll(finalMsg);
-                    resolve(finalMsg);
-                  })
-                  .catch(reject);
+              if (this.options.debug) {
+                console.log("SIGNUP PUT > " + userRoot, signupMessage);
               }
-            }
-          );
+
+              const finalMsg = {
+                type: "put",
+                id: textRandom(10),
+                to: [],
+                data: signupMessage,
+              } as PutMessage;
+
+              this.network.sendToAll(finalMsg);
+              resolve(finalMsg);
+            })
+            .catch(reject);
         } else {
           reject(new Error("User already exists!"));
         }

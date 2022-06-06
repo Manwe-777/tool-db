@@ -7,7 +7,7 @@ export default function handleJoin(
   message: JoinMessage,
   remotePeerId: string
 ) {
-  const verified = verifyPeer(this.web3, message.peer);
+  const verified = verifyPeer(this, message.peer);
   // Add this peer to our list of peers
   if (verified) {
     const filteredPeers = this.peers.filter(

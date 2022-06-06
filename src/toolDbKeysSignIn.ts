@@ -6,7 +6,7 @@ export default function toolDbKeysSignIn(
   privateKey: string,
   username?: string
 ) {
-  const newAccount = this.web3.eth.accounts.privateKeyToAccount(privateKey);
+  const newAccount = this.getAccountFromPrivate(privateKey);
 
   this.setUser(newAccount, username || `Anonymous ${randomAnimal()}`);
   return newAccount;

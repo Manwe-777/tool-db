@@ -8,7 +8,7 @@ export default function handleServers(
   remotePeerId: string
 ) {
   message.servers.forEach((peer) => {
-    const verified = verifyPeer(this.web3, peer);
+    const verified = verifyPeer(this, peer);
 
     // Add this peer to our list of peers
     if (verified) {

@@ -9,6 +9,7 @@
     "eslint:fix": "eslint --fix . --ext .ts",
     "bundle": "browserify ./dist/index.js --standalone tooldb | uglifyjs -cm > ./bundle.js",
     "build": "tsc && npm run bundle",
+    "tsc": "tsc",
     "publish": "np",
     "prepublish": "npm run build",
     "test": "jest --clearCache && jest ./src --detectOpenHandles",

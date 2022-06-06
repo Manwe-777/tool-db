@@ -210,7 +210,7 @@ it("Can verify peers", async () => {
     sig: signature.signature,
   };
 
-  const verified = await verifyPeer(ClientA.web3, peerData);
+  const verified = await verifyPeer(ClientA, peerData);
 
   expect(verified).toBeTruthy();
 });
