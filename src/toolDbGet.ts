@@ -23,7 +23,6 @@ export default function toolDbGet<T = any>(
     if (this.options.debug) {
       console.log("GET > " + finalKey);
     }
-    this.emit("get", finalKey);
 
     const msgId = textRandom(10);
 
@@ -32,6 +31,7 @@ export default function toolDbGet<T = any>(
         if (data) {
           try {
             const message = JSON.parse(data);
+            this.emit("data", message);
             resolve(message.v);
           } catch (e) {
             resolve(null);
@@ -56,9 +56,11 @@ export default function toolDbGet<T = any>(
     this.store.get(finalKey, (err, data) => {
       if (data) {
         try {
-          const val = JSON.parse(data).v;
+          const parsed = JSON.parse(data);
+          const val = parsed.v;
           clearTimeout(cancelTimeout);
           this.removeIdListener(msgId);
+          this.emit("data", parsed);
           resolve(val);
         } catch (e) {
           // do nothing

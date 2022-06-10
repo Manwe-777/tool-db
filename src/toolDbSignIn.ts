@@ -19,10 +19,7 @@ export default function toolDbSignIn(
         }
 
         try {
-          const newAccount = this.web3.eth.accounts.decrypt(
-            _user,
-            sha256(password)
-          );
+          const newAccount = this.decryptAccount(_user, sha256(password));
           this.setUser(newAccount, user || `Anonymous ${randomAnimal()}`);
 
           resolve(newAccount);

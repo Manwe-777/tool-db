@@ -1,7 +1,10 @@
 import { ToolDb } from "..";
 import { VerifyResult, CrdtPutMessage } from "../types/message";
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
-import MapCrdt from "../crdt/mapCrdt";
+import MapCrdt, { MapChanges } from "../crdt/mapCrdt";
+import { CRDT_COUNTER, CRDT_LIST, CRDT_MAP } from "../crdt/baseCrdt";
+import ListCrdt, { ListChanges } from "../crdt/listCrdt";
+import CounterCrdt, { CounterChanges } from "../crdt/counterCrdt";
 
 export default function handleCrdtPut(
   this: ToolDb,
@@ -12,6 +15,7 @@ export default function handleCrdtPut(
     // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
       this.emit("crdtput", message);
+      this.emit("data", message.data);
       this.emit("verified", message);
       // relay to other servers !!!
       this.network.sendToAll(message, true);
@@ -24,18 +28,37 @@ export default function handleCrdtPut(
 
           // Merge old document with new data incoming and save it
           // Add handles for all kinds of CRDT we add
-          if (parsedOldData.crdt === "MAP") {
-            const oldDoc = new MapCrdt(
-              this.getAddress() || "",
-              parsedOldData.v
-            );
-            oldDoc.mergeChanges(message.data.v);
-            const changesMerged = oldDoc.getChanges();
-            newMessage = {
-              ...message,
-            };
-            newMessage.data.v = changesMerged;
+          let oldDoc:
+            | MapCrdt<any>
+            | ListCrdt<any>
+            | CounterCrdt<any>
+            | undefined;
+
+          if (parsedOldData.crdt === CRDT_MAP) {
+            oldDoc = new MapCrdt(this.getAddress() || "", parsedOldData.v);
           }
+
+          if (parsedOldData.crdt === CRDT_LIST) {
+            oldDoc = new ListCrdt(this.getAddress() || "", parsedOldData.v);
+          }
+
+          if (parsedOldData.crdt === CRDT_COUNTER) {
+            oldDoc = new CounterCrdt(this.getAddress() || "", parsedOldData.v);
+          }
+
+          let changesMerged:
+            | MapChanges<any>[]
+            | ListChanges<any>[]
+            | CounterChanges[] = [];
+
+          if (oldDoc) {
+            oldDoc.mergeChanges(message.data.v);
+            changesMerged = oldDoc.getChanges();
+          }
+          newMessage = {
+            ...message,
+          };
+          newMessage.data.v = changesMerged;
 
           if (parsedOldData.t < message.data.t) {
             const key = newMessage.data.k;

@@ -35,6 +35,8 @@ export default function toolDbCrdtGet<T = any>(
           try {
             const message = JSON.parse(data);
             crdt.mergeChanges(message.v);
+
+            this.emit("data", message);
             resolve(message);
           } catch (e) {
             resolve(null);
@@ -64,6 +66,7 @@ export default function toolDbCrdtGet<T = any>(
           clearTimeout(cancelTimeout);
           this.removeIdListener(msgId);
           crdt.mergeChanges(msg.v);
+          this.emit("data", msg);
           resolve(msg);
         } catch (e) {
           // do nothing

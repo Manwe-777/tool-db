@@ -167,7 +167,7 @@ export default class ToolDb extends EventEmitter {
   }
 
   public encryptAccount(account: Account, password: string) {
-    return account.encrypt(sha256(password));
+    return account.encrypt(password);
   }
 
   public decryptAccount(acc: EncryptedKeystoreV3Json, password: string) {

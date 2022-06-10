@@ -11,6 +11,7 @@ export default function handlePut(
     // console.log("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
       this.emit("put", message);
+      this.emit("data", message.data);
       this.emit("verified", message);
       // relay to other servers !!!
       this.network.sendToAll(message, true);

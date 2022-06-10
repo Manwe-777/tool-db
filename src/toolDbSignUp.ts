@@ -6,8 +6,6 @@ import {
   PutMessage,
   textRandom,
   VerificationData,
-  encryptWithPass,
-  generateIv,
   proofOfWork,
   sha256,
 } from ".";
