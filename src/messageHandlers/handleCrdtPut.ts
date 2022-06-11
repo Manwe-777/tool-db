@@ -1,5 +1,9 @@
 import { ToolDb } from "..";
-import { VerifyResult, CrdtPutMessage } from "../types/message";
+import {
+  VerifyResult,
+  CrdtPutMessage,
+  VerificationData,
+} from "../types/message";
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
 import MapCrdt, { MapChanges } from "../crdt/mapCrdt";
 import { CRDT_COUNTER, CRDT_LIST, CRDT_MAP } from "../crdt/baseCrdt";
@@ -22,7 +26,7 @@ export default function handleCrdtPut(
 
       this.store.get(message.data.k, (err, oldData?: string) => {
         if (oldData) {
-          const parsedOldData = JSON.parse(oldData);
+          const parsedOldData: VerificationData<any> = JSON.parse(oldData);
 
           let newMessage = message;
 
@@ -34,15 +38,15 @@ export default function handleCrdtPut(
             | CounterCrdt<any>
             | undefined;
 
-          if (parsedOldData.crdt === CRDT_MAP) {
+          if (parsedOldData.c === CRDT_MAP) {
             oldDoc = new MapCrdt(this.getAddress() || "", parsedOldData.v);
           }
 
-          if (parsedOldData.crdt === CRDT_LIST) {
+          if (parsedOldData.c === CRDT_LIST) {
             oldDoc = new ListCrdt(this.getAddress() || "", parsedOldData.v);
           }
 
-          if (parsedOldData.crdt === CRDT_COUNTER) {
+          if (parsedOldData.c === CRDT_COUNTER) {
             oldDoc = new CounterCrdt(this.getAddress() || "", parsedOldData.v);
           }
 
