@@ -1,4 +1,40 @@
+const adjectives = [
+  "Fast",
+  "Slow",
+  "Cute",
+  "Evil",
+  "Anxious",
+  "Cursed",
+  "Average",
+  "Zombie",
+  "Smart",
+  "Small",
+  "Tall",
+  "Amazing",
+  "Splendid",
+  "Fat",
+  "Invisible",
+  "Regular",
+  "Domestic",
+  "Unique",
+  "Soft",
+  "Lazy",
+  "Angry",
+  "Relaxed",
+  "Huge",
+  "Shy",
+  "Playful",
+  "Creepy",
+  "Ancient",
+  "Beautiful",
+];
+
 const animals = [
+  "Snake",
+  "Monkey",
+  "Platypus",
+  "Fox",
+  "Lynx",
   "Pug",
   "Chicken",
   "Slug",
@@ -35,5 +71,7 @@ const animals = [
 ];
 
 export default function randomAnimal() {
-  return animals[Math.round(Math.random() * animals.length)];
+  return `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${
+    animals[Math.floor(Math.random() * animals.length)]
+  }`;
 }

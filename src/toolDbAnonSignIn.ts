@@ -4,5 +4,5 @@ import randomAnimal from "./utils/randomAnimal";
 
 export default function toolDbAnonSignIn(this: ToolDb): void {
   const account = this.createAccount();
-  this.setUser(account, `Anonymous ${randomAnimal()}`);
+  this.setUser(account, randomAnimal());
 }

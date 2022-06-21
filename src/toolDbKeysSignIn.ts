@@ -8,6 +8,6 @@ export default function toolDbKeysSignIn(
 ) {
   const newAccount = this.getAccountFromPrivate(privateKey);
 
-  this.setUser(newAccount, username || `Anonymous ${randomAnimal()}`);
+  this.setUser(newAccount, username || randomAnimal());
   return newAccount;
 }
