@@ -6,9 +6,9 @@ import toolDbGet from "./toolDbGet";
 import toolDbPut from "./toolDbPut";
 import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
-import toolDbNetwork from "./toolDbNetwork";
 import toolDbCrdtGet from "./toolDbCrdtGet";
 import toolDbCrdtPut from "./toolDbCrdtPut";
+import ToolDbWebsocket from "./toolDbWebsocket";
 
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
@@ -236,7 +236,7 @@ export default class ToolDb extends EventEmitter {
     port: 8080,
     debug: false,
     httpServer: undefined,
-    networkAdapter: toolDbNetwork,
+    networkAdapter: ToolDbWebsocket,
     userAdapter: ToolDbWeb3User,
     storageName: "tooldb",
     storageAdapter: typeof window === "undefined" ? leveldb : indexedb,

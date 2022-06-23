@@ -1,28 +1,8 @@
+import _ from "lodash";
 import { Server as HTTPServer } from "http";
 import { Server as HTTPSServer } from "https";
 import { ToolDb, ToolDbMessage, VerificationData } from "..";
-
-export class ToolDbNetworkAdapter {
-  constructor(db: ToolDb) {
-    //
-  }
-
-  public close(clientId: string): void {
-    //
-  }
-
-  public sendToAll(
-    msg: ToolDbMessage,
-    crossServerOnly = false,
-    isRelay = false
-  ) {
-    //
-  }
-
-  public sendToClientId(clientId: string, msg: ToolDbMessage) {
-    //
-  }
-}
+import ToolDbNetworkAdapter from "../toolDbNetworkAdapter";
 
 export class ToolDbUserAdapter {
   constructor(db: ToolDb) {

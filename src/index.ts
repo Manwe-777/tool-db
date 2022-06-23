@@ -32,20 +32,30 @@ export { default as hexToArrayBuffer } from "./utils/encoding/hexToArrayBuffer";
 export { default as hexToString } from "./utils/encoding/hexToString";
 export { default as hexToUint8 } from "./utils/encoding/hexToUint8";
 
+export { default as generateKeyFromPassword } from "./utils/crypto/generateKeyFromPassword";
 export { default as decryptWithPass } from "./utils/crypto/decryptWithPass";
 export { default as encryptWithPass } from "./utils/crypto/encryptWithPass";
-export { default as generateKeyFromPassword } from "./utils/crypto/generateKeyFromPassword";
 
-export { default as toolDbNetwork } from "./toolDbNetwork";
-export { default as toolDbWebrtc } from "./toolDbWebrtc";
+export { default as ToolDbNetworkAdapter } from "./toolDbNetworkAdapter";
+export { default as ToolDbWebsocket } from "./toolDbWebsocket";
+export { default as ToolDbWebrtc } from "./toolDbWebrtc";
 
+export * from "./types/tooldb";
+export * from "./types/message";
+export * from "./crdt/baseCrdt";
+export * from "./crdt/counterCrdt";
+export * from "./crdt/listCrdt";
+export * from "./crdt/mapCrdt";
+
+export { default as ToolDbWeb3User } from "./toolDbWeb3User";
+
+export { default as handleSubscribe } from "./messageHandlers/handleSubscribe";
 export { default as handleCrdtGet } from "./messageHandlers/handleCrdtGet";
 export { default as handleCrdtPut } from "./messageHandlers/handleCrdtPut";
-export { default as handleGet } from "./messageHandlers/handleGet";
+export { default as handleQuery } from "./messageHandlers/handleQuery";
 export { default as handlePing } from "./messageHandlers/handlePing";
 export { default as handlePong } from "./messageHandlers/handlePong";
+export { default as handleGet } from "./messageHandlers/handleGet";
 export { default as handlePut } from "./messageHandlers/handlePut";
-export { default as handleQuery } from "./messageHandlers/handleQuery";
-export { default as handleSubscribe } from "./messageHandlers/handleSubscribe";
 
 export { default as ToolDb } from "./tooldb";

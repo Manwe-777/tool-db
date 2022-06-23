@@ -14,12 +14,12 @@ export interface InsListChange<T> extends ChangeListBase<T> {
   n: string | undefined; // Next index, if any
 }
 
-export interface DelMapChange<T> extends ChangeListBase<T> {
+export interface DelListChange<T> extends ChangeListBase<T> {
   t: "DEL";
   v: string; // target index to tombstone
 }
 
-export type ListChanges<T> = InsListChange<T> | DelMapChange<T>;
+export type ListChanges<T> = InsListChange<T> | DelListChange<T>;
 
 interface ListTempCursor<T> {
   value: T;

@@ -7,7 +7,7 @@ export default function handleJoin(
   message: JoinMessage,
   remotePeerId: string
 ) {
-  const verified = verifyPeer(this, message.peer).then((verified) => {
+  verifyPeer(this, message.peer).then((verified) => {
     if (verified) {
       // Add this peer to our list of peers
       const filteredPeers = this.peers.filter(

@@ -2,9 +2,10 @@ import _ from "lodash";
 import Peer from "simple-peer";
 
 import { PingMessage, sha1, textRandom, ToolDbMessage } from ".";
-import { ToolDbNetworkAdapter, ToolDbOptions } from "./types/tooldb";
+
 import ToolDb from "./tooldb";
 import WebSocket from "ws";
+import ToolDbNetworkAdapter from "./toolDbNetworkAdapter";
 
 export type ToolDbWebSocket = WebSocket & {
   toolDbId?: string;
@@ -36,15 +37,7 @@ const defaultTrackerUrls = [
   "wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
 ];
 
-interface WebrtcAdapterOptions {
-  wrtc?: any;
-}
-
 export default class toolDbWebrtc extends ToolDbNetworkAdapter {
-  private _tooldb: ToolDb & {
-    options: ToolDbOptions & WebrtcAdapterOptions;
-  };
-
   private wnd =
     typeof window === "undefined" ? undefined : (window as any | undefined);
 
@@ -70,6 +63,26 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     }
   };
 
+  private peersCheck() {
+    Object.keys(this.clientToSend).forEach((id) => {
+      if (!this.isConnected(id)) {
+        console.log("disconnected from " + id);
+        this.onClientDisconnect(id);
+        const peer = this.peerMap[id];
+        if (peer) {
+          peer.destroy();
+        }
+        if (this.connectedPeers[id]) delete this.connectedPeers[id];
+        delete this.peerMap[id];
+      }
+    });
+
+    if (Object.keys(this.peerMap).length === 0) {
+      this.tooldb.isConnected = false;
+      this.tooldb.onDisconnect();
+    }
+  }
+
   private announceInterval;
 
   /**
@@ -81,7 +94,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     rtcConfig: any // RTCConfiguration
   ) => {
     const peer: Peer.Instance = new Peer({
-      wrtc: this._tooldb.options.wrtc,
+      wrtc: (this.tooldb.options as any).wrtc,
       initiator,
       trickle,
       config: rtcConfig,
@@ -134,29 +147,24 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       delete this.peerMap[id];
     }
 
+    let clientId: string | null = null;
+
     // console.log("onPeerConnect", id);
 
     const onData = (data: Uint8Array) => {
       const str = new TextDecoder().decode(data);
-      try {
-        const msg = JSON.parse(str) as ToolDbMessage;
-        if (
-          msg.type !== "servers" &&
-          msg.type !== "join" &&
-          msg.type !== "pong"
-        ) {
-          this.tooldb.clientOnMessage(msg, id);
-        }
-        if (msg.type === "pong" || msg.type === "ping") {
-          if (this.tooldb.isConnected) {
-            this.tooldb.onConnect();
-            this.tooldb.isConnected = true;
-          }
-          this.tooldb.onPeerConnect(id);
-        }
-      } catch (e) {
-        //
-      }
+
+      this.onClientMessage(str, clientId || "", (id) => {
+        clientId = id;
+        // Set this socket's functions on the adapter
+        this.isClientConnected[id] = () => {
+          return peer.connected;
+        };
+
+        this.clientToSend[id] = (_msg: string) => {
+          peer.send(_msg);
+        };
+      });
     };
 
     this.peerMap[id] = peer;
@@ -170,9 +178,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     peer.send(
       JSON.stringify({
         type: "ping",
-        clientId: this._tooldb.options.peerAccount.address,
-        to: [this._tooldb.options.peerAccount.address],
-        isServer: this._tooldb.options.server,
+        clientId: this.getClientAddress(),
+        to: [this.getClientAddress()],
+        isServer: this.tooldb.options.server,
         id: textRandom(10),
       } as PingMessage)
     );
@@ -255,7 +263,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         action: "announce",
         info_hash: infoHash,
         numwant: offerPoolSize,
-        peer_id: this.tooldb.options.peerAccount.address.slice(-20),
+        peer_id: this.getClientAddress(),
         offers: await Promise.all(
           Object.entries(this.offerPool).map(async ([id, { offerP }]) => {
             const offer = await offerP;
@@ -328,10 +336,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       return;
     }
 
-    if (
-      val.peer_id &&
-      val.peer_id === this.tooldb.options.peerAccount.address.slice(-20)
-    ) {
+    if (val.peer_id && val.peer_id === this.getClientAddress()) {
       // console.warn("Peer ids mismatch", val.peer_id, selfId);
       return;
     }
@@ -361,7 +366,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
             answer,
             action: "announce",
             info_hash: this.infoHash,
-            peer_id: this.tooldb.options.peerAccount.address.slice(-20),
+            peer_id: this.getClientAddress(),
             to_peer_id: val.peer_id,
             offer_id: val.offer_id,
           })
@@ -415,9 +420,10 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
   constructor(db: ToolDb) {
     super(db);
-    this._tooldb = db;
 
     this.announceInterval = setInterval(this.announceAll, announceSecs * 1000);
+
+    setInterval(() => this.peersCheck(), 100);
 
     // Stop announcing after maxAnnounceSecs
     const intervalStart = new Date().getTime();
@@ -441,80 +447,45 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         this.cleanPool();
       }
     }
+
+    // Basically the same as the WS network adapter
+    if (this.tooldb.options.server) {
+      const server = new WebSocket.Server({
+        port: this.tooldb.options.port,
+        server: this.tooldb.options.httpServer,
+      });
+
+      server.on("connection", (socket: ToolDbWebSocket) => {
+        let clientId: string | null = null;
+
+        socket.on("close", () => {
+          if (clientId) {
+            this.onClientDisconnect(clientId);
+          }
+        });
+
+        socket.on("error", () => {
+          if (clientId) {
+            this.onClientDisconnect(clientId);
+          }
+        });
+
+        socket.on("message", (message: string) => {
+          this.onClientMessage(message, clientId || "", (id) => {
+            clientId = id;
+            this.isClientConnected[id] = () => {
+              return socket.readyState === socket.OPEN;
+            };
+            this.clientToSend[id] = (_msg: string) => {
+              socket.send(_msg);
+            };
+          });
+        });
+      });
+    }
   }
 
   public close(clientId: string): void {
     //
-  }
-
-  public sendToAll(
-    msg: ToolDbMessage,
-    crossServerOnly = false,
-    isRelay = false
-  ) {
-    // if (this.tooldb.options.debug) {
-    // console.log("> sendToAll", msg);
-    // }
-
-    const to = _.uniq([
-      ...msg.to,
-      this.tooldb.options.peerAccount.address.slice(-20),
-    ]);
-
-    Object.keys(this.peerMap)
-      .filter((id) => !to.includes(id))
-      .forEach((id) => {
-        const peer = this.peerMap[id];
-        if (peer.connected) {
-          // if (this.tooldb.options.debug) {
-          // console.log("Sent out to: ", id);
-          // console.log("OUT > ", { ...msg, to });
-          // }
-          peer.send(JSON.stringify({ ...msg, to }));
-        } else {
-          peer.destroy();
-          delete this.peerMap[id];
-          if (Object.keys(this.peerMap).length === 0) {
-            this.tooldb.isConnected = false;
-            this.tooldb.onDisconnect();
-          }
-        }
-      });
-  }
-
-  public sendToClientId(clientId: string, msg: ToolDbMessage) {
-    // if (this.tooldb.options.debug) {
-    // console.log("> sendToClientId", clientId, msg);
-    // }
-
-    const to = _.uniq([
-      ...[msg.to || []],
-      this.tooldb.options.peerAccount.address.slice(-20),
-    ]);
-
-    Object.keys(this.peerMap)
-      .filter((id) => id === clientId)
-      .filter((id) => !to.includes(id))
-      .forEach((id) => {
-        const peer = this.peerMap[id];
-        if (peer.connected) {
-          // if (this.tooldb.options.debug) {
-          // console.log("Sent out to client ID ", id);
-          // console.log("OUT > ", { ...msg, to });
-          // }
-          peer.send(JSON.stringify({ ...msg, to }));
-        } else {
-          peer.destroy();
-          delete this.peerMap[id];
-          if (Object.keys(this.peerMap).length === 0) {
-            this.tooldb.isConnected = false;
-            this.tooldb.onDisconnect();
-          }
-        }
-      });
-  }
-
-  get tooldb() {
-    return this._tooldb;
   }
 }

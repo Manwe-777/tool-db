@@ -5,7 +5,7 @@ import { textRandom, ToolDb } from "..";
 import MapCrdt from "../crdt/mapCrdt";
 import leveldb from "../utils/leveldb";
 
-jest.setTimeout(20000);
+jest.setTimeout(15000);
 
 let nodeA: ToolDb;
 let nodeB: ToolDb;
@@ -60,6 +60,12 @@ beforeAll((done) => {
 
       if (connected.length === 3) {
         done();
+        // console.log(`
+        //   test-node-a: ${nodeA.network.getClientAddress()}
+        //   test-node-b: ${nodeB.network.getClientAddress()}
+        //   test-alice: ${Alice.network.getClientAddress()}
+        //   test-bob: ${Bob.network.getClientAddress()}
+        // `);
       }
     }
   };
@@ -113,6 +119,7 @@ it("A and B can communicate trough the swarm", () => {
 });
 
 it("A can sign up and B can sign in", () => {
+  // console.warn("TEST BEGIN");
   return new Promise<void>((resolve) => {
     const testUsername = "test-username-" + textRandom(16);
     const testPassword = "im a password";
