@@ -271,11 +271,11 @@ export default class ToolDb extends EventEmitter {
     super();
     this._options = { ...this.options, ...options };
 
+    this._store = this.options.storageAdapter(this.options.storageName);
     this._peerAccount = new this.options.userAdapter(this);
     this._userAccount = new this.options.userAdapter(this);
     this.emit("init", this.userAccount.getAddress());
 
     this._network = new this.options.networkAdapter(this);
-    this._store = this.options.storageAdapter(this.options.storageName);
   }
 }

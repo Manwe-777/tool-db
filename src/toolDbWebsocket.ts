@@ -1,6 +1,6 @@
 import _ from "lodash";
 import WebSocket from "ws";
-import { PingMessage, textRandom, ToolDbMessage } from ".";
+import { PingMessage, textRandom } from ".";
 import ToolDb from "./tooldb";
 import ToolDbNetworkAdapter from "./toolDbNetworkAdapter";
 
