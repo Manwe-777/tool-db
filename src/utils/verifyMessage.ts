@@ -83,8 +83,9 @@ export default async function verifyMessage<T>(
     }
   }
 
-  const address = this.recoverAddress(msg.h, msg.s);
-  const verified = address === msg.a;
+  const verified = this.userAccount
+    ? this.userAccount.verifySignature(msg)
+    : false;
   // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;

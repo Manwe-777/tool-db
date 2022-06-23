@@ -20,26 +20,26 @@ export default async function toolDbSignUp(
     this.getData<EncryptedKeystoreV3Json>(userRoot, false, 3000)
       .then((data) => {
         if (data === null) {
-          const account = this.createAccount();
-          const userData = this.encryptAccount(account, sha256(password));
+          const account = new this.options.userAdapter(this);
+          const userData = account.encryptAccount(sha256(password));
 
           const timestamp = new Date().getTime();
-          const userDataString = `${JSON.stringify(userData)}${
-            account.address
-          }${timestamp}`;
+          const userDataString = `${JSON.stringify(
+            userData
+          )}${account.getAddress()}${timestamp}`;
 
           proofOfWork(userDataString, 0)
             .then(({ hash, nonce }) => {
-              const signature = this.signData(hash, account.privateKey);
+              const signature = account.signData(hash);
 
               const signupMessage: VerificationData<EncryptedKeystoreV3Json> = {
                 k: userRoot,
-                a: account.address,
+                a: account.getAddress() || "",
                 n: nonce,
                 t: timestamp,
                 h: hash,
-                s: signature.signature,
-                v: userData,
+                s: signature,
+                v: userData as any,
                 c: null,
               };
 

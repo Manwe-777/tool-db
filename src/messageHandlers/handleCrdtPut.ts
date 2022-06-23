@@ -39,15 +39,24 @@ export default function handleCrdtPut(
             | undefined;
 
           if (parsedOldData.c === CRDT_MAP) {
-            oldDoc = new MapCrdt(this.getAddress() || "", parsedOldData.v);
+            oldDoc = new MapCrdt(
+              this.userAccount.getAddress() || "",
+              parsedOldData.v
+            );
           }
 
           if (parsedOldData.c === CRDT_LIST) {
-            oldDoc = new ListCrdt(this.getAddress() || "", parsedOldData.v);
+            oldDoc = new ListCrdt(
+              this.userAccount.getAddress() || "",
+              parsedOldData.v
+            );
           }
 
           if (parsedOldData.c === CRDT_COUNTER) {
-            oldDoc = new CounterCrdt(this.getAddress() || "", parsedOldData.v);
+            oldDoc = new CounterCrdt(
+              this.userAccount.getAddress() || "",
+              parsedOldData.v
+            );
           }
 
           let changesMerged:

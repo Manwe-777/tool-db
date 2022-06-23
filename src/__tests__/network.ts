@@ -7,10 +7,10 @@ import leveldb from "../utils/leveldb";
 
 jest.setTimeout(20000);
 
-let nodeA: ToolDb | undefined;
-let nodeB: ToolDb | undefined;
-let Alice: ToolDb | undefined;
-let Bob: ToolDb | undefined;
+let nodeA: ToolDb;
+let nodeB: ToolDb;
+let Alice: ToolDb;
+let Bob: ToolDb;
 
 beforeAll((done) => {
   (global as any).ecp256 = new elliptic.ec("p256");
@@ -22,7 +22,7 @@ beforeAll((done) => {
     storageName: "test-node-a",
     storageAdapter: leveldb,
   });
-  nodeA.onConnect = () => checkIfOk(nodeA.options.peerAccount.address);
+  nodeA.onConnect = () => checkIfOk(nodeA.peerAccount.getAddress() || "");
 
   nodeB = new ToolDb({
     server: true,
@@ -33,7 +33,7 @@ beforeAll((done) => {
     storageName: "test-node-b",
     storageAdapter: leveldb,
   });
-  nodeB.onConnect = () => checkIfOk(nodeB.options.peerAccount.address);
+  nodeB.onConnect = () => checkIfOk(nodeB.peerAccount.getAddress() || "");
 
   Alice = new ToolDb({
     server: false,
@@ -42,7 +42,7 @@ beforeAll((done) => {
     storageAdapter: leveldb,
   });
   Alice.anonSignIn();
-  Alice.onConnect = () => checkIfOk(Alice.options.peerAccount.address);
+  Alice.onConnect = () => checkIfOk(Alice.peerAccount.getAddress() || "");
 
   Bob = new ToolDb({
     server: false,
@@ -51,20 +51,14 @@ beforeAll((done) => {
     storageAdapter: leveldb,
   });
   Bob.anonSignIn();
-  Bob.onConnect = () => checkIfOk(Bob.options.peerAccount.address);
+  Bob.onConnect = () => checkIfOk(Bob.peerAccount.getAddress() || "");
 
-  const connected = [];
+  const connected: string[] = [];
   const checkIfOk = (id: string) => {
     if (!connected.includes(id)) {
       connected.push(id);
 
       if (connected.length === 3) {
-        let signedIn = false;
-        while (!signedIn) {
-          if (Alice.getAddress() && Bob.getAddress()) {
-            signedIn = true;
-          }
-        }
         done();
       }
     }
@@ -79,8 +73,8 @@ afterAll((done) => {
 });
 
 it("A and B are signed in", () => {
-  expect(Alice.getAddress()).toBeDefined();
-  expect(Bob.getAddress()).toBeDefined();
+  expect(Alice.userAccount.getAddress()).toBeDefined();
+  expect(Bob.userAccount.getAddress()).toBeDefined();
 });
 
 it("A can put and get", () => {
@@ -128,8 +122,8 @@ it("A can sign up and B can sign in", () => {
       setTimeout(() => {
         Bob.signIn(testUsername, testPassword).then((res) => {
           expect(res).toBeDefined();
-          expect(Bob.getAddress()).toBeDefined();
-          expect(Bob.getUsername()).toBe(testUsername);
+          expect(Bob.userAccount.getAddress()).toBeDefined();
+          expect(Bob.userAccount.getUsername()).toBe(testUsername);
 
           // test for failed sign in
           setTimeout(() => {

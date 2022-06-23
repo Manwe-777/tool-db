@@ -9,8 +9,11 @@ export default function verifyPeer(tooldb: ToolDb, peer: Peer) {
     `${peer.topic}-${peer.timestamp}-${peer.host}:${peer.port}`
   );
 
-  const recoveredAddress = tooldb.recoverAddress(data, peer.sig); // web3.eth.accounts.recover(data, peer.sig);
-
-  const verified = recoveredAddress === peer.adress;
-  return verified;
+  // its not really a message but this function works with a Partial
+  // I want to keep it like this so the signature verification is in a single place
+  return tooldb.verifyMessage({
+    h: data,
+    a: peer.adress,
+    s: peer.sig,
+  });
 }

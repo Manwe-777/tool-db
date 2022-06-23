@@ -8,17 +8,17 @@ export default function handleServers(
   remotePeerId: string
 ) {
   message.servers.forEach((peer) => {
-    const verified = verifyPeer(this, peer);
-
-    // Add this peer to our list of peers
-    if (verified) {
-      const filteredPeers = this.peers.findIndex(
-        (p) => p.adress === peer.adress
-      );
-      if (filteredPeers === -1) {
-        // Add this peer to the list
-        this.peers.push(peer);
+    verifyPeer(this, peer).then((verified) => {
+      // Add this peer to our list of peers
+      if (verified) {
+        const filteredPeers = this.peers.findIndex(
+          (p) => p.adress === peer.adress
+        );
+        if (filteredPeers === -1) {
+          // Add this peer to the list
+          this.peers.push(peer);
+        }
       }
-    }
+    });
   });
 }

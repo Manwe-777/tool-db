@@ -13,13 +13,13 @@ export default function handlePong(
     this.isConnected = true;
     this.onConnect();
   }
-  this.onPeerConnect(this.options.peerAccount.address);
+  this.onPeerConnect(this.peerAccount.getAddress() || "");
 
-  if (this.options.server && this.options.peerAccount.address) {
+  if (this.options.server && this.peerAccount.getAddress()) {
     const timestamp = new Date().getTime();
 
     const signature = getPeerSignature(
-      this.options.peerAccount,
+      this.peerAccount,
       this.options.topic,
       timestamp,
       this.options.host,
@@ -31,8 +31,8 @@ export default function handlePong(
       timestamp: timestamp,
       host: this.options.host,
       port: this.options.port,
-      adress: this.options.peerAccount.address,
-      sig: signature.signature,
+      adress: this.peerAccount.getAddress() || "",
+      sig: signature,
     };
 
     this.network.sendToClientId(remotePeerId, {

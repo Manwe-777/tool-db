@@ -13,11 +13,13 @@ export default function toolDbSubscribe(
   userNamespaced = false
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (userNamespaced && this.getAddress() === undefined) {
+    if (userNamespaced && this.userAccount.getAddress() === undefined) {
       reject(new Error("You are not authorized yet!"));
       return;
     }
-    const finalKey = userNamespaced ? `:${this.getAddress()}.${key}` : key;
+    const finalKey = userNamespaced
+      ? `:${this.userAccount.getAddress()}.${key}`
+      : key;
     if (this.options.debug) {
       console.log("Subscribe > " + finalKey);
     }

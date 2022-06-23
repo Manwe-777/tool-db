@@ -6,8 +6,10 @@ export default function toolDbKeysSignIn(
   privateKey: string,
   username?: string
 ) {
-  const newAccount = this.getAccountFromPrivate(privateKey);
+  if (!this.userAccount) return;
 
-  this.setUser(newAccount, username || randomAnimal());
+  const newAccount = this.userAccount.getAccountFromPrivate(privateKey);
+
+  this.userAccount.setUser(newAccount, username || randomAnimal());
   return newAccount;
 }

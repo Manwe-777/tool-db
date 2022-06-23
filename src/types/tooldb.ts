@@ -1,7 +1,6 @@
-import { Account } from "web3-core";
 import { Server as HTTPServer } from "http";
 import { Server as HTTPSServer } from "https";
-import { ToolDb, ToolDbMessage } from "..";
+import { ToolDb, ToolDbMessage, VerificationData } from "..";
 
 export class ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
@@ -22,6 +21,46 @@ export class ToolDbNetworkAdapter {
 
   public sendToClientId(clientId: string, msg: ToolDbMessage) {
     //
+  }
+}
+
+export class ToolDbUserAdapter {
+  constructor(db: ToolDb) {
+    //
+  }
+
+  public anonUser() {
+    return;
+  }
+
+  public setUser(account: unknown | undefined, name: string): void {}
+
+  public signData(data: string, privateKey?: string) {
+    return "";
+  }
+
+  public verifySignature(message: Partial<VerificationData<any>>) {
+    return false;
+  }
+
+  public getAccountFromPrivate(privateKey: string): unknown {
+    return undefined;
+  }
+
+  public encryptAccount(password: string): unknown {
+    return undefined;
+  }
+
+  public decryptAccount(acc: unknown, password: string): any {
+    return undefined;
+  }
+
+  public getAddress(): string | undefined {
+    return "";
+  }
+
+  public getUsername(): string | undefined {
+    return "";
   }
 }
 
@@ -114,12 +153,12 @@ export interface ToolDbOptions {
    */
   storageAdapter: ToolDbStorageAdapter;
   /**
+   * A custom user storage and validation adapter class
+   */
+  userAdapter: typeof ToolDbUserAdapter;
+  /**
    * The namespace/topic of our app (default is "tool-db-default")
    */
   topic: string;
-  /**
-   * Peer's ETH account (generated at init, random)
-   */
-  peerAccount: Account;
   // [extra: string]: any;
 }

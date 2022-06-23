@@ -1,7 +1,4 @@
 import EventEmitter from "events";
-import w3 from "web3";
-
-import { EncryptedKeystoreV3Json, Account } from "web3-core";
 
 import { ToolDbMessage, VerificationData, verifyMessage } from ".";
 
@@ -34,8 +31,14 @@ import handleCrdtGet from "./messageHandlers/handleCrdtGet";
 import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
-import { Peer, ToolDbOptions, ToolDbStore } from "./types/tooldb";
-import sha256 from "./utils/sha256";
+import {
+  Peer,
+  ToolDbOptions,
+  ToolDbStore,
+  ToolDbUserAdapter,
+} from "./types/tooldb";
+
+import ToolDbWeb3User from "./toolDbWeb3User";
 
 export interface Listener<T = any> {
   key: string;
@@ -55,8 +58,8 @@ export default class ToolDb extends EventEmitter {
   private _network;
   private _store: ToolDbStore;
   private _peers: Peer[] = [];
-
-  public web3: w3;
+  private _peerAccount: ToolDbUserAdapter;
+  private _userAccount: ToolDbUserAdapter;
 
   public clientOnMessage = toolDbClientOnMessage;
 
@@ -136,57 +139,6 @@ export default class ToolDb extends EventEmitter {
   public handleQuery = handleQuery;
   public handleSubscribe = handleSubscribe;
 
-  public setUser(account: Account | undefined, name: string): void {
-    this._user = account
-      ? {
-          account: account,
-          name: name,
-        }
-      : undefined;
-  }
-
-  public signData(data: string, privateKey?: string) {
-    const signature = this.web3.eth.accounts.sign(
-      data,
-      privateKey || this._user?.account.privateKey || ""
-    );
-
-    return signature;
-  }
-
-  public recoverAddress(message: string, signature: string) {
-    return this.web3.eth.accounts.recover(message, signature);
-  }
-
-  public getAccountFromPrivate(privateKey: string) {
-    return this.web3.eth.accounts.privateKeyToAccount(privateKey);
-  }
-
-  public createAccount(): Account {
-    return this.web3.eth.accounts.create();
-  }
-
-  public encryptAccount(account: Account, password: string) {
-    return account.encrypt(password);
-  }
-
-  public decryptAccount(acc: EncryptedKeystoreV3Json, password: string) {
-    try {
-      const newAccount = this.web3.eth.accounts.decrypt(acc, password);
-      return newAccount;
-    } catch (e) {
-      throw e;
-    }
-  }
-
-  public getAddress(): string | undefined {
-    return this._user?.account.address;
-  }
-
-  public getUsername(): string | undefined {
-    return this._user?.name;
-  }
-
   /**
    * id listeners listen for a specific message ID just once
    */
@@ -201,7 +153,7 @@ export default class ToolDb extends EventEmitter {
   };
 
   public getUserNamespacedKey(key: string) {
-    return ":" + (this.getAddress() || "") + "." + key;
+    return ":" + (this.userAccount?.getAddress() || "") + "." + key;
   }
 
   /**
@@ -272,13 +224,6 @@ export default class ToolDb extends EventEmitter {
     this._customVerificator[id] = null;
   };
 
-  private _user = undefined as
-    | undefined
-    | {
-        account: Account;
-        name: string;
-      };
-
   private _options: ToolDbOptions = {
     db: "tooldb",
     peers: [],
@@ -292,10 +237,10 @@ export default class ToolDb extends EventEmitter {
     debug: false,
     httpServer: undefined,
     networkAdapter: toolDbNetwork,
+    userAdapter: ToolDbWeb3User,
     storageName: "tooldb",
     storageAdapter: typeof window === "undefined" ? leveldb : indexedb,
     topic: "tool-db-default",
-    peerAccount: undefined as any,
   };
 
   get options() {
@@ -314,18 +259,22 @@ export default class ToolDb extends EventEmitter {
     return this._store;
   }
 
+  get userAccount() {
+    return this._userAccount;
+  }
+
+  get peerAccount() {
+    return this._peerAccount;
+  }
+
   constructor(options: Partial<ToolDbOptions> = {}) {
     super();
-
     this._options = { ...this.options, ...options };
 
-    this.web3 = new w3(w3.givenProvider);
+    this._peerAccount = new this.options.userAdapter(this);
+    this._userAccount = new this.options.userAdapter(this);
+    this.emit("init", this.userAccount.getAddress());
 
-    const account = this.web3.eth.accounts.create();
-    this.options.peerAccount = account;
-    this.emit("init", account.address);
-
-    // These could be made to be customizable by setting the variables as public
     this._network = new this.options.networkAdapter(this);
     this._store = this.options.storageAdapter(this.options.storageName);
   }

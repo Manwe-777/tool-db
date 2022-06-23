@@ -174,8 +174,8 @@ export default class toolDbNetwork {
         wss.send(
           JSON.stringify({
             type: "ping",
-            clientId: this.options.peerAccount?.address,
-            to: [this.options.peerAccount?.address],
+            clientId: this.tooldb.peerAccount?.getAddress(),
+            to: [this.tooldb.peerAccount?.getAddress()],
             isServer: this.options.server,
             id: textRandom(10),
           } as PingMessage)
@@ -235,7 +235,7 @@ export default class toolDbNetwork {
   ) {
     const to = isRelay
       ? _.uniq([...msg.to])
-      : _.uniq([...msg.to, this.options.peerAccount.address]);
+      : _.uniq([...msg.to, this.tooldb.peerAccount.getAddress()]);
 
     const filteredConns = Object.keys(this.clientSockets)
       .filter((id) => !to.includes(id))
@@ -274,7 +274,7 @@ export default class toolDbNetwork {
   public sendToClientId(clientId: string, msg: ToolDbMessage) {
     const socket = this._clientSockets[clientId];
     if (socket) {
-      const to = _.uniq([...msg.to, this.options.peerAccount.address]);
+      const to = _.uniq([...msg.to, this.tooldb.peerAccount.getAddress()]);
 
       if (msg.type === "put" || msg.type === "crdtPut") {
         if (

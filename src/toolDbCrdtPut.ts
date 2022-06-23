@@ -25,7 +25,7 @@ export default function toolDbCrdtPut<T = any>(
       return;
     }
 
-    if (!this.getAddress()) {
+    if (!this.userAccount.getAddress()) {
       reject(new Error("You need to log in before you can PUT."));
       return;
     }
@@ -36,21 +36,23 @@ export default function toolDbCrdtPut<T = any>(
 
     const encodedData = JSON.stringify(crdtChanges);
 
-    const dataString = `${encodedData}${this.getAddress()}${timestamp}`;
+    const dataString = `${encodedData}${this.userAccount.getAddress()}${timestamp}`;
 
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
-        const signature = this.signData(hash);
-        if (signature && this.getAddress()) {
+        const signature = this.userAccount.signData(hash);
+        if (signature && this.userAccount.getAddress()) {
           // Compose the message
           const data: VerificationData<any> = {
-            k: userNamespaced ? `:${this.getAddress()}.${key}` : key,
-            a: this.getAddress() || "",
+            k: userNamespaced
+              ? `:${this.userAccount.getAddress()}.${key}`
+              : key,
+            a: this.userAccount.getAddress() || "",
             n: nonce,
             t: timestamp,
             h: hash,
-            s: signature.signature,
+            s: signature,
             v: crdtChanges,
             c: crdt.type,
           };

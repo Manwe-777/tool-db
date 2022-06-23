@@ -5,7 +5,7 @@ import leveldb from "../utils/leveldb";
 
 jest.setTimeout(5000);
 
-let Alice: ToolDb | undefined;
+let Alice: ToolDb;
 
 beforeAll((done) => {
   Alice = new ToolDb({
@@ -19,14 +19,16 @@ beforeAll((done) => {
 });
 
 it("Can verify messages fast enough", async () => {
-  const results = [];
+  const results: number[] = [];
   for (let i = 0; i < 100; i += 1) {
     await Alice.putData("fasttestkey-" + i, i).then((msg) => {
       const start = new Date().getTime();
-      return Alice.verifyMessage(msg.data).then(() => {
-        const end = new Date().getTime();
-        results.push(end - start);
-      });
+      if (msg) {
+        return Alice.verifyMessage(msg.data).then(() => {
+          const end = new Date().getTime();
+          results.push(end - start);
+        });
+      }
     });
   }
 

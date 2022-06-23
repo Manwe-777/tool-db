@@ -11,7 +11,7 @@ import verifyPeer from "../utils/verifyPeer";
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
 
-let ClientA: ToolDb | undefined;
+let ClientA: ToolDb;
 
 beforeAll((done) => {
   ClientA = new ToolDb({
@@ -190,7 +190,7 @@ it("Can verify peers", async () => {
   const timestamp = new Date().getTime();
 
   const signature = await getPeerSignature(
-    ClientA.options.peerAccount,
+    ClientA.peerAccount,
     "topic",
     timestamp,
     "host",
@@ -206,8 +206,8 @@ it("Can verify peers", async () => {
     timestamp: timestamp,
     host: "host",
     port: 8080,
-    adress: ClientA.options.peerAccount.address,
-    sig: signature.signature,
+    adress: ClientA.peerAccount.getAddress() || "",
+    sig: signature,
   };
 
   const verified = await verifyPeer(ClientA, peerData);
