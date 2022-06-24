@@ -7,12 +7,6 @@ import ToolDb from "./tooldb";
 import WebSocket from "ws";
 import ToolDbNetworkAdapter from "./toolDbNetworkAdapter";
 
-export type ToolDbWebSocket = WebSocket & {
-  toolDbId?: string;
-  isServer: boolean;
-  origUrl: string;
-};
-
 type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
 
 type IOffers = Record<
@@ -456,7 +450,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         server: this.tooldb.options.httpServer,
       });
 
-      server.on("connection", (socket: ToolDbWebSocket) => {
+      server.on("connection", (socket: WebSocket) => {
         let clientId: string | null = null;
 
         socket.on("close", () => {
