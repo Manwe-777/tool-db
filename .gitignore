@@ -4,6 +4,7 @@ dist
 test-alice
 test-alice-speed
 test-bob
+test-chris
 test-node-a
 test-node-b
 test-keys-a

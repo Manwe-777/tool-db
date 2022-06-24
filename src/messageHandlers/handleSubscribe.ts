@@ -6,25 +6,23 @@ export default function handleSubscribe(
   message: SubscribeMessage,
   remotePeerId: string
 ) {
-  if (remotePeerId) {
-    const subId = remotePeerId + "-" + message.key;
-    if (!this.subscriptions.includes(subId)) {
-      this.subscriptions.push(subId);
+  const subId = remotePeerId + "-" + message.key;
+  if (!this.subscriptions.includes(subId)) {
+    this.subscriptions.push(subId);
 
-      this.addKeyListener(message.key, (msg) => {
-        if (remotePeerId) {
-          // We do not reply to the socket directly
-          // instead we use the client id, in case the socket reconnects
-          const newMsg: PutMessage = {
-            data: msg,
-            id: message.id,
-            type: "put",
-            to: [],
-          };
-          this.network.sendToClientId(remotePeerId, newMsg);
-        }
-      });
-    }
+    this.addKeyListener(message.key, (msg) => {
+      if (remotePeerId) {
+        // We do not reply to the socket directly
+        // instead we use the client id, in case the socket reconnects
+        const newMsg: PutMessage = {
+          data: msg,
+          id: message.id,
+          type: "put",
+          to: [],
+        };
+        this.network.sendToClientId(remotePeerId, newMsg);
+      }
+    });
   }
 
   // basically the exact same as GET, below

@@ -1,16 +1,17 @@
 jest.mock("../getCrypto.ts");
 import elliptic from "elliptic";
 
-import { textRandom, ToolDb } from "..";
+import { textRandom, ToolDb, VerificationData } from "..";
 import MapCrdt from "../crdt/mapCrdt";
 import leveldb from "../utils/leveldb";
 
-jest.setTimeout(15000);
+jest.setTimeout(10000);
 
 let nodeA: ToolDb;
 let nodeB: ToolDb;
 let Alice: ToolDb;
 let Bob: ToolDb;
+let Chris: ToolDb;
 
 beforeAll((done) => {
   (global as any).ecp256 = new elliptic.ec("p256");
@@ -53,18 +54,28 @@ beforeAll((done) => {
   Bob.anonSignIn();
   Bob.onConnect = () => checkIfOk(Bob.peerAccount.getAddress() || "");
 
+  Chris = new ToolDb({
+    server: false,
+    peers: [{ host: "localhost", port: 9000 }],
+    storageName: "test-chris",
+    storageAdapter: leveldb,
+  });
+  Chris.anonSignIn();
+  Chris.onConnect = () => checkIfOk(Chris.peerAccount.getAddress() || "");
+
   const connected: string[] = [];
   const checkIfOk = (id: string) => {
     if (!connected.includes(id)) {
       connected.push(id);
 
-      if (connected.length === 3) {
+      if (connected.length === 4) {
         done();
         // console.log(`
         //   test-node-a: ${nodeA.network.getClientAddress()}
         //   test-node-b: ${nodeB.network.getClientAddress()}
         //   test-alice: ${Alice.network.getClientAddress()}
         //   test-bob: ${Bob.network.getClientAddress()}
+        //   test-chris: ${Chris.network.getClientAddress()}
         // `);
       }
     }
@@ -83,8 +94,8 @@ it("A and B are signed in", () => {
   expect(Bob.userAccount.getAddress()).toBeDefined();
 });
 
-it("A can put and get", () => {
-  return new Promise<void>((resolve) => {
+it("A can put and get", (done) => {
+  setTimeout(() => {
     const testKey = "test-key-" + textRandom(16);
     const testValue = "Cool value";
 
@@ -93,15 +104,15 @@ it("A can put and get", () => {
       setTimeout(() => {
         Alice.getData(testKey).then((data) => {
           expect(data).toBe(testValue);
-          resolve();
+          done();
         });
       }, 1000);
     });
-  });
+  }, 500);
 });
 
-it("A and B can communicate trough the swarm", () => {
-  return new Promise<void>((resolve) => {
+it("A and B can communicate trough the swarm", (done) => {
+  setTimeout(() => {
     const testKey = "test-key-" + textRandom(16);
     const testValue = "Awesome value";
 
@@ -111,16 +122,38 @@ it("A and B can communicate trough the swarm", () => {
       setTimeout(() => {
         Bob.getData(testKey).then((data) => {
           expect(data).toBe(testValue);
-          resolve();
+          done();
         });
-      }, 1500);
+      }, 1000);
     });
-  });
+  }, 500);
 });
 
-it("A can sign up and B can sign in", () => {
-  // console.warn("TEST BEGIN");
-  return new Promise<void>((resolve) => {
+it("A cand send and C can recieve from a subscription", (done) => {
+  setTimeout(() => {
+    const testKey = "test-key-" + textRandom(16);
+    const testValue = "im a value";
+
+    let recievedMessage: VerificationData<string> | undefined = undefined;
+
+    Chris.subscribeData(testKey);
+    Chris.addKeyListener<string>(testKey, (msg) => {
+      recievedMessage = msg;
+    });
+
+    Alice.putData(testKey, testValue).then((msg) => {
+      expect(msg).toBeDefined();
+
+      setTimeout(() => {
+        expect(recievedMessage).toBeDefined();
+        done();
+      }, 500);
+    });
+  }, 500);
+});
+
+it("A can sign up and B can sign in", (done) => {
+  setTimeout(() => {
     const testUsername = "test-username-" + textRandom(16);
     const testPassword = "im a password";
 
@@ -138,31 +171,31 @@ it("A can sign up and B can sign in", () => {
               expect(e.message).toBe(
                 "Key derivation failed - possibly wrong password"
               );
-              resolve();
+              done();
             });
-          }, 1000);
+          }, 500);
         });
-      }, 1000);
+      }, 500);
     });
-  });
+  }, 500);
 });
 
-it("Can cancel GET timeout", () => {
-  return new Promise<void>((resolve) => {
+it("Can cancel GET timeout", (done) => {
+  setTimeout(() => {
     const testKey = "crdt-get-test-" + textRandom(16);
     const testValue = textRandom(24);
 
     Alice.putData(testKey, testValue).then(() => {
       Alice.getData(testKey, false, 1).then((res) => {
         expect(res).toBe(testValue);
-        resolve();
+        done();
       });
     });
-  });
+  }, 500);
 });
 
-it("CRDTs", () => {
-  return new Promise<void>((resolve) => {
+it("CRDTs", (done) => {
+  setTimeout(() => {
     const crdtKey = "crdt-test-" + textRandom(16);
     const crdtValue = textRandom(24);
 
@@ -179,9 +212,9 @@ it("CRDTs", () => {
             key: crdtValue,
             test: "foo",
           });
-          resolve();
+          done();
         });
-      }, 1000);
+      }, 500);
     });
-  });
+  }, 500);
 });

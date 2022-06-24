@@ -165,6 +165,9 @@ export default class ToolDb extends EventEmitter {
     key: string,
     fn: (msg: VerificationData<T>) => void
   ) => {
+    // if (this.options.debug) {
+    //   console.warn(`addKeyListener ${key}`);
+    // }
     const newListener: Listener = {
       key,
       timeout: null,
@@ -187,7 +190,9 @@ export default class ToolDb extends EventEmitter {
     key: string,
     message: VerificationData<T>
   ) => {
-    // console.warn(`triggerKeyListener ${key}`);
+    // if (this.options.debug) {
+    //   console.warn(`triggerKeyListener ${key}`);
+    // }
     this._keyListeners.forEach((listener) => {
       if (listener?.key === key) {
         // console.log(`TRIGGER OK`, message);
