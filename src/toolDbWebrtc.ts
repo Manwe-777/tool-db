@@ -449,7 +449,8 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     }
 
     // Basically the same as the WS network adapter
-    if (this.tooldb.options.server) {
+    // Only for Node!
+    if (this.tooldb.options.server && typeof window === "undefined") {
       const server = new WebSocket.Server({
         port: this.tooldb.options.port,
         server: this.tooldb.options.httpServer,
