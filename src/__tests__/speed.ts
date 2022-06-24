@@ -35,5 +35,5 @@ it("Can verify messages fast enough", async () => {
   const average = results.reduce((a, b) => a + b, 0) / results.length;
   // This is not a good test, as it is not deterministic
   // It will vary depending the CI machine specs
-  expect(average).toBeLessThan(150);
+  expect(average).toBeLessThan(200);
 });
