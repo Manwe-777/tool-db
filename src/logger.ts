@@ -11,21 +11,21 @@ export default function logger(
   arg5?: any
 ) {
   if (this.options.debug) {
-    const title =
-      typeof window === "undefined"
-        ? this.options.storageName
-        : "%c" + this.options.storageName;
-    const style =
-      typeof window === "undefined"
-        ? ""
-        : "background: #" +
-          sha1(this.options.storageName).slice(-6) +
-          "; padding: 2px; color: black";
-    if (!arg1) console.log(title, style, arg0);
-    else if (!arg2) console.log(title, style, arg0, arg1);
-    else if (!arg3) console.log(title, style, arg0, arg1, arg2);
-    else if (!arg4) console.log(title, style, arg0, arg1, arg2, arg3);
-    else if (!arg5) console.log(title, style, arg0, arg1, arg2, arg3, arg4);
-    else console.log(title, style, arg0, arg1, arg2, arg3, arg4, arg4, arg5);
+    const isNode = typeof window === "undefined";
+    const title = isNode
+      ? this.options.storageName
+      : "%c" + this.options.storageName;
+
+    const style = isNode
+      ? ""
+      : "background: #" +
+        sha1(this.options.storageName).slice(-6) +
+        "; padding: 2px; color: black";
+
+    console.log(
+      title,
+      style,
+      ...[arg0, arg1, arg2, arg3, arg4, arg4, arg5].filter((n) => n)
+    );
   }
 }
