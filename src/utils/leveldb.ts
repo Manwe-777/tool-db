@@ -28,7 +28,7 @@ export default function leveldb(dbName = "tooldb"): ToolDbStore {
 
   store.put = function (key, data, cb) {
     db.put(key, data, function (err: any) {
-      // console.warn("put", key, err, err?.message);
+      // this.logger("put", key, err, err?.message);
       if (err) {
         if (cb) cb(err);
       } else {
@@ -38,7 +38,7 @@ export default function leveldb(dbName = "tooldb"): ToolDbStore {
   };
 
   store.get = function (key, cb) {
-    // console.warn("store get", key);
+    // this.logger("store get", key);
     if (!db) {
       setTimeout(function () {
         store.get(key, cb);
@@ -46,7 +46,7 @@ export default function leveldb(dbName = "tooldb"): ToolDbStore {
       return;
     }
     db.get(key, function (err: any, value: any) {
-      // console.warn("get", key, err, err?.message);
+      // this.logger("get", key, err, err?.message);
       if (err) {
         if (cb) cb(err);
       } else {
@@ -56,7 +56,7 @@ export default function leveldb(dbName = "tooldb"): ToolDbStore {
   };
 
   store.query = function (key) {
-    console.log("QUERY", key);
+    db.logger("QUERY", key);
     return new Promise((resolve, reject) => {
       try {
         const array: string[] = [];

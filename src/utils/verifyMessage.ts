@@ -14,7 +14,7 @@ export default async function verifyMessage<T>(
   msg: Partial<VerificationData<T>>,
   pow = 0
 ): Promise<VerifyResult> {
-  // console.log("verify: ", msg);
+  // this.logger("verify: ", msg);
   const strData = JSON.stringify(msg.v);
 
   if (
@@ -31,7 +31,7 @@ export default async function verifyMessage<T>(
   // Max clock shift allowed is 30 seconds.
   // Ten seconds was my original threshold but it failed some times.
   if (msg.t > new Date().getTime() + 30000) {
-    // console.warn("Invalid message timestamp.");
+    // this.logger("Invalid message timestamp.");
     return VerifyResult.InvalidTimestamp;
   }
 
@@ -63,7 +63,7 @@ export default async function verifyMessage<T>(
   }
 
   if (adressNamespace && adressNamespace !== msg.a) {
-    // console.warn("Provided address does not match");
+    // this.logger("Provided address does not match");
     return VerifyResult.AddressMismatch;
   }
 
@@ -73,12 +73,12 @@ export default async function verifyMessage<T>(
   // Disabled for now because it is painful on large requests
   if (pow > 0) {
     if (msg.h.slice(0, pow) !== new Array(pow).fill("0").join("")) {
-      // console.warn("No valid hash (no pow)");
+      // this.logger("No valid hash (no pow)");
       return VerifyResult.NoProofOfWork;
     }
 
     if (sha256(`${strData}${msg.a}${msg.t}${msg.n}`) !== msg.h) {
-      // console.warn("Specified hash does not generate a valid pow");
+      // this.logger("Specified hash does not generate a valid pow");
       return VerifyResult.InvalidHashNonce;
     }
   }
@@ -86,7 +86,7 @@ export default async function verifyMessage<T>(
   const verified = this.userAccount
     ? this.userAccount.verifySignature(msg)
     : false;
-  // console.warn(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
+  // this.logger(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
   return verified ? VerifyResult.Verified : VerifyResult.InvalidSignature;
 }

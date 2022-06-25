@@ -84,9 +84,7 @@ export default class ToolDbNetworkAdapter {
     clientId: string | null,
     setClientId: (clientId: string) => void
   ) {
-    if (this.tooldb.options.debug) {
-      console.log(message, clientId);
-    }
+    // this.tooldb.logger("onClientMessage", clientId);
 
     if (clientId && !this.tooldb.processedOutHashes[clientId]) {
       this.tooldb.processedOutHashes[clientId] = [];
@@ -107,8 +105,8 @@ export default class ToolDbNetworkAdapter {
         this.tooldb.clientOnMessage(parsedMessage, clientId);
       }
     } catch (e) {
-      console.log("Got message ERR > ", message);
-      console.log(e);
+      this.tooldb.logger("Got message ERR", message);
+      this.tooldb.logger(e);
     }
   }
 
@@ -138,14 +136,8 @@ export default class ToolDbNetworkAdapter {
 
     filteredConns.forEach((clientId) => {
       if ((crossServerOnly && this.isServer(clientId)) || !crossServerOnly) {
-        if (this.tooldb.options.debug) {
-          console.log(
-            this.tooldb.options.storageName,
-            to,
-            "Sent out to: ",
-            clientId
-          );
-        }
+        this.tooldb.logger(to, "Sent out to:", clientId);
+
         if (msg.type === "put" || msg.type === "crdtPut") {
           if (!this.tooldb.processedOutHashes[clientId].includes(msg.data.h)) {
             this.executeSendToClient(clientId, finalMessage);
@@ -156,7 +148,7 @@ export default class ToolDbNetworkAdapter {
         }
       }
       // } else {
-      //   console.log("Fitlered out;", clientId);
+      //   this.tooldb.logger("Fitlered out;", clientId);
       // }
     });
   }

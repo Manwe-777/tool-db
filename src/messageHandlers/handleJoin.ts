@@ -33,7 +33,7 @@ export default function handleJoin(
         }
       }
     } else {
-      console.warn("Blocked a remote peer from joining; ", message);
+      this.logger("Blocked a remote peer from joining; ", message);
     }
   });
 }

@@ -10,7 +10,7 @@ export default function toolDbClientOnMessage(
     this.processedIds[message.type] = [];
   }
   if (this.processedIds[message.type].includes(message.id)) {
-    // console.warn(
+    // this.logger(
     //   `Already processed this message > ${message.type} from ${remotePeerId}`
     // );
     return;
@@ -20,10 +20,8 @@ export default function toolDbClientOnMessage(
 
   this.processedIds[message.type].push(message.id);
 
-  if (this.options.debug) {
-    console.warn(`Got message ${message.type} from ${remotePeerId}`);
-    console.warn(message);
-  }
+  this.logger(`Got message ${message.type} from ${remotePeerId}`);
+  this.logger(message);
 
   // Check if we are listening for this ID
   if (message.id) {
@@ -34,11 +32,8 @@ export default function toolDbClientOnMessage(
     }
   }
 
-  if (
-    (message === undefined || message.type === undefined) &&
-    this.options.debug
-  ) {
-    console.warn("Message is invalid!", message, typeof message);
+  if (message === undefined || message.type === undefined) {
+    this.logger("Message is invalid!", message, typeof message);
     return;
   }
 

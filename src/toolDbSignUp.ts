@@ -51,9 +51,7 @@ export default async function toolDbSignUp(
                 }
               );
 
-              if (this.options.debug) {
-                console.log("SIGNUP PUT > " + userRoot, signupMessage);
-              }
+              this.logger("SIGNUP PUT", userRoot, signupMessage);
 
               const finalMsg = {
                 type: "put",

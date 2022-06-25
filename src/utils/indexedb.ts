@@ -21,7 +21,7 @@ export default function indexedb(dbName = "tooldb"): ToolDbStore {
   };
 
   store.start = function () {
-    // console.warn("store start");
+    // this.logger("store start");
     const open = indexedDB.open(dbName, 1);
     open.onupgradeneeded = function (eve: any) {
       eve.target.result.createObjectStore(dbName);
@@ -30,13 +30,13 @@ export default function indexedb(dbName = "tooldb"): ToolDbStore {
       db = open.result;
     };
     open.onerror = function (eve) {
-      console.warn(eve || 1);
+      db.logger(eve || 1);
     };
   };
   store.start();
 
   store.put = function (key, data, cb) {
-    // console.warn("store put", key);
+    // this.logger("store put", key);
     if (!db) {
       setTimeout(function () {
         store.put(key, data, cb);
@@ -69,7 +69,7 @@ export default function indexedb(dbName = "tooldb"): ToolDbStore {
   };
 
   store.get = function (key, cb) {
-    // console.warn("store get", key);
+    // db.logger("store get", key);
     if (!db) {
       setTimeout(function () {
         store.get(key, cb);

@@ -57,9 +57,7 @@ export default function toolDbPut<T = any>(
             //
           });
 
-          if (this.options.debug) {
-            console.log("PUT > " + key, data);
-          }
+          this.logger("PUT", key, data);
 
           const finalMessage: PutMessage = {
             type: "put",

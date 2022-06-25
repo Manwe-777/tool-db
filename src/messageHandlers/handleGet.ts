@@ -22,9 +22,8 @@ export default function handleGet(
         // do nothing
       }
     } else {
-      if (this.options.debug) {
-        console.log("Local key not found, relay", JSON.stringify(message));
-      }
+      this.logger("Local key not found, relay", JSON.stringify(message));
+
       this.network.sendToAll(message, false, true);
     }
   });

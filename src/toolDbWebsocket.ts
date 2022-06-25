@@ -57,16 +57,16 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
       this.server.on("connection", (socket: WebSocket) => {
         let clientId: string | null = null;
 
-        // console.log("new connection:", clientId);
+        // this.tooldb.logger("new connection:", clientId);
         socket.on("close", () => {
-          // console.log("closed connection:", clientId);
+          // this.tooldb.logger("closed connection:", clientId);
           if (clientId) {
             this.onClientDisconnect(clientId);
           }
         });
 
         socket.on("error", () => {
-          // console.log("errored connection:", clientId);
+          // this.tooldb.logger("errored connection:", clientId);
           if (clientId) {
             this.onClientDisconnect(clientId);
           }
@@ -124,16 +124,13 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
       }
 
       wss.onclose = (_error: any) => {
-        if (this.tooldb.options.debug) {
-          console.log(_error.error);
-        }
+        this.tooldb.logger(_error.error);
         this.reconnect(connId);
       };
 
       wss.onerror = (_error: any) => {
-        if (this.tooldb.options.debug) {
-          console.log(_error.error);
-        }
+        this.tooldb.logger(_error.error);
+
         if (_error?.error?.code !== "ETIMEDOUT") {
           this.reconnect(connId);
         }
@@ -141,9 +138,9 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
 
       wss.onopen = () => {
         this.removeFromAwaiting(connId);
-        if (this.tooldb.options.debug) {
-          console.warn("Connected to " + host + ": " + port + " sucessfully.");
-        }
+        this.tooldb.logger(
+          "Connected to " + host + ": " + port + " sucessfully."
+        );
 
         // hi peer
         wss.send(
@@ -176,7 +173,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
 
       return wss;
     } catch (e) {
-      console.warn(e);
+      this.tooldb.logger(e);
     }
     return undefined;
   };
@@ -193,7 +190,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
       if (connection.tries < this.tooldb.options.maxRetries) {
         const defer = () => {
           connection.tries += 1;
-          console.warn(
+          this.tooldb.logger(
             "Connection to " +
               connection.host +
               ":" +
@@ -205,7 +202,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
 
         connection.defer = setTimeout(defer, this.tooldb.options.wait) as any;
       } else {
-        console.warn(
+        this.tooldb.logger(
           "Connection attempts to " +
             connection.host +
             ":" +

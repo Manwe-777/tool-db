@@ -16,7 +16,7 @@ export default function handleCrdtPut(
   remotePeerId: string
 ) {
   toolDbVerificationWrapper.call(this, message.data).then((value) => {
-    // console.log("Verification wrapper result: ", value, message.k);
+    // this.logger("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
       this.emit("crdtput", message);
       this.emit("data", message.data);
@@ -87,8 +87,8 @@ export default function handleCrdtPut(
             const key = message.data.k;
             this.triggerKeyListener(key, parsedOldData);
           }
-          // } else if (this.options.debug) {
-          //   console.log(
+          // } else {
+          //   this.logger(
           //     `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
           //   );
           // }
@@ -105,7 +105,7 @@ export default function handleCrdtPut(
         }
       });
     } else {
-      console.warn("unverified message: ", value, message);
+      this.logger("unverified message: ", value, message);
     }
   });
 }

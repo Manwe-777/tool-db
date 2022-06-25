@@ -48,7 +48,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private connectedPeers: Record<string, boolean> = {};
 
   private onDisconnect = (id: string, err: any) => {
-    console.warn(id, err);
+    this.tooldb.logger(id, err);
     if (this.connectedPeers[id]) delete this.connectedPeers[id];
     if (this.peerMap[id]) delete this.peerMap[id];
     if (Object.keys(this.peerMap).length === 0) {
@@ -60,7 +60,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private peersCheck() {
     Object.keys(this.clientToSend).forEach((id) => {
       if (!this.isConnected(id)) {
-        console.log("disconnected from " + id);
+        this.tooldb.logger("disconnected from " + id);
         this.onClientDisconnect(id);
         const peer = this.peerMap[id];
         if (peer) {
@@ -125,7 +125,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
           offerP: new Promise((res) => peer.once("signal", res)),
         };
       } catch (e) {
-        console.warn(e);
+        this.tooldb.logger(e);
       }
     });
     return offers;
@@ -143,7 +143,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     let clientId: string | null = null;
 
-    // console.log("onPeerConnect", id);
+    // this.tooldb.logger("onPeerConnect", id);
 
     const onData = (data: Uint8Array) => {
       const str = new TextDecoder().decode(data);
@@ -197,7 +197,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private cleanPool = () => {
     Object.entries(this.offerPool).forEach(([id, { peer }]) => {
       if (!this.handledOffers[id] && !this.connectedPeers[id]) {
-        // console.log("closed peer " + id);
+        // this.tooldb.logger("closed peer " + id);
         peer.end();
         peer.destroy();
         delete this.peerMap[id];
@@ -261,7 +261,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         offers: await Promise.all(
           Object.entries(this.offerPool).map(async ([id, { offerP }]) => {
             const offer = await offerP;
-            // console.warn(`Created offer id ${id}`);
+            // this.tooldb.logger(`Created offer id ${id}`);
             return {
               offer_id: id,
               offer,
@@ -282,12 +282,12 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     this.offerPool = this.makeOffers();
 
     this.trackerUrls.forEach(async (url: string) => {
-      // console.log("begin tracker connection " + url);
+      // this.tooldb.logger("begin tracker connection " + url);
       const socket = await this.makeSocket(url, this.infoHash);
-      // console.log(" ok tracker " + url);
-      // console.log("socket", url, socket);
+      // this.tooldb.logger(" ok tracker " + url);
+      // this.tooldb.logger("socket", url, socket);
       if (socket && socket.readyState === 1) {
-        // console.log("announce to " + url);
+        // this.tooldb.logger("announce to " + url);
         this.announce(socket, this.infoHash);
       }
     });
@@ -312,26 +312,26 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     try {
       val = JSON.parse(e.data);
-      // console.log("onSocketMessage", socket.url, val);
+      // this.tooldb.logger("onSocketMessage", socket.url, val);
     } catch (_e: any) {
-      // console.error(`${libName}: received malformed SDP JSON`);
+      // this.tooldb.logger(`${libName}: received malformed SDP JSON`);
       return;
     }
 
     const failure = val["failure reason"];
 
     if (failure) {
-      console.warn(`${e.origin}: torrent tracker failure (${failure})`);
+      this.tooldb.logger(`${e.origin}: torrent tracker failure (${failure})`);
       return;
     }
 
     if (val.info_hash !== this.infoHash) {
-      // console.warn("Info hash mismatch");
+      // this.tooldb.logger("Info hash mismatch");
       return;
     }
 
     if (val.peer_id && val.peer_id === this.getClientAddress()) {
-      // console.warn("Peer ids mismatch", val.peer_id, selfId);
+      // this.tooldb.logger("Peer ids mismatch", val.peer_id, selfId);
       return;
     }
 

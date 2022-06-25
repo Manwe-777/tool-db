@@ -25,9 +25,7 @@ export default function toolDbCrdtGet<T = any>(
     const finalKey = userNamespaced
       ? `:${this.userAccount.getAddress()}.${key}`
       : key;
-    if (this.options.debug) {
-      console.log("CRDT GET > " + finalKey);
-    }
+    this.logger("CRDT GET", finalKey);
 
     const msgId = textRandom(10);
 
@@ -50,9 +48,7 @@ export default function toolDbCrdtGet<T = any>(
     }, timeoutMs);
 
     this.addIdListener(msgId, (msg) => {
-      if (this.options.debug) {
-        console.log("GET RECV  > " + finalKey, msg);
-      }
+      this.logger("GET RECV", finalKey);
 
       clearTimeout(cancelTimeout);
       if (msg.type === "crdtPut") {

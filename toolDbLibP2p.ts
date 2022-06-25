@@ -54,7 +54,7 @@ export default class toolDbLibP2p {
 
     // Listen for new peers
     // node.on("peer:discovery", (peerId) => {
-    //   console.log(`Found peer ${peerId.toB58String()}`);
+    //   this.tooldb.logger(`Found peer ${peerId.toB58String()}`);
     // });
 
     // Listen for new connections to peers
@@ -71,7 +71,7 @@ export default class toolDbLibP2p {
         const pid = peer.id.toB58String();
 
         if (!this.clientSockets[pid]) {
-          console.warn(`Protocol found ${PROTOCOL_VER}`);
+          this.tooldb.logger(`Protocol found ${PROTOCOL_VER}`);
           try {
             const { stream } = await connection.newStream([PROTOCOL_VER]);
             this.clientSockets[pid] = stream;
@@ -83,7 +83,7 @@ export default class toolDbLibP2p {
               id: textRandom(10),
             } as PingMessage);
           } catch (err) {
-            console.info("Could not handshake protocol with peer", err);
+            this.tooldb.logger("Could not handshake protocol with peer", err);
           }
         }
       });
@@ -101,7 +101,6 @@ export default class toolDbLibP2p {
   }
 
   constructor(db: ToolDb) {
-    this._tooldb = db;
     this.options = db.options;
 
     this.createLibP2p();
@@ -135,7 +134,9 @@ export default class toolDbLibP2p {
     try {
       await pipe(stream, async (source) => {
         for await (const message of source) {
-          console.info(`${connection.remotePeer.toB58String()}: ${message}`);
+          this.tooldb.logger(
+            `${connection.remotePeer.toB58String()}: ${message}`
+          );
           try {
             const msg = JSON.parse(`${message}`) as ToolDbMessage;
             this._tooldb.clientOnMessage(
@@ -143,15 +144,15 @@ export default class toolDbLibP2p {
               connection.remotePeer.toB58String()
             );
           } catch (e) {
-            console.log("Got message ERR > ", message);
-            console.log(e);
+            this.tooldb.logger("Got message ERR", message);
+            this.tooldb.logger(e);
           }
         }
       });
       // Replies are done on new streams, so let's close this stream so we don't leak it
       await pipe([], stream);
     } catch (err) {
-      console.error(err);
+      this.tooldb.logger(err);
     }
   }
 
@@ -164,11 +165,11 @@ export default class toolDbLibP2p {
     try {
       await pipe([message], stream, async function (source: any) {
         for await (const message of source) {
-          console.info(`Me: ${message}`);
+          this.tooldb.logger(`Me: ${message}`);
         }
       });
     } catch (err) {
-      console.error(err);
+      this.tooldb.logger(err);
     }
   }
 
@@ -182,7 +183,7 @@ export default class toolDbLibP2p {
     filteredConns.forEach((clientId) => {
       const stream = this._clientSockets[clientId];
       if (!crossServerOnly) {
-        console.log("Sent out to: ", clientId);
+        this.tooldb.logger("Sent out to: ", clientId);
         if (stream) {
           const message = JSON.stringify({ ...msg, to });
           this.toolDbProtocolSend(message, stream);

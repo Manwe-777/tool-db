@@ -22,9 +22,7 @@ export default function toolDbQueryKeys(
       return;
     }
     const finalKey = userNamespaced ? `:${user.getAddress()}.${key}` : key;
-    if (this.options.debug) {
-      console.log("QUERY > " + finalKey);
-    }
+    this.logger("QUERY", finalKey);
 
     const msgId = textRandom(10);
     let foundKeys: string[] = [];
@@ -40,9 +38,8 @@ export default function toolDbQueryKeys(
     };
 
     this.addIdListener(msgId, (msg) => {
-      if (this.options.debug) {
-        console.log("QUERY RECV  > " + finalKey, msg);
-      }
+      this.logger("QUERY RECV", finalKey);
+
       if (msg.type === "queryAck") {
         foundKeys = [...foundKeys, ...msg.keys];
 

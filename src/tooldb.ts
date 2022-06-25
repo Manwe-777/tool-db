@@ -39,6 +39,7 @@ import {
 } from "./types/tooldb";
 
 import ToolDbWeb3User from "./toolDbWeb3User";
+import logger from "./logger";
 
 export interface Listener<T = any> {
   key: string;
@@ -60,6 +61,8 @@ export default class ToolDb extends EventEmitter {
   private _peers: Peer[] = [];
   private _peerAccount: ToolDbUserAdapter;
   private _userAccount: ToolDbUserAdapter;
+
+  public logger = logger;
 
   public clientOnMessage = toolDbClientOnMessage;
 
@@ -165,9 +168,8 @@ export default class ToolDb extends EventEmitter {
     key: string,
     fn: (msg: VerificationData<T>) => void
   ) => {
-    // if (this.options.debug) {
-    //   console.warn(`addKeyListener ${key}`);
-    // }
+    this.logger(`Add key listener: ${key}`);
+
     const newListener: Listener = {
       key,
       timeout: null,
@@ -192,9 +194,7 @@ export default class ToolDb extends EventEmitter {
   ) => {
     this._keyListeners.forEach((listener) => {
       if (listener?.key === key) {
-        // if (this.options.debug) {
-        //   console.warn(`triggerKeyListener ${key}`);
-        // }
+        this.logger(`Trigger key listener: ${key}`);
         if (listener.timeout) {
           clearTimeout(listener.timeout);
         }
