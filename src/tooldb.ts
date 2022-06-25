@@ -190,12 +190,11 @@ export default class ToolDb extends EventEmitter {
     key: string,
     message: VerificationData<T>
   ) => {
-    // if (this.options.debug) {
-    //   console.warn(`triggerKeyListener ${key}`);
-    // }
     this._keyListeners.forEach((listener) => {
       if (listener?.key === key) {
-        // console.log(`TRIGGER OK`, message);
+        // if (this.options.debug) {
+        //   console.warn(`triggerKeyListener ${key}`);
+        // }
         if (listener.timeout) {
           clearTimeout(listener.timeout);
         }

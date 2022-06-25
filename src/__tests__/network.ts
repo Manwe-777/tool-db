@@ -92,6 +92,7 @@ afterAll((done) => {
 it("A and B are signed in", () => {
   expect(Alice.userAccount.getAddress()).toBeDefined();
   expect(Bob.userAccount.getAddress()).toBeDefined();
+  expect(Chris.userAccount.getAddress()).toBeDefined();
 });
 
 it("A can put and get", (done) => {
@@ -147,9 +148,9 @@ it("A cand send and C can recieve from a subscription", (done) => {
       setTimeout(() => {
         expect(recievedMessage).toBeDefined();
         done();
-      }, 500);
+      }, 1000);
     });
-  }, 500);
+  }, 1000);
 });
 
 it("A can sign up and B can sign in", (done) => {
