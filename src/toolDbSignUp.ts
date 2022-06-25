@@ -17,7 +17,7 @@ export default async function toolDbSignUp(
 ): Promise<PutMessage<any>> {
   const userRoot = `==${user}`;
   return new Promise((resolve, reject) => {
-    this.getData<EncryptedKeystoreV3Json>(userRoot, false, 3000)
+    this.getData(userRoot, false, 3000)
       .then((data) => {
         if (data === null) {
           const account = new this.options.userAdapter(this);
@@ -32,14 +32,14 @@ export default async function toolDbSignUp(
             .then(({ hash, nonce }) => {
               const signature = account.signData(hash);
 
-              const signupMessage: VerificationData<EncryptedKeystoreV3Json> = {
+              const signupMessage: VerificationData = {
                 k: userRoot,
                 a: account.getAddress() || "",
                 n: nonce,
                 t: timestamp,
                 h: hash,
                 s: signature,
-                v: userData as any,
+                v: userData,
                 c: null,
               };
 
