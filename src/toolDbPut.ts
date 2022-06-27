@@ -41,6 +41,7 @@ export default function toolDbPut<T = any>(
           const finalKey = userNamespaced
             ? `:${this.userAccount.getAddress()}.${key}`
             : key;
+
           // Compose the message
           const data: VerificationData = {
             k: finalKey,
@@ -53,10 +54,6 @@ export default function toolDbPut<T = any>(
             c: null,
           };
 
-          this.store.put(finalKey, JSON.stringify(data), (err, data) => {
-            //
-          });
-
           this.logger("PUT", key, data);
 
           const finalMessage: PutMessage = {
@@ -65,9 +62,16 @@ export default function toolDbPut<T = any>(
             to: [],
             data,
           };
-          this.network.sendToAll(finalMessage);
 
-          resolve(finalMessage);
+          this.network.sendToAll(finalMessage);
+          this.store
+            .put(finalKey, JSON.stringify(data))
+            .catch((e) => {
+              // do nothing
+            })
+            .finally(() => {
+              resolve(finalMessage);
+            });
         }
       })
       .catch(reject);

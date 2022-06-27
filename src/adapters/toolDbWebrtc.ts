@@ -1,11 +1,11 @@
 import _ from "lodash";
 import Peer from "simple-peer";
 
-import { PingMessage, sha1, textRandom } from ".";
+import { PingMessage, sha1, textRandom } from "..";
 
-import ToolDb from "./tooldb";
+import ToolDb from "../tooldb";
 import WebSocket from "ws";
-import ToolDbNetworkAdapter from "./toolDbNetworkAdapter";
+import ToolDbNetworkAdapter from "../adapters-base/networkAdapter";
 
 type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
 

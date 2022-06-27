@@ -6,9 +6,9 @@ export default function handleCrdtGet(
   message: CrdtGetMessage,
   remotePeerId: string
 ) {
-  this.emit("crdtget", message);
-  this.store.get(message.key, (err, data) => {
-    if (data) {
+  this.store
+    .get(message.key)
+    .then((data) => {
       try {
         // Use the id of the get so the other client knows we are replying
         const oldData = {
@@ -22,9 +22,9 @@ export default function handleCrdtGet(
         // socket.send(data);
         // do nothing
       }
-    } else {
+    })
+    .catch((e) => {
       this.logger("Local key not found, relay", JSON.stringify(message));
       this.network.sendToAll(message, false, true);
-    }
-  });
+    });
 }

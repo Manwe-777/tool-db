@@ -26,8 +26,9 @@ export default function handleSubscribe(
   }
 
   // basically the exact same as GET, below
-  this.store.get(message.key, (err, data) => {
-    if (data) {
+  this.store
+    .get(message.key)
+    .then((data) => {
       try {
         const oldData: PutMessage = {
           data: JSON.parse(data),
@@ -39,6 +40,8 @@ export default function handleSubscribe(
       } catch (e) {
         // do nothing
       }
-    }
-  });
+    })
+    .catch((e) => {
+      // do nothing
+    });
 }

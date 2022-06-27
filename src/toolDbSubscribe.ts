@@ -4,7 +4,8 @@ import ToolDb from "./tooldb";
 /**
  * Subscribe to all PUT updates for this key.
  * @param key key of the data
- * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our address and signatures.
+ * @param userNamespaced If this key bolongs to a user or its public. Making it
+ * private will enforce validation for our address and signatures.
  * @returns Promise<Data>
  */
 export default function toolDbSubscribe(
@@ -17,23 +18,14 @@ export default function toolDbSubscribe(
       reject(new Error("You are not authorized yet!"));
       return;
     }
+
     const finalKey = userNamespaced
       ? `:${this.userAccount.getAddress()}.${key}`
       : key;
+
     this.logger("SUBSCRIBE", finalKey);
 
     const msgId = textRandom(10);
-
-    this.store.get(finalKey, (err, data) => {
-      if (data) {
-        try {
-          const message = JSON.parse(data);
-          this.triggerKeyListener(finalKey, message);
-        } catch (e) {
-          // do nothing
-        }
-      }
-    });
 
     this.network.sendToAll({
       type: "subscribe",
@@ -42,6 +34,21 @@ export default function toolDbSubscribe(
       id: msgId,
     });
 
-    resolve();
+    this.store
+      .get(finalKey)
+      .then((data) => {
+        try {
+          const message = JSON.parse(data);
+          this.triggerKeyListener(finalKey, message);
+        } catch (e) {
+          // do nothing
+        }
+      })
+      .catch((e) => {
+        // do nothing
+      })
+      .finally(() => {
+        resolve();
+      });
   });
 }

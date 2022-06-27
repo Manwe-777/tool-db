@@ -45,20 +45,19 @@ export default async function verifyMessage<T>(
   // This violates the offline first principle..?
   if (msg.k.slice(0, 2) == "==") {
     const key = msg.k;
-    const data = await new Promise<VerificationData<T> | null>((resolve) => {
-      this.store.get(key, (err, data) => {
-        if (data) {
-          try {
-            const message = JSON.parse(data);
-            resolve(message);
-          } catch (e) {
-            resolve(null);
-          }
-        } else {
-          resolve(null);
+    const data = await this.store
+      .get(key)
+      .then((data) => {
+        try {
+          const message = JSON.parse(data);
+          return message;
+        } catch (e) {
+          return null;
         }
+      })
+      .catch(() => {
+        return null;
       });
-    });
     if (data && data.a !== msg.a) return VerifyResult.CantOverwrite;
   }
 

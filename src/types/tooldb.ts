@@ -1,48 +1,11 @@
 import _ from "lodash";
 import { Server as HTTPServer } from "http";
 import { Server as HTTPSServer } from "https";
-import { ToolDb, ToolDbMessage, VerificationData } from "..";
-import ToolDbNetworkAdapter from "../toolDbNetworkAdapter";
-
-export class ToolDbUserAdapter {
-  constructor(db: ToolDb) {
-    //
-  }
-
-  public anonUser() {
-    return;
-  }
-
-  public setUser(account: unknown | undefined, name: string): void {}
-
-  public signData(data: string, privateKey?: string) {
-    return "";
-  }
-
-  public verifySignature(message: Partial<VerificationData<any>>) {
-    return false;
-  }
-
-  public getAccountFromPrivate(privateKey: string): unknown {
-    return undefined;
-  }
-
-  public encryptAccount(password: string): unknown {
-    return undefined;
-  }
-
-  public decryptAccount(acc: unknown, password: string): any {
-    return undefined;
-  }
-
-  public getAddress(): string | undefined {
-    return "";
-  }
-
-  public getUsername(): string | undefined {
-    return "";
-  }
-}
+import ToolDb from "../tooldb";
+import { ToolDbMessage } from "./message";
+import ToolDbNetworkAdapter from "../adapters-base/networkAdapter";
+import ToolDbStorageAdapter from "../adapters-base/storageAdapter";
+import ToolDbUserAdapter from "../adapters-base/userAdapter";
 
 export interface Peer {
   topic: string;
@@ -52,22 +15,6 @@ export interface Peer {
   adress: string;
   sig: string;
 }
-
-export interface ToolDbStore {
-  start: () => void;
-  put: (
-    key: string,
-    data: string,
-    callback: (err: any | null, data?: string) => void
-  ) => void;
-  get: (
-    key: string,
-    callback: (err: any | null, data?: string) => void
-  ) => void;
-  query: (key: string) => Promise<string[]>;
-}
-
-export type ToolDbStorageAdapter = (dbName?: string) => ToolDbStore;
 
 export type ToolDbMessageHandler = (
   this: ToolDb,
@@ -131,7 +78,7 @@ export interface ToolDbOptions {
   /**
    * A custom storage adapter function
    */
-  storageAdapter: ToolDbStorageAdapter;
+  storageAdapter: typeof ToolDbStorageAdapter;
   /**
    * A custom user storage and validation adapter class
    */

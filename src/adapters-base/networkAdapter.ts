@@ -1,7 +1,7 @@
 import _ from "lodash";
 
-import ToolDb from "./tooldb";
-import { ToolDbMessage } from "./types/message";
+import ToolDb from "../tooldb";
+import { ToolDbMessage } from "../types/message";
 
 export default class ToolDbNetworkAdapter {
   private _clientToSend: Record<string, (message: string) => void> = {};

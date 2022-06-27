@@ -2,9 +2,7 @@ import { VerifyResult } from "../types/message";
 
 import catchReturn from "../utils/catchReturn";
 
-import { Peer, ToolDb, VerificationData } from "..";
-
-import leveldb from "../utils/leveldb";
+import { Peer, ToolDb, ToolDbLeveldb, VerificationData } from "..";
 import getPeerSignature from "../utils/getPeerSignature";
 import verifyPeer from "../utils/verifyPeer";
 
@@ -18,7 +16,7 @@ beforeAll((done) => {
     server: true,
     host: "127.0.0.1",
     port: 8888,
-    storageAdapter: leveldb,
+    storageAdapter: ToolDbLeveldb,
     storageName: "test-verify-a",
   });
   ClientA.anonSignIn();

@@ -1,8 +1,8 @@
 import _ from "lodash";
 import WebSocket from "ws";
-import { PingMessage, textRandom } from ".";
-import ToolDb from "./tooldb";
-import ToolDbNetworkAdapter from "./toolDbNetworkAdapter";
+import { PingMessage, textRandom } from "..";
+import ToolDb from "../tooldb";
+import ToolDbNetworkAdapter from "../adapters-base/networkAdapter";
 
 interface ConnectionAwaiting {
   socket: WebSocket;
@@ -57,16 +57,16 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
       this.server.on("connection", (socket: WebSocket) => {
         let clientId: string | null = null;
 
-        // this.tooldb.logger("new connection:", clientId);
+        this.tooldb.logger("new connection:", clientId);
         socket.on("close", () => {
-          // this.tooldb.logger("closed connection:", clientId);
+          this.tooldb.logger("closed connection:", clientId);
           if (clientId) {
             this.onClientDisconnect(clientId);
           }
         });
 
         socket.on("error", () => {
-          // this.tooldb.logger("errored connection:", clientId);
+          this.tooldb.logger("errored connection:", clientId);
           if (clientId) {
             this.onClientDisconnect(clientId);
           }
@@ -99,13 +99,13 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
     port: number,
     connectionId?: string
   ): WebSocket | undefined => {
+    this.tooldb.logger("connectTo:", host + ":" + port);
     try {
       const wsUrl =
         port === 443 ? "wss://" + host : "ws://" + host + ":" + port;
       const wss = new this._wss(wsUrl);
-      const connId = textRandom(10);
+      const connId = connectionId || textRandom(10);
       let clientId = "";
-      wss.connId = connectionId || connId;
 
       const previousConnection = this._awaitingConnections.filter(
         (c) => c.id === connectionId
@@ -129,8 +129,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
       };
 
       wss.onerror = (_error: any) => {
-        this.tooldb.logger(_error.error);
-
+        this.tooldb.logger("wss.onerror", connId);
         if (_error?.error?.code !== "ETIMEDOUT") {
           this.reconnect(connId);
         }
@@ -182,20 +181,20 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
     const connection = this._awaitingConnections.filter(
       (c) => c.id === connectionId
     )[0];
+    this.tooldb.logger("reconnect", connectionId, connection);
     if (connection) {
       if (connection.defer) {
         clearTimeout(connection.defer);
       }
 
+      this.tooldb.logger(
+        `connection ${connectionId} tries: ${connection.tries}`
+      );
       if (connection.tries < this.tooldb.options.maxRetries) {
         const defer = () => {
           connection.tries += 1;
           this.tooldb.logger(
-            "Connection to " +
-              connection.host +
-              ":" +
-              connection.port +
-              " retry."
+            `connection to ${connection.host}:${connection.port} (${connectionId}) retry.`
           );
           this.connectTo(connection.host, connection.port, connectionId);
         };
@@ -203,11 +202,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
         connection.defer = setTimeout(defer, this.tooldb.options.wait) as any;
       } else {
         this.tooldb.logger(
-          "Connection attempts to " +
-            connection.host +
-            ":" +
-            connection.port +
-            " exceeded."
+          `connection attempts to ${connection.host}:${connection.port} (${connectionId}) exceeded,`
         );
         this.removeFromAwaiting(connectionId);
 

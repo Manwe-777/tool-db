@@ -30,8 +30,9 @@ export default function toolDbCrdtGet<T = any>(
     const msgId = textRandom(10);
 
     const cancelTimeout = setTimeout(() => {
-      this.store.get(finalKey, (err, data) => {
-        if (data) {
+      this.store
+        .get(finalKey)
+        .then((data) => {
           try {
             const message = JSON.parse(data);
             crdt.mergeChanges(message.v);
@@ -41,10 +42,8 @@ export default function toolDbCrdtGet<T = any>(
           } catch (e) {
             resolve(null);
           }
-        } else {
-          resolve(null);
-        }
-      });
+        })
+        .catch((e) => reject(null));
     }, timeoutMs);
 
     this.addIdListener(msgId, (msg) => {
@@ -57,8 +56,9 @@ export default function toolDbCrdtGet<T = any>(
       }
     });
 
-    this.store.get(finalKey, (err, data) => {
-      if (data) {
+    this.store
+      .get(finalKey)
+      .then((data) => {
         try {
           const msg = JSON.parse(data);
           clearTimeout(cancelTimeout);
@@ -69,8 +69,10 @@ export default function toolDbCrdtGet<T = any>(
         } catch (e) {
           // do nothing
         }
-      }
-    });
+      })
+      .catch(() => {
+        // do nothing
+      });
 
     // Do get
     this.network.sendToAll({

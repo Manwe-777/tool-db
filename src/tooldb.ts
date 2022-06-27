@@ -8,14 +8,14 @@ import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbCrdtGet from "./toolDbCrdtGet";
 import toolDbCrdtPut from "./toolDbCrdtPut";
-import ToolDbWebsocket from "./toolDbWebsocket";
+import ToolDbWebsocket from "./adapters/toolDbWebsocket";
 
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 
-import leveldb from "./utils/leveldb";
-import indexedb from "./utils/indexedb";
+import ToolDbLeveldb from "./adapters/toolDbLeveldb";
+import ToolDbIndexedb from "./adapters/toolDbIndexedb";
 
 import toolDbSubscribe from "./toolDbSubscribe";
 
@@ -31,15 +31,12 @@ import handleCrdtGet from "./messageHandlers/handleCrdtGet";
 import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
-import {
-  Peer,
-  ToolDbOptions,
-  ToolDbStore,
-  ToolDbUserAdapter,
-} from "./types/tooldb";
+import { Peer, ToolDbOptions } from "./types/tooldb";
 
-import ToolDbWeb3User from "./toolDbWeb3User";
+import ToolDbWeb3User from "./adapters/toolDbWeb3User";
 import logger from "./logger";
+import ToolDbStorageAdapter from "./adapters-base/storageAdapter";
+import ToolDbUserAdapter from "./adapters-base/userAdapter";
 
 export interface Listener<T = any> {
   key: string;
@@ -57,7 +54,7 @@ interface Verificator<T> {
 
 export default class ToolDb extends EventEmitter {
   private _network;
-  private _store: ToolDbStore;
+  private _store: ToolDbStorageAdapter;
   private _peers: Peer[] = [];
   private _peerAccount: ToolDbUserAdapter;
   private _userAccount: ToolDbUserAdapter;
@@ -243,7 +240,8 @@ export default class ToolDb extends EventEmitter {
     networkAdapter: ToolDbWebsocket,
     userAdapter: ToolDbWeb3User,
     storageName: "tooldb",
-    storageAdapter: typeof window === "undefined" ? leveldb : indexedb,
+    storageAdapter:
+      typeof window === "undefined" ? ToolDbLeveldb : ToolDbIndexedb,
     topic: "tool-db-default",
   };
 
@@ -275,7 +273,7 @@ export default class ToolDb extends EventEmitter {
     super();
     this._options = { ...this.options, ...options };
 
-    this._store = this.options.storageAdapter(this.options.storageName);
+    this._store = new this.options.storageAdapter(this);
     this._peerAccount = new this.options.userAdapter(this);
     this._userAccount = new this.options.userAdapter(this);
     this.emit("init", this.userAccount.getAddress());

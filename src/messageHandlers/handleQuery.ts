@@ -6,14 +6,19 @@ export default function handleQuery(
   message: QueryMessage,
   remotePeerId: string
 ) {
-  this.store.query(message.key).then((keys) => {
-    this.network.sendToClientId(remotePeerId, {
-      type: "queryAck",
-      id: message.id,
-      to: [],
-      keys,
-    } as QueryAckMessage);
-  });
+  this.store
+    .query(message.key)
+    .then((keys) => {
+      this.network.sendToClientId(remotePeerId, {
+        type: "queryAck",
+        id: message.id,
+        to: [],
+        keys,
+      } as QueryAckMessage);
+    })
+    .catch((e) => {
+      // do nothing
+    });
 
   if (this.options.server) {
     this.network.sendToAll(message, true, true);

@@ -1,11 +1,11 @@
 jest.mock("../getCrypto.ts");
-import elliptic from "elliptic";
 
 import { textRandom, ToolDb, VerificationData } from "..";
 import MapCrdt from "../crdt/mapCrdt";
-import leveldb from "../utils/leveldb";
 
-jest.setTimeout(10000);
+import { ToolDbLeveldb } from "..";
+
+jest.setTimeout(15000);
 
 let nodeA: ToolDb;
 let nodeB: ToolDb;
@@ -14,14 +14,12 @@ let Bob: ToolDb;
 let Chris: ToolDb;
 
 beforeAll((done) => {
-  (global as any).ecp256 = new elliptic.ec("p256");
-
   nodeA = new ToolDb({
     server: true,
     host: "127.0.0.1",
     port: 9000,
     storageName: "test-node-a",
-    storageAdapter: leveldb,
+    storageAdapter: ToolDbLeveldb,
   });
   nodeA.onConnect = () => checkIfOk(nodeA.peerAccount.getAddress() || "");
 
@@ -32,7 +30,7 @@ beforeAll((done) => {
     host: "127.0.0.1",
     port: 8000,
     storageName: "test-node-b",
-    storageAdapter: leveldb,
+    storageAdapter: ToolDbLeveldb,
   });
   nodeB.onConnect = () => checkIfOk(nodeB.peerAccount.getAddress() || "");
 
@@ -40,7 +38,7 @@ beforeAll((done) => {
     server: false,
     peers: [{ host: "localhost", port: 9000 }],
     storageName: "test-alice",
-    storageAdapter: leveldb,
+    storageAdapter: ToolDbLeveldb,
   });
   Alice.anonSignIn();
   Alice.onConnect = () => checkIfOk(Alice.peerAccount.getAddress() || "");
@@ -49,7 +47,7 @@ beforeAll((done) => {
     server: false,
     peers: [{ host: "localhost", port: 8000 }],
     storageName: "test-bob",
-    storageAdapter: leveldb,
+    storageAdapter: ToolDbLeveldb,
   });
   Bob.anonSignIn();
   Bob.onConnect = () => checkIfOk(Bob.peerAccount.getAddress() || "");
@@ -58,7 +56,7 @@ beforeAll((done) => {
     server: false,
     peers: [{ host: "localhost", port: 9000 }],
     storageName: "test-chris",
-    storageAdapter: leveldb,
+    storageAdapter: ToolDbLeveldb,
   });
   Chris.anonSignIn();
   Chris.onConnect = () => checkIfOk(Chris.peerAccount.getAddress() || "");
@@ -142,14 +140,19 @@ it("A cand send and C can recieve from a subscription", (done) => {
       recievedMessage = msg;
     });
 
-    Alice.putData(testKey, testValue).then((msg) => {
-      expect(msg).toBeDefined();
+    Alice.putData(testKey, testValue)
+      .then((msg) => {
+        expect(msg).toBeDefined();
 
-      setTimeout(() => {
-        expect(recievedMessage).toBeDefined();
+        setTimeout(() => {
+          expect(recievedMessage).toBeDefined();
+          expect(recievedMessage?.v).toBe(testValue);
+          done();
+        }, 1000);
+      })
+      .catch(() => {
         done();
-      }, 1000);
-    });
+      });
   }, 1000);
 });
 
@@ -157,33 +160,40 @@ it("A can sign up and B can sign in", (done) => {
   setTimeout(() => {
     const testUsername = "test-username-" + textRandom(16);
     const testPassword = "im a password";
+    Alice.signUp(testUsername, testPassword)
+      .then((result) => {
+        expect(result).toBeDefined();
+        setTimeout(() => {
+          Bob.signIn(testUsername, testPassword)
+            .then((res) => {
+              expect(res).toBeDefined();
+              expect(Bob.userAccount.getAddress()).toBeDefined();
+              expect(Bob.userAccount.getUsername()).toBe(testUsername);
 
-    Alice.signUp(testUsername, testPassword).then((result) => {
-      expect(result).toBeDefined();
-      setTimeout(() => {
-        Bob.signIn(testUsername, testPassword).then((res) => {
-          expect(res).toBeDefined();
-          expect(Bob.userAccount.getAddress()).toBeDefined();
-          expect(Bob.userAccount.getUsername()).toBe(testUsername);
-
-          // test for failed sign in
-          setTimeout(() => {
-            Bob.signIn(testUsername, testPassword + " ").catch((e) => {
-              expect(e.message).toBe(
-                "Key derivation failed - possibly wrong password"
-              );
+              // test for failed sign in
+              setTimeout(() => {
+                Bob.signIn(testUsername, testPassword + " ").catch((e) => {
+                  expect(e.message).toBe(
+                    "Key derivation failed - possibly wrong password"
+                  );
+                  done();
+                });
+              }, 500);
+            })
+            .catch((e) => {
               done();
             });
-          }, 500);
-        });
-      }, 500);
-    });
+        }, 500);
+      })
+      .catch((e) => {
+        done();
+      });
   }, 500);
 });
 
 it("Can cancel GET timeout", (done) => {
   setTimeout(() => {
-    const testKey = "crdt-get-test-" + textRandom(16);
+    const testKey = "timeout-test-" + textRandom(16);
     const testValue = textRandom(24);
 
     Alice.putData(testKey, testValue).then(() => {

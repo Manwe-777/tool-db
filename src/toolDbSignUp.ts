@@ -1,7 +1,5 @@
 import ToolDb from "./tooldb";
 
-import { EncryptedKeystoreV3Json } from "web3-core";
-
 import {
   PutMessage,
   textRandom,
@@ -43,14 +41,6 @@ export default async function toolDbSignUp(
                 c: null,
               };
 
-              this.store.put(
-                userRoot,
-                JSON.stringify(signupMessage),
-                (err, data) => {
-                  //
-                }
-              );
-
               this.logger("SIGNUP PUT", userRoot, signupMessage);
 
               const finalMsg = {
@@ -61,7 +51,14 @@ export default async function toolDbSignUp(
               } as PutMessage;
 
               this.network.sendToAll(finalMsg);
-              resolve(finalMsg);
+              this.store
+                .put(userRoot, JSON.stringify(signupMessage))
+                .catch((e) => {
+                  // do nothing
+                })
+                .finally(() => {
+                  resolve(finalMsg);
+                });
             })
             .catch(reject);
         } else {

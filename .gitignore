@@ -12,5 +12,8 @@ test-keys-b
 test-node-speed
 test-verify-a
 test-verify-b
+test-store
+test-base-server
+test-base-client
 bundle.js
 tooldb

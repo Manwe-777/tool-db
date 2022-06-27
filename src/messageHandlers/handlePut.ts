@@ -16,19 +16,18 @@ export default function handlePut(
       // relay to other servers !!!
       this.network.sendToAll(message, true);
 
-      this.store.get(message.data.k, (err, oldData?: string) => {
-        if (oldData) {
+      this.store
+        .get(message.data.k)
+        .then((oldData) => {
           const parsedOldData = JSON.parse(oldData);
           if (parsedOldData.t < message.data.t) {
             const key = message.data.k;
             this.triggerKeyListener(key, message.data);
-            this.store.put(
-              message.data.k,
-              JSON.stringify(message.data),
-              (err, data) => {
-                //
-              }
-            );
+            this.store
+              .put(message.data.k, JSON.stringify(message.data))
+              .catch((e) => {
+                // do nothing
+              });
           } else {
             const key = message.data.k;
             this.triggerKeyListener(key, parsedOldData);
@@ -38,18 +37,16 @@ export default function handlePut(
           //     `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
           //   );
           // }
-        } else {
+        })
+        .catch((e) => {
           const key = message.data.k;
           this.triggerKeyListener(key, message.data);
-          this.store.put(
-            message.data.k,
-            JSON.stringify(message.data),
-            (err, data) => {
+          this.store
+            .put(message.data.k, JSON.stringify(message.data))
+            .catch((e) => {
               //
-            }
-          );
-        }
-      });
+            });
+        });
     } else {
       this.logger("unverified message: ", value, message);
     }

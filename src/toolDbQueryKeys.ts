@@ -28,10 +28,15 @@ export default function toolDbQueryKeys(
     let foundKeys: string[] = [];
     let timeout: NodeJS.Timeout | undefined;
 
-    this.store.query(finalKey).then((localKeys) => {
-      foundKeys = [...foundKeys, ...localKeys];
-      timeout = setTimeout(finishListening, timeoutMs);
-    });
+    this.store
+      .query(finalKey)
+      .then((localKeys) => {
+        foundKeys = [...foundKeys, ...localKeys];
+        timeout = setTimeout(finishListening, timeoutMs);
+      })
+      .catch((e) => {
+        // do nothing
+      });
 
     const finishListening = () => {
       resolve(_.uniq(foundKeys));

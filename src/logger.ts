@@ -25,7 +25,7 @@ export default function logger(
     console.log(
       title,
       style,
-      ...[arg0, arg1, arg2, arg3, arg4, arg4, arg5].filter((n) => n)
+      ...[arg0, arg1, arg2, arg3, arg4, arg4, arg5].slice(0, arguments.length)
     );
   }
 }

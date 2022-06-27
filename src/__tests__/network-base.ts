@@ -1,18 +1,10 @@
 jest.mock("../getCrypto.ts");
-import elliptic from "elliptic";
 
-import { ToolDb } from "..";
+import { ToolDb, ToolDbLeveldb } from "..";
 
-import leveldb from "../utils/leveldb";
-
-jest.setTimeout(10000);
+jest.setTimeout(20000);
 
 let nodeA: ToolDb;
-
-beforeAll((done) => {
-  (global as any).ecp256 = new elliptic.ec("p256");
-  done();
-});
 
 afterAll((done) => {
   if (nodeA) {
@@ -24,9 +16,10 @@ afterAll((done) => {
 it("A can retry connection", (done) => {
   const Alice = new ToolDb({
     server: false,
-    peers: [{ host: "localhost", port: 9000 }],
-    storageName: "test-alice",
-    storageAdapter: leveldb,
+    maxRetries: 1000,
+    peers: [{ host: "localhost", port: 8001 }],
+    storageName: "test-base-client",
+    storageAdapter: ToolDbLeveldb,
   });
   Alice.anonSignIn();
   Alice.onConnect = () => {
@@ -35,13 +28,14 @@ it("A can retry connection", (done) => {
   };
 
   setTimeout(() => {
-    expect(Alice.isConnected).toBeFalsy();
     nodeA = new ToolDb({
       server: true,
       host: "127.0.0.1",
-      port: 9000,
-      storageName: "test-node-a",
-      storageAdapter: leveldb,
+      port: 8001,
+      storageName: "test-base-server",
+      storageAdapter: ToolDbLeveldb,
     });
-  }, Alice.options.wait * 3);
+    nodeA.anonSignIn();
+    expect(Alice.isConnected).toBeFalsy();
+  }, 5000);
 });

@@ -27,8 +27,9 @@ export default function toolDbGet<T = any>(
     const msgId = textRandom(10);
 
     const cancelTimeout = setTimeout(() => {
-      this.store.get(finalKey, (err, data) => {
-        if (data) {
+      this.store
+        .get(finalKey)
+        .then((data) => {
           try {
             const message = JSON.parse(data);
             this.emit("data", message);
@@ -36,10 +37,10 @@ export default function toolDbGet<T = any>(
           } catch (e) {
             resolve(null);
           }
-        } else {
+        })
+        .catch((e) => {
           resolve(null);
-        }
-      });
+        });
     }, timeoutMs);
 
     this.addIdListener(msgId, (msg) => {
@@ -51,8 +52,9 @@ export default function toolDbGet<T = any>(
       }
     });
 
-    this.store.get(finalKey, (err, data) => {
-      if (data) {
+    this.store
+      .get(finalKey)
+      .then((data) => {
         try {
           const parsed = JSON.parse(data);
           const val = parsed.v;
@@ -63,8 +65,10 @@ export default function toolDbGet<T = any>(
         } catch (e) {
           // do nothing
         }
-      }
-    });
+      })
+      .catch((e) => {
+        // do nothing
+      });
 
     // Do get
     this.network.sendToAll({
