@@ -24,10 +24,6 @@ export type ToolDbMessageHandler = (
 
 export interface ToolDbOptions {
   /**
-   * Database name to use
-   */
-  db: string;
-  /**
    * Show debug console logs
    */
   debug: boolean;

@@ -226,7 +226,6 @@ export default class ToolDb extends EventEmitter {
   };
 
   private _options: ToolDbOptions = {
-    db: "tooldb",
     peers: [],
     maxRetries: 5,
     triggerDebouce: 100,
