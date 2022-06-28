@@ -1,6 +1,6 @@
 # Tool Db
 
-ToolDb is a peer-to-peer model for a decentralized database, inspired by Gun (Mark Nadal): https://gun.eco/
+ToolDb is a peer-to-peer model for a decentralized database, inspired by GundB
 
 
 It is the mix of a lot of cool concepts into one;
@@ -29,9 +29,8 @@ We do that using [discovery-channel](https://www.npmjs.com/package/discovery-cha
 
 While the database is currently functioning as expected, there are many things that could be added or improved to make it even better!
 
-- Use a common web3 format for users identity, or a more standarized key pair.
-- Allow messages encryption, add methods for Elliptic Curves, shared keys, etc.
-- Allow adding Noise/encryption to connections (probably based on the ECC?)
+- Allow data encryption (proably built in), add methods for ECC encryption, shared keys, etc.
+- Allow adding Noise/encryption to connections (probably based on the peer identity, requires initial keys exchange on connection)
 
 # Install
 
@@ -54,148 +53,22 @@ const { ToolDb, sha256 } = tooldb;
 ```
 
 ## Base usage
-Connect to the selected toolDb peers;
-```
-const client = new ToolDb(options);
-```
 
-These are the options you can pass to the constructor:
+Creating a webrtc peers network is as easy as;
 
 ```
-{
-  // Database name to use (default "tooldb")
-  db: string;
+import { ToolDb, ToolDbWebrtc } from "tool-db";
 
-  // Show debug console logs (default false)
-  debug: boolean;
-
-  // Array of peers to connect to, each one in the form of { host: "127.0.0.1", port: 9000 }
-  peers: { host: "127.0.0.1", port: 9000 }[];
-
-  // Max number of tries when a connection fails (default 5)
-  maxRetries: number;
-
-  // How long to wait (max) for a debounced key listener recv (default 100)
-  triggerDebouce: number;
-
-  // How long to wait between retries (default 2000)
-  wait: number;
-
-  // If you want to force a Proof of Work on all messages, set how much (zero is no POW, default 0)
-  pow: number;
-
-  // Whether we are a server or not (default false)
-  server: boolean;
-
-  // Our hostname (server only)
-  host: string
-
-  // Port to listen incoming connections (server only, default is 8080)
-  port: number;
-
-  // A server instance like Express (server only)
-  httpServer: HTTPServer | HTTPSServer | undefined;
-
-  // Our storage namespace (default is "tooldb")
-  storageName: string;
-
-  // A custom network adapter class
-  networkAdapter: typeof ToolDbNetworkAdapter;
-
-  // A custom storage adapter function
-  storageAdapter: ToolDbStorageAdapter;
-
-  // The namespace/topic of our app (default is "tool-db-default")
-  topic: string;
-}
-```
-Notice you can use your own network and storage modules if you would like to implement custom solutions for peers discovery, connections, storage, etc, the default adapters will work both on nodejs and the browser.
-
-
-You can create a user, sign in or create a random set of keys for anonymous usage;
-```
-client.signUp(user, pass).then();
-client.signIn(user, pass).then(keys);
-client.anonSignIn().then();
+const db = new ToolDb({
+  networkAdapter: ToolDbWebrtc,
+  debug: true,
+});
 ```
 
-To retrieve your address; (only if logged in)
-```
-client.getAddress();
-```
-
-You can check if you are correctly logged in by checking if the user field exists or not;
-```
-if (client.user) {
-  // Ok!
-}
-```
-
-## Putting and getting data
-
-Core methods are very straighforward:
-```
-client.getData("key", userNamespaced?, timeout?).then();
-client.putData("key", value, userNamespaced?).then();
-client.putCrdt("key", documentChanges, userNamespaced?).then();
-```
-UserNamespaced will check for the user namespace, so it will transform the key used to ":user.key", This way all peers reading this entry will understand the key belongs to this user and will enforce the verifications required to namespaced entries.
-
-You can use `client.getUserNamespacedKey(key)` to convert any key to a private namespaced key of the current logged in user.
-
-Note the third function (putCrdt); For p2p networks some times you want to have conflict resolution on certain documents, to do this we use [automerge](https://github.com/automerge/automerge). Please take a look at it to know how it works in detail! The only thing you need to know on Tool Db is that you have to send an `Automerge.BinaryChange[]` (you get it using `Automerge.change()`). The recieving peer will process the changes, compare it to its stored documents and generate a new document with JSON CRDT applied to it, then relay the final document back to you.
-
-To listen for a value changes you can set up a listener on a key. Beware the listener will check for all keys *starting with* the supplied key, so for example, if you use "value." as your listener if will execute on every key that starts with "value.". This is useful for checking against an address or namespace.
-```
-const listenerId = client.addKeyListener("value", console.log);
-client.removeKeyListener(listenerId);
-```
-
-Similarly, for using a custom verification on a key (or subset of keys) you can create a new function that returns a Promise boolean;
-```
-const validateFn = (msg) => {
-  return new Promise((resolve) => {
-    console.log("Custom verification: ", msg);
-    if (typeof msg.value === "string") resolve(true);
-    else resolve(false);
-  });
-}
-
-const validatorId = client.addCustomVerification("value", validateFn);
-
-client.removeCustomVerification(validatorId);
-```
-
-Keep in mind custom validators should run on all client and server nodes, and even though the nodes not running your validator will be able to store and relay invalid messages its up to each peer to check these messages on arrival. ToolDb does this automatically when using the custom validation, but its important to make sure every peer runs the same code to avoid tampered messages flowing in the network.
-
-## Query
-
-To make queries or just create indexes you can make a query, it simply asks all server or peers connected a list of all keys starting with a prefix. You can later use these keys to get the data itself.
+From there you can put and get data using the api;
 
 ```
-client.queryKeys(keyPrefix, userNamespaced?, timeout?).then()
+db.putData("foo-key", "var").then(console.log);
 ```
 
-Just like previous methods you can configure the namespace and timeout and returns a promise, but in this case the value is always an array with the found keys.
-Using for example ":" + address as our prefix would return all keys stored for that specific user namespace; you can also create keys for very specific use cases like "post-1" and query again "post-" to get a list of all available posts.
-
-Keep in mind this can be an intensive thing to do if your indexes are too big, and not recommended to be used very frequently.
-
-
-## Listen for changes
-
-Some times you want to subscribe to the changes made on a certain key, this is possible via subscribeData;
-```
-client.subscribeData("key", userNamespaced?);
-```
-
-This will relay back to you all Put and CrdtPut messages on that key.
-
-## Events
-
-If you need to check when you are connected to a server peer or not you can use the following method replacements;
-
-```
-client.onConnect = (remotePeerId: string) => { /* Your code here */ };
-client.onDisconnect = () => { /* Your code here */ };
-```
+There is a lot more you can do, like subscribe for updates, built-in users credentials validation based on ECC, create federated networks, run servers on Nodejs, auto-replicate data trough them, etc. Make sure more you read trough the [documentation](https://github.com/Manwe-777/tool-db-docs)!
