@@ -16,16 +16,16 @@ export default function toolDbSignIn(
       }
 
       try {
-        const newAccount = this.userAccount.decryptAccount(
-          _user,
-          sha256(password)
-        );
-        this.userAccount.setUser(
-          newAccount,
-          user || `Anonymous ${randomAnimal()}`
-        );
+        this.userAccount
+          .decryptAccount(_user, sha256(password))
+          .then((newAccount) => {
+            this.userAccount.setUser(
+              newAccount,
+              user || `Anonymous ${randomAnimal()}`
+            );
 
-        resolve(newAccount);
+            resolve(_user);
+          });
       } catch (e) {
         reject(e);
       }

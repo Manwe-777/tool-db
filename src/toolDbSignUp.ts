@@ -19,48 +19,48 @@ export default async function toolDbSignUp(
       .then((data) => {
         if (data === null) {
           const account = new this.options.userAdapter(this);
-          const userData = account.encryptAccount(sha256(password));
+          account.encryptAccount(sha256(password)).then((userData) => {
+            const timestamp = new Date().getTime();
+            const userDataString = `${JSON.stringify(
+              userData
+            )}${account.getAddress()}${timestamp}`;
 
-          const timestamp = new Date().getTime();
-          const userDataString = `${JSON.stringify(
-            userData
-          )}${account.getAddress()}${timestamp}`;
+            proofOfWork(userDataString, 0)
+              .then(({ hash, nonce }) => {
+                account.signData(hash).then((signature) => {
+                  const signupMessage: VerificationData = {
+                    k: userRoot,
+                    a: account.getAddress() || "",
+                    n: nonce,
+                    t: timestamp,
+                    h: hash,
+                    s: signature,
+                    v: userData,
+                    c: null,
+                  };
 
-          proofOfWork(userDataString, 0)
-            .then(({ hash, nonce }) => {
-              const signature = account.signData(hash);
+                  this.logger("SIGNUP PUT", userRoot, signupMessage);
 
-              const signupMessage: VerificationData = {
-                k: userRoot,
-                a: account.getAddress() || "",
-                n: nonce,
-                t: timestamp,
-                h: hash,
-                s: signature,
-                v: userData,
-                c: null,
-              };
+                  const finalMsg = {
+                    type: "put",
+                    id: textRandom(10),
+                    to: [],
+                    data: signupMessage,
+                  } as PutMessage;
 
-              this.logger("SIGNUP PUT", userRoot, signupMessage);
-
-              const finalMsg = {
-                type: "put",
-                id: textRandom(10),
-                to: [],
-                data: signupMessage,
-              } as PutMessage;
-
-              this.network.sendToAll(finalMsg);
-              this.store
-                .put(userRoot, JSON.stringify(signupMessage))
-                .catch((e) => {
-                  // do nothing
-                })
-                .finally(() => {
-                  resolve(finalMsg);
+                  this.network.sendToAll(finalMsg);
+                  this.store
+                    .put(userRoot, JSON.stringify(signupMessage))
+                    .catch((e) => {
+                      // do nothing
+                    })
+                    .finally(() => {
+                      resolve(finalMsg);
+                    });
                 });
-            })
-            .catch(reject);
+              })
+              .catch(reject);
+          });
         } else {
           reject(new Error("User already exists!"));
         }

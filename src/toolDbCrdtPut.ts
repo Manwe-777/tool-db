@@ -41,33 +41,34 @@ export default function toolDbCrdtPut<T = any>(
     // WORK
     proofOfWork(dataString, this.options.pow)
       .then(({ hash, nonce }) => {
-        const signature = this.userAccount.signData(hash);
-        if (signature && this.userAccount.getAddress()) {
-          // Compose the message
-          const data: VerificationData<any> = {
-            k: userNamespaced
-              ? `:${this.userAccount.getAddress()}.${key}`
-              : key,
-            a: this.userAccount.getAddress() || "",
-            n: nonce,
-            t: timestamp,
-            h: hash,
-            s: signature,
-            v: crdtChanges,
-            c: crdt.type,
-          };
+        this.userAccount.signData(hash).then((signature) => {
+          if (signature && this.userAccount.getAddress()) {
+            // Compose the message
+            const data: VerificationData<any> = {
+              k: userNamespaced
+                ? `:${this.userAccount.getAddress()}.${key}`
+                : key,
+              a: this.userAccount.getAddress() || "",
+              n: nonce,
+              t: timestamp,
+              h: hash,
+              s: signature,
+              v: crdtChanges,
+              c: crdt.type,
+            };
 
-          this.logger("PUT CRDT", key, data);
+            this.logger("PUT CRDT", key, data);
 
-          const finalMessage: CrdtPutMessage<any> = {
-            type: "crdtPut",
-            id: textRandom(10),
-            to: [],
-            data,
-          };
-          this.network.sendToAll(finalMessage);
-          resolve(finalMessage);
-        }
+            const finalMessage: CrdtPutMessage<any> = {
+              type: "crdtPut",
+              id: textRandom(10),
+              to: [],
+              data,
+            };
+            this.network.sendToAll(finalMessage);
+            resolve(finalMessage);
+          }
+        });
       })
       .catch(reject);
   });

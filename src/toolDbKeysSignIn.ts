@@ -5,11 +5,13 @@ export default function toolDbKeysSignIn(
   this: ToolDb,
   privateKey: string,
   username?: string
-) {
-  if (!this.userAccount) return;
+): Promise<unknown> {
+  if (!this.userAccount) return Promise.resolve(undefined);
 
-  const newAccount = this.userAccount.getAccountFromPrivate(privateKey);
-
-  this.userAccount.setUser(newAccount, username || randomAnimal());
-  return newAccount;
+  return this.userAccount
+    .getAccountFromPrivate(privateKey)
+    .then((newAccount) => {
+      this.userAccount.setUser(newAccount, username || randomAnimal());
+      return newAccount;
+    });
 }

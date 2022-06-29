@@ -34,28 +34,30 @@ export default class ToolDbWeb3User extends ToolDbUserAdapter {
   public signData(data: string) {
     const signature = this.web3.eth.accounts.sign(data, this._user.privateKey);
 
-    return signature.signature;
+    return Promise.resolve(signature.signature);
   }
 
   public verifySignature(message: Partial<VerificationData<any>>) {
-    if (!message.h || !message.s) return false;
+    if (!message.h || !message.s) return Promise.resolve(false);
 
     const address = this.web3.eth.accounts.recover(message.h, message.s);
-    return address === message.a;
+    return Promise.resolve(address === message.a);
   }
 
   public getAccountFromPrivate(privateKey: string) {
-    return this.web3.eth.accounts.privateKeyToAccount(privateKey);
+    return Promise.resolve(
+      this.web3.eth.accounts.privateKeyToAccount(privateKey)
+    );
   }
 
   public encryptAccount(password: string) {
-    return this._user.encrypt(password);
+    return Promise.resolve(this._user.encrypt(password));
   }
 
   public decryptAccount(acc: EncryptedKeystoreV3Json, password: string) {
     try {
       const newAccount = this.web3.eth.accounts.decrypt(acc, password);
-      return newAccount;
+      return Promise.resolve(newAccount);
     } catch (e) {
       throw e;
     }

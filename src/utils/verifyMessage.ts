@@ -83,7 +83,7 @@ export default async function verifyMessage<T>(
   }
 
   const verified = this.userAccount
-    ? this.userAccount.verifySignature(msg)
+    ? await this.userAccount.verifySignature(msg)
     : false;
   // this.logger(`Signature validation: ${verified ? "Sucess" : "Failed"}`);
 
