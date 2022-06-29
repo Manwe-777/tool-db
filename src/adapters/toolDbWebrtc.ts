@@ -236,7 +236,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
               f(socket, e)
             );
           // eslint-disable-next-line func-names
-          socket.onerror = function () {
+          socket.onerror = () => {
+            const index = this.trackerUrls.indexOf(url);
+            this.trackerUrls.splice(index, 1);
             resolve(null);
           };
         } catch (e) {
