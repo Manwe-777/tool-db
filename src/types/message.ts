@@ -19,7 +19,7 @@ export interface VerificationData<T = any> {
    */
   k: string;
   /**
-   * Adress
+   * Address
    */
   a: string;
   /**

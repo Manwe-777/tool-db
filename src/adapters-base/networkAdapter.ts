@@ -118,14 +118,7 @@ export default class ToolDbNetworkAdapter {
    * @param crossServerOnly If this message should be send to server peers only
    * @param isRelay if we should relay this message
    */
-  public sendToAll(
-    msg: ToolDbMessage,
-    crossServerOnly = false,
-    isRelay = false
-  ) {
-    // const to = isRelay
-    //   ? _.uniq([...msg.to])
-    //   : _.uniq([...msg.to, this.getClientAddress()]);
+  public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
     const to = _.uniq([...msg.to, this.getClientAddress()]);
 
     const finalMessage = JSON.stringify({ ...msg, to });

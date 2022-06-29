@@ -11,7 +11,7 @@ export default function handleJoin(
     if (verified) {
       // Add this peer to our list of peers
       const filteredPeers = this.peers.filter(
-        (p) => p.adress !== message.peer.adress
+        (p) => p.address !== message.peer.address
       );
       if (
         filteredPeers.length === 0 &&

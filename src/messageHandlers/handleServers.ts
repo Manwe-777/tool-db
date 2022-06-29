@@ -12,7 +12,7 @@ export default function handleServers(
       // Add this peer to our list of peers
       if (verified) {
         const filteredPeers = this.peers.findIndex(
-          (p) => p.adress === peer.adress
+          (p) => p.address === peer.address
         );
         if (filteredPeers === -1) {
           // Add this peer to the list

@@ -204,7 +204,7 @@ it("Can verify peers", async () => {
     timestamp: timestamp,
     host: "host",
     port: 8080,
-    adress: ClientA.peerAccount.getAddress() || "",
+    address: ClientA.peerAccount.getAddress() || "",
     sig: signature,
   };
 

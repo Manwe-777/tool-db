@@ -12,7 +12,7 @@ export interface Peer {
   timestamp: number;
   host: string;
   port: number;
-  adress: string;
+  address: string;
   sig: string;
 }
 

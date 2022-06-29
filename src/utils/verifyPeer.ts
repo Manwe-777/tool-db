@@ -13,7 +13,7 @@ export default function verifyPeer(tooldb: ToolDb, peer: Peer) {
   // I want to keep it like this so the signature verification is in a single place
   return tooldb.verifyMessage({
     h: data,
-    a: peer.adress,
+    a: peer.address,
     s: peer.sig,
   });
 }

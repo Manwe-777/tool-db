@@ -20,6 +20,8 @@ export default function handlePing(
     id: message.id,
   } as PongMessage);
 
+  this.sendJoin(remotePeerId);
+
   this.network.sendToClientId(remotePeerId, {
     type: "servers",
     servers: this.peers,

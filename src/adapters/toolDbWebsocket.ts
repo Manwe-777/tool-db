@@ -137,9 +137,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
 
       wss.onopen = () => {
         this.removeFromAwaiting(connId);
-        this.tooldb.logger(
-          "Connected to " + host + ": " + port + " sucessfully."
-        );
+        this.tooldb.logger(`Connected to ${host}:${port} sucessfully.`);
 
         // hi peer
         wss.send(

@@ -21,6 +21,6 @@ export default function handleQuery(
     });
 
   if (this.options.server) {
-    this.network.sendToAll(message, true, true);
+    this.network.sendToAll(message, true);
   }
 }

@@ -37,6 +37,7 @@ import ToolDbWeb3User from "./adapters/toolDbWeb3User";
 import logger from "./logger";
 import ToolDbStorageAdapter from "./adapters-base/storageAdapter";
 import ToolDbUserAdapter from "./adapters-base/userAdapter";
+import sendJoin from "./sendJoin";
 
 export interface Listener<T = any> {
   key: string;
@@ -108,6 +109,8 @@ export default class ToolDb extends EventEmitter {
   public onPeerConnect = (peerId: string) => {
     //
   };
+
+  public sendJoin = sendJoin;
 
   public getData = toolDbGet;
 

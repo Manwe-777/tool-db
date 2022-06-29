@@ -36,9 +36,9 @@ export default async function verifyMessage<T>(
   }
 
   // This is a user namespace
-  let adressNamespace: false | string = false;
+  let addressNamespace: false | string = false;
   if (msg.k.slice(0, 1) == ":") {
-    adressNamespace = msg.k.split(".")[0].slice(1);
+    addressNamespace = msg.k.split(".")[0].slice(1);
   }
 
   // This namespace can only be written if data does not exist previously
@@ -61,7 +61,7 @@ export default async function verifyMessage<T>(
     if (data && data.a !== msg.a) return VerifyResult.CantOverwrite;
   }
 
-  if (adressNamespace && adressNamespace !== msg.a) {
+  if (addressNamespace && addressNamespace !== msg.a) {
     // this.logger("Provided address does not match");
     return VerifyResult.AddressMismatch;
   }
