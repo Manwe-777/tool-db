@@ -283,7 +283,7 @@ export default class ToolDb extends EventEmitter {
 
     this._network = new this.options.networkAdapter(this);
 
-    const DEFAULT_KEYS = "%default-web3eth-user%";
+    const DEFAULT_KEYS = "%default-peer%";
 
     this.store
       .get(DEFAULT_KEYS)
