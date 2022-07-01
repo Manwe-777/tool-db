@@ -1,7 +1,14 @@
 import { ToolDb, VerificationData } from "..";
 
 export default class ToolDbUserAdapter {
+  private _tooldb: ToolDb;
+
+  get tooldb() {
+    return this._tooldb;
+  }
+
   constructor(db: ToolDb) {
+    this._tooldb = db;
     //
   }
 

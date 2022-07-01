@@ -1,6 +1,11 @@
 import EventEmitter from "events";
 
-import { ToolDbMessage, VerificationData, verifyMessage } from ".";
+import {
+  ToolDbMessage,
+  VerificationData,
+  verifyMessage,
+  randomAnimal,
+} from ".";
 
 import toolDbGet from "./toolDbGet";
 import toolDbPut from "./toolDbPut";
@@ -275,8 +280,34 @@ export default class ToolDb extends EventEmitter {
     this._store = new this.options.storageAdapter(this);
     this._peerAccount = new this.options.userAdapter(this);
     this._userAccount = new this.options.userAdapter(this);
-    this.emit("init", this.userAccount.getAddress());
 
     this._network = new this.options.networkAdapter(this);
+
+    const DEFAULT_KEYS = "%default-web3eth-user%";
+
+    this.store
+      .get(DEFAULT_KEYS)
+      .then((val) => {
+        this.peerAccount
+          .decryptAccount(JSON.parse(val), DEFAULT_KEYS)
+          .then((a) => {
+            this.peerAccount.setUser(a, randomAnimal());
+          })
+          .finally(() => {
+            this.emit("init", this.userAccount.getAddress());
+          });
+      })
+      .catch((_e) => {
+        this.peerAccount.encryptAccount(DEFAULT_KEYS).then((a) => {
+          this.store
+            .put(DEFAULT_KEYS, JSON.stringify(a))
+            .catch(() => {
+              // nothing
+            })
+            .finally(() => {
+              this.emit("init", this.userAccount.getAddress());
+            });
+        });
+      });
   }
 }
