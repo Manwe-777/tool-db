@@ -15,14 +15,9 @@ export default function handlePing(
     if (verified && message.peer.topic === this.options.topic) {
       // Add this peer to our list of peers
       const filteredPeers = this.serverPeers.filter(
-        (p) => p.address !== message.peer.address
+        (p) => p.address === message.peer.address
       );
-      if (
-        filteredPeers.length === 0 &&
-        message.peer.host &&
-        message.peer.port &&
-        message.isServer
-      ) {
+      if (filteredPeers.length === 0 && message.isServer) {
         // Add this peer to the list
         this.serverPeers.push(message.peer);
       }

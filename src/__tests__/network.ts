@@ -18,6 +18,7 @@ beforeAll((done) => {
     server: true,
     host: "127.0.0.1",
     port: 9000,
+    debug: true,
     storageName: "test-node-a",
     storageAdapter: ToolDbLeveldb,
   });
@@ -40,7 +41,6 @@ beforeAll((done) => {
     storageName: "test-alice",
     storageAdapter: ToolDbLeveldb,
   });
-  Alice.anonSignIn();
   Alice.onConnect = () => checkIfOk(Alice.peerAccount.getAddress() || "");
 
   Bob = new ToolDb({
@@ -49,7 +49,6 @@ beforeAll((done) => {
     storageName: "test-bob",
     storageAdapter: ToolDbLeveldb,
   });
-  Bob.anonSignIn();
   Bob.onConnect = () => checkIfOk(Bob.peerAccount.getAddress() || "");
 
   Chris = new ToolDb({
@@ -58,7 +57,6 @@ beforeAll((done) => {
     storageName: "test-chris",
     storageAdapter: ToolDbLeveldb,
   });
-  Chris.anonSignIn();
   Chris.onConnect = () => checkIfOk(Chris.peerAccount.getAddress() || "");
 
   const connected: string[] = [];
@@ -85,6 +83,15 @@ afterAll((done) => {
   nodeB.network.server.close();
 
   setTimeout(done, 1000);
+});
+
+it("All peers have correct servers data", (done) => {
+  setTimeout(() => {
+    expect(Alice.serverPeers.length).toBe(2);
+    expect(Bob.serverPeers.length).toBe(2);
+    expect(Chris.serverPeers.length).toBe(2);
+    done();
+  }, 1000);
 });
 
 it("A and B are signed in", () => {

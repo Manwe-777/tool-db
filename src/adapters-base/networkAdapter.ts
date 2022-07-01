@@ -1,10 +1,13 @@
 import _ from "lodash";
 
-import ToolDb from "../tooldb";
-import { PingMessage, ToolDbMessage } from "../types/message";
-import { Peer } from "../types/tooldb";
-import getPeerSignature from "../utils/getPeerSignature";
-import textRandom from "../utils/textRandom";
+import {
+  ToolDb,
+  PingMessage,
+  ToolDbMessage,
+  Peer,
+  getPeerSignature,
+  textRandom,
+} from "..";
 
 export default class ToolDbNetworkAdapter {
   private _clientToSend: Record<string, (message: string) => void> = {};
@@ -17,6 +20,12 @@ export default class ToolDbNetworkAdapter {
 
   constructor(db: ToolDb) {
     this._tooldb = db;
+
+    if (this.tooldb.options.server) {
+      this.getMeAsPeer().then((meAsPeer) => {
+        this.tooldb.serverPeers.push(meAsPeer);
+      });
+    }
   }
 
   get clientToSend() {
@@ -29,6 +38,26 @@ export default class ToolDbNetworkAdapter {
 
   get tooldb() {
     return this._tooldb;
+  }
+
+  public getMeAsPeer() {
+    const timestamp = new Date().getTime();
+    return getPeerSignature(
+      this.tooldb.peerAccount,
+      this.tooldb.options.topic,
+      timestamp,
+      this.tooldb.options.host,
+      this.tooldb.options.port
+    ).then((signature) => {
+      return {
+        topic: this.tooldb.options.topic,
+        timestamp: timestamp,
+        host: this.tooldb.options.host,
+        port: this.tooldb.options.port,
+        address: this.tooldb.peerAccount.getAddress() || "",
+        sig: signature,
+      } as Peer;
+    });
   }
 
   /**
@@ -52,24 +81,7 @@ export default class ToolDbNetworkAdapter {
   }
 
   public craftPingMessage() {
-    const timestamp = new Date().getTime();
-
-    return getPeerSignature(
-      this.tooldb.peerAccount,
-      this.tooldb.options.topic,
-      timestamp,
-      this.tooldb.options.host,
-      this.tooldb.options.port
-    ).then((signature) => {
-      const meAsPeer: Peer = {
-        topic: this.tooldb.options.topic,
-        timestamp: timestamp,
-        host: this.tooldb.options.host,
-        port: this.tooldb.options.port,
-        address: this.tooldb.peerAccount.getAddress() || "",
-        sig: signature,
-      };
-
+    return this.getMeAsPeer().then((meAsPeer) => {
       return JSON.stringify({
         type: "ping",
         clientId: this.getClientAddress(),

@@ -55,7 +55,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
       this.server.on("connection", (socket: WebSocket) => {
         let clientId: string | null = null;
 
-        this.tooldb.logger("new connection:", clientId);
+        this.tooldb.logger("new connection");
         socket.on("close", () => {
           this.tooldb.logger("closed connection:", clientId);
           if (clientId) {

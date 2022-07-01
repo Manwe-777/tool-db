@@ -16,7 +16,7 @@ export default function handlePong(
       if (verified && peer.topic === this.options.topic) {
         // Add this peer to our list of peers
         const filteredPeers = this.serverPeers.filter(
-          (p) => p.address !== peer.address
+          (p) => p.address === peer.address
         );
         if (filteredPeers.length === 0 && peer.host && peer.port) {
           // Add this peer to the list

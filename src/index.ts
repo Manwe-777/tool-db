@@ -18,6 +18,7 @@ export { default as sha256 } from "./utils/sha256";
 
 export { default as randomAnimal } from "./utils/randomAnimal";
 export { default as verifyMessage } from "./utils/verifyMessage";
+export { default as getPeerSignature } from "./utils/getPeerSignature";
 export { default as verifyPeer } from "./utils/verifyPeer";
 export { default as textRandom } from "./utils/textRandom";
 export { default as generateIv } from "./utils/generateIv";
