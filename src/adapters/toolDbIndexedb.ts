@@ -31,7 +31,9 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   public put(key: string, data: string) {
     return new Promise((resolve, reject) => {
       if (!this.database) {
-        reject();
+        setTimeout(() => {
+          resolve(this.put(key, data));
+        }, 5);
         return;
       }
       const tx = this.database.transaction(
@@ -64,7 +66,9 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   public get(key: string) {
     return new Promise<string>((resolve, reject) => {
       if (!this.database) {
-        reject();
+        setTimeout(() => {
+          resolve(this.get(key));
+        }, 5);
         return;
       }
       const tx = this.database.transaction(
@@ -88,7 +92,9 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   public query(key: string) {
     return new Promise<string[]>((resolve, reject) => {
       if (!this.database) {
-        reject();
+        setTimeout(() => {
+          resolve(this.query(key));
+        }, 5);
         return;
       }
       try {
