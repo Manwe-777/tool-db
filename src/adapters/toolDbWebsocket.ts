@@ -1,8 +1,6 @@
 import _ from "lodash";
 import WebSocket from "ws";
-import { PingMessage, textRandom } from "..";
-import ToolDb from "../tooldb";
-import ToolDbNetworkAdapter from "../adapters-base/networkAdapter";
+import { ToolDb, textRandom, ToolDbNetworkAdapter } from "..";
 
 interface ConnectionAwaiting {
   socket: WebSocket;
@@ -140,15 +138,9 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
         this.tooldb.logger(`Connected to ${host}:${port} sucessfully.`);
 
         // hi peer
-        wss.send(
-          JSON.stringify({
-            type: "ping",
-            clientId: this.tooldb.network.getClientAddress(),
-            to: [this.tooldb.network.getClientAddress()],
-            isServer: this.tooldb.options.server,
-            id: textRandom(10),
-          } as PingMessage)
-        );
+        this.craftPingMessage().then((msg) => {
+          wss.send(msg);
+        });
       };
 
       wss.onmessage = (msg: WebSocket.MessageEvent) => {

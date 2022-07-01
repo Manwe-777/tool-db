@@ -1,7 +1,10 @@
 import _ from "lodash";
 
 import ToolDb from "../tooldb";
-import { ToolDbMessage } from "../types/message";
+import { PingMessage, ToolDbMessage } from "../types/message";
+import { Peer } from "../types/tooldb";
+import getPeerSignature from "../utils/getPeerSignature";
+import textRandom from "../utils/textRandom";
 
 export default class ToolDbNetworkAdapter {
   private _clientToSend: Record<string, (message: string) => void> = {};
@@ -46,6 +49,36 @@ export default class ToolDbNetworkAdapter {
    */
   public isServer(clientId: string) {
     return this._clientIsServer[clientId] || false;
+  }
+
+  public craftPingMessage() {
+    const timestamp = new Date().getTime();
+
+    return getPeerSignature(
+      this.tooldb.peerAccount,
+      this.tooldb.options.topic,
+      timestamp,
+      this.tooldb.options.host,
+      this.tooldb.options.port
+    ).then((signature) => {
+      const meAsPeer: Peer = {
+        topic: this.tooldb.options.topic,
+        timestamp: timestamp,
+        host: this.tooldb.options.host,
+        port: this.tooldb.options.port,
+        address: this.tooldb.peerAccount.getAddress() || "",
+        sig: signature,
+      };
+
+      return JSON.stringify({
+        type: "ping",
+        clientId: this.getClientAddress(),
+        to: [this.getClientAddress()],
+        isServer: this.tooldb.options.server,
+        id: textRandom(10),
+        peer: meAsPeer,
+      } as PingMessage);
+    });
   }
 
   /**

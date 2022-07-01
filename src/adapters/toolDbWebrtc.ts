@@ -1,11 +1,9 @@
 import _ from "lodash";
 import Peer from "simple-peer";
 
-import { PingMessage, sha1, textRandom } from "..";
+import { ToolDb, sha1, textRandom, ToolDbNetworkAdapter } from "..";
 
-import ToolDb from "../tooldb";
 import WebSocket from "ws";
-import ToolDbNetworkAdapter from "../adapters-base/networkAdapter";
 
 type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
 
@@ -169,15 +167,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     peer.on("error", (err: any) => this.onDisconnect(id, err));
 
-    peer.send(
-      JSON.stringify({
-        type: "ping",
-        clientId: this.getClientAddress(),
-        to: [this.getClientAddress()],
-        isServer: this.tooldb.options.server,
-        id: textRandom(10),
-      } as PingMessage)
-    );
+    this.craftPingMessage().then((msg) => {
+      peer.send(msg);
+    });
   };
 
   /**

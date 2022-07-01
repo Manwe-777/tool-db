@@ -1,6 +1,4 @@
-import { ToolDb } from "..";
-import { PingMessage, PongMessage, ServersMessage } from "../types/message";
-import textRandom from "../utils/textRandom";
+import { ToolDb, verifyPeer, PingMessage, PongMessage } from "..";
 
 export default function handlePing(
   this: ToolDb,
@@ -12,20 +10,36 @@ export default function handlePing(
     this.onConnect();
   }
 
-  this.network.sendToClientId(remotePeerId, {
-    type: "pong",
-    isServer: this.options.server,
-    clientId: this.network.getClientAddress(),
-    to: [],
-    id: message.id,
-  } as PongMessage);
+  verifyPeer(this, message.peer).then((verified) => {
+    // Verify integrity and topic
+    if (verified && message.peer.topic === this.options.topic) {
+      // Add this peer to our list of peers
+      const filteredPeers = this.serverPeers.filter(
+        (p) => p.address !== message.peer.address
+      );
+      if (
+        filteredPeers.length === 0 &&
+        message.peer.host &&
+        message.peer.port &&
+        message.isServer
+      ) {
+        // Add this peer to the list
+        this.serverPeers.push(message.peer);
+      }
 
-  this.sendJoin(remotePeerId);
+      this.network.sendToClientId(remotePeerId, {
+        type: "pong",
+        isServer: this.options.server,
+        clientId: this.network.getClientAddress(),
+        to: [],
+        servers: this.serverPeers,
+        id: message.id,
+      } as PongMessage);
 
-  this.network.sendToClientId(remotePeerId, {
-    type: "servers",
-    servers: this.peers,
-    to: [],
-    id: textRandom(10),
-  } as ServersMessage);
+      this.onPeerConnect(this.peerAccount.getAddress() || "");
+    } else {
+      this.logger("Blocked a remote peer from joining; ", message);
+      // Drop connection here!
+    }
+  });
 }
