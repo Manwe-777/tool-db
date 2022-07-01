@@ -1,5 +1,4 @@
-import { ToolDbMessage } from ".";
-import ToolDb from "./tooldb";
+import { ToolDb, ToolDbMessage } from ".";
 
 export default function toolDbClientOnMessage(
   this: ToolDb,

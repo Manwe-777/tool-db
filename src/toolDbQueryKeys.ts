@@ -1,6 +1,5 @@
 import _ from "lodash";
-import { textRandom } from ".";
-import ToolDb from "./tooldb";
+import { ToolDb, textRandom } from ".";
 
 /**
  * Triggers a QUERY request to other peers.

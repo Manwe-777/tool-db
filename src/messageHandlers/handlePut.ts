@@ -1,6 +1,6 @@
-import { ToolDb } from "..";
+import { ToolDb, PutMessage, VerifyResult } from "..";
+
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
-import { PutMessage, VerifyResult } from "../types/message";
 
 export default function handlePut(
   this: ToolDb,

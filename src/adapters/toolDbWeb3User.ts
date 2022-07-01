@@ -1,10 +1,8 @@
 import w3 from "web3";
 
 import { EncryptedKeystoreV3Json, Account } from "web3-core";
-import ToolDbUserAdapter from "../adapters-base/userAdapter";
 
-import ToolDb from "../tooldb";
-import { VerificationData } from "../types/message";
+import { ToolDb, VerificationData, ToolDbUserAdapter } from "..";
 
 import randomAnimal from "../utils/randomAnimal";
 

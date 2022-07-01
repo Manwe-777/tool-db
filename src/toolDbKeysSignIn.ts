@@ -1,5 +1,4 @@
-import { randomAnimal } from ".";
-import ToolDb from "./tooldb";
+import { ToolDb, randomAnimal } from ".";
 
 export default function toolDbKeysSignIn(
   this: ToolDb,

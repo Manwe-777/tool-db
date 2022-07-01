@@ -1,7 +1,4 @@
-import { textRandom } from ".";
-import BaseCrdt from "./crdt/baseCrdt";
-import ToolDb from "./tooldb";
-import { CrdtPutMessage } from "./types/message";
+import { textRandom, BaseCrdt, ToolDb, CrdtPutMessage } from ".";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.

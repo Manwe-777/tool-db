@@ -1,7 +1,10 @@
-import { PutMessage, textRandom, VerificationData } from ".";
-import ToolDb from "./tooldb";
-
-import proofOfWork from "./utils/proofOfWork";
+import {
+  ToolDb,
+  PutMessage,
+  textRandom,
+  VerificationData,
+  proofOfWork,
+} from ".";
 
 /**
  * Triggers a PUT request to other peers.

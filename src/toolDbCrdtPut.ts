@@ -1,9 +1,11 @@
-import { CrdtPutMessage, textRandom, VerificationData } from ".";
-import ToolDb from "./tooldb";
-
-import proofOfWork from "./utils/proofOfWork";
-
-import BaseCrdt from "./crdt/baseCrdt";
+import {
+  ToolDb,
+  CrdtPutMessage,
+  textRandom,
+  VerificationData,
+  proofOfWork,
+  BaseCrdt,
+} from ".";
 
 /**
  * Triggers a PUT request to other peers.

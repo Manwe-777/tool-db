@@ -1,5 +1,4 @@
-import ToolDb from "./tooldb";
-import sha1 from "./utils/sha1";
+import { ToolDb, sha1 } from ".";
 
 export default function logger(
   this: ToolDb,

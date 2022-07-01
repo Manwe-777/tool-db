@@ -1,5 +1,4 @@
-import ToolDbStorageAdapter from "../adapters-base/storageAdapter";
-import ToolDb from "../tooldb";
+import { ToolDb, ToolDbStorageAdapter } from "..";
 
 export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database;

@@ -1,4 +1,4 @@
-import ToolDb from "./tooldb";
+import { ToolDb } from ".";
 
 console.log("Starting server..");
 const server = new ToolDb({

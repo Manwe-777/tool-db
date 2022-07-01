@@ -1,11 +1,14 @@
 import _ from "lodash";
 import { Server as HTTPServer } from "http";
 import { Server as HTTPSServer } from "https";
-import ToolDb from "../tooldb";
-import { ToolDbMessage } from "./message";
-import ToolDbNetworkAdapter from "../adapters-base/networkAdapter";
-import ToolDbStorageAdapter from "../adapters-base/storageAdapter";
-import ToolDbUserAdapter from "../adapters-base/userAdapter";
+
+import {
+  ToolDb,
+  ToolDbMessage,
+  ToolDbNetworkAdapter,
+  ToolDbStorageAdapter,
+  ToolDbUserAdapter,
+} from "..";
 
 export interface Peer {
   topic: string;

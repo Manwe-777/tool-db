@@ -1,9 +1,6 @@
 /* eslint-disable no-undef */
 /* eslint-disable global-require */
 
-export * from "./types/tooldb";
-export * from "./types/message";
-
 global.Buffer = global.Buffer || require("buffer").Buffer;
 
 if (typeof window === "undefined") {
@@ -19,13 +16,13 @@ export { default as proofOfWork } from "./utils/proofOfWork";
 export { default as sha1 } from "./utils/sha1";
 export { default as sha256 } from "./utils/sha256";
 
-export { default as generateIv } from "./utils/generateIv";
 export { default as randomAnimal } from "./utils/randomAnimal";
-export { default as textRandom } from "./utils/textRandom";
-export { default as stringToArrayBuffer } from "./utils/encoding/stringToArrayBuffer";
 export { default as verifyMessage } from "./utils/verifyMessage";
 export { default as verifyPeer } from "./utils/verifyPeer";
+export { default as textRandom } from "./utils/textRandom";
+export { default as generateIv } from "./utils/generateIv";
 
+export { default as stringToArrayBuffer } from "./utils/encoding/stringToArrayBuffer";
 export { default as arrayBufferToString } from "./utils/encoding/arrayBufferToString";
 export { default as arrayBufferToHex } from "./utils/encoding/arrayBufferToHex";
 export { default as hexToArrayBuffer } from "./utils/encoding/hexToArrayBuffer";

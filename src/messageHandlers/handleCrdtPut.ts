@@ -1,14 +1,20 @@
-import { ToolDb } from "..";
 import {
+  ToolDb,
   VerifyResult,
   CrdtPutMessage,
   VerificationData,
-} from "../types/message";
+  MapCrdt,
+  MapChanges,
+  CRDT_COUNTER,
+  CRDT_LIST,
+  CRDT_MAP,
+  ListCrdt,
+  ListChanges,
+  CounterCrdt,
+  CounterChanges,
+} from "..";
+
 import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
-import MapCrdt, { MapChanges } from "../crdt/mapCrdt";
-import { CRDT_COUNTER, CRDT_LIST, CRDT_MAP } from "../crdt/baseCrdt";
-import ListCrdt, { ListChanges } from "../crdt/listCrdt";
-import CounterCrdt, { CounterChanges } from "../crdt/counterCrdt";
 
 export default function handleCrdtPut(
   this: ToolDb,

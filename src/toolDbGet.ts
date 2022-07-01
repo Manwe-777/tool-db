@@ -1,5 +1,4 @@
-import { textRandom } from ".";
-import ToolDb from "./tooldb";
+import { ToolDb, textRandom } from ".";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.

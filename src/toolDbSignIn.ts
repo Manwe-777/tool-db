@@ -1,7 +1,4 @@
-import ToolDb from "./tooldb";
-
-import sha256 from "./utils/sha256";
-import randomAnimal from "./utils/randomAnimal";
+import { ToolDb, sha256, randomAnimal } from ".";
 
 export default function toolDbSignIn(
   this: ToolDb,

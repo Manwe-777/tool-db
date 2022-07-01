@@ -1,5 +1,4 @@
-import { textRandom } from ".";
-import ToolDb from "./tooldb";
+import { ToolDb, textRandom } from ".";
 
 /**
  * Subscribe to all PUT updates for this key.

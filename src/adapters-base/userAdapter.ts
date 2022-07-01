@@ -1,5 +1,4 @@
-import ToolDb from "../tooldb";
-import { VerificationData } from "../types/message";
+import { ToolDb, VerificationData } from "..";
 
 export default class ToolDbUserAdapter {
   constructor(db: ToolDb) {

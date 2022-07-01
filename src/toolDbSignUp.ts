@@ -1,6 +1,5 @@
-import ToolDb from "./tooldb";
-
 import {
+  ToolDb,
   PutMessage,
   textRandom,
   VerificationData,

@@ -1,5 +1,4 @@
-import { ToolDb } from "..";
-import { PutMessage, SubscribeMessage } from "../types/message";
+import { ToolDb, PutMessage, SubscribeMessage } from "..";
 
 export default function handleSubscribe(
   this: ToolDb,
