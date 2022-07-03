@@ -1,5 +1,5 @@
-import _ from "lodash";
 import { ToolDb, textRandom } from ".";
+import uniq from "./utils/uniq";
 
 /**
  * Triggers a QUERY request to other peers.
@@ -38,7 +38,7 @@ export default function toolDbQueryKeys(
       });
 
     const finishListening = () => {
-      resolve(_.uniq(foundKeys));
+      resolve(uniq(foundKeys));
     };
 
     this.addIdListener(msgId, (msg) => {

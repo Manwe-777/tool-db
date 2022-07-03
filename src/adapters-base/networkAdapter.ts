@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 import {
   ToolDb,
   PingMessage,
@@ -8,6 +6,7 @@ import {
   getPeerSignature,
   textRandom,
 } from "..";
+import uniq from "../utils/uniq";
 
 export default class ToolDbNetworkAdapter {
   private _clientToSend: Record<string, (message: string) => void> = {};
@@ -164,7 +163,7 @@ export default class ToolDbNetworkAdapter {
    * @param isRelay if we should relay this message
    */
   public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
-    const to = _.uniq([...msg.to, this.getClientAddress()]);
+    const to = uniq([...msg.to, this.getClientAddress()]);
 
     const finalMessage = JSON.stringify({ ...msg, to });
 
@@ -198,7 +197,7 @@ export default class ToolDbNetworkAdapter {
    * @param msg message data
    */
   public sendToClientId(clientId: string, msg: ToolDbMessage) {
-    const to = _.uniq([...msg.to, this.getClientAddress()]);
+    const to = uniq([...msg.to, this.getClientAddress()]);
     const finalMessage = JSON.stringify({ ...msg, to });
 
     if (msg.type === "put" || msg.type === "crdtPut") {
