@@ -1,6 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable global-require */
-
 export { default as proofOfWork } from "./utils/proofOfWork";
 export { default as sha1 } from "./utils/sha1";
 export { default as sha256 } from "./utils/sha256";

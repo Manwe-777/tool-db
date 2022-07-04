@@ -19,7 +19,6 @@ beforeAll((done) => {
     server: true,
     host: "127.0.0.1",
     port: 9000,
-    debug: true,
     storageName: "test-node-a",
     storageAdapter: ToolDbLeveldb,
   });
