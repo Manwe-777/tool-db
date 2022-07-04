@@ -284,7 +284,10 @@ export default class ToolDb extends EventEmitter {
     const DEFAULT_KEYS = "%default-peer%";
 
     // DO NOT USE THE DEFAULT STORE FOR KEYS
-    const tempStore = new this.options.storageAdapter(this, "%peer%");
+    const tempStore = new this.options.storageAdapter(
+      this,
+      "_____peer_" + this.options.storageName
+    );
 
     tempStore
       .get(DEFAULT_KEYS)
