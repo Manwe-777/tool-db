@@ -19,8 +19,6 @@
   "author": "Manuel Etchegaray",
   "license": "ISC",
   "dependencies": {
-    "@peculiar/webcrypto": "^1.4.0",
-    "crypto": "^1.0.1",
     "level": "^7.0.0",
     "simple-peer": "^9.11.1",
     "web3": "^1.7.4",

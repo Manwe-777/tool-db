@@ -1,6 +1,5 @@
-import w3 from "web3";
-
 import { EncryptedKeystoreV3Json, Account } from "web3-core";
+import w3 from "web3";
 
 import { ToolDb, VerificationData, ToolDbUserAdapter, randomAnimal } from "..";
 

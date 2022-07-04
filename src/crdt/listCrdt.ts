@@ -29,7 +29,7 @@ interface ListTempCursor<T> {
   next: string | undefined;
 }
 
-export default class ListCrdt<T> extends BaseCrdt<T, ListChanges<T>, T[]> {
+export class ListCrdt<T> extends BaseCrdt<T, ListChanges<T>, T[]> {
   public type = CRDT_LIST;
 
   public _changes: ListChanges<T>[] = [];

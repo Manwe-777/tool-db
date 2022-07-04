@@ -1,9 +1,8 @@
 import _ from "lodash";
 import Peer from "simple-peer";
+import WebSocket from "ws";
 
 import { ToolDb, sha1, textRandom, ToolDbNetworkAdapter } from "..";
-
-import WebSocket from "ws";
 
 type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
 

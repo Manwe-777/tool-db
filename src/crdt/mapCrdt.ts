@@ -20,11 +20,7 @@ export interface DelMapChange<T> extends ChangeMapBase<T> {
 
 export type MapChanges<T> = SetMapChange<T> | DelMapChange<T>;
 
-export default class MapCrdt<T> extends BaseCrdt<
-  T,
-  MapChanges<T>,
-  Record<string, T>
-> {
+export class MapCrdt<T> extends BaseCrdt<T, MapChanges<T>, Record<string, T>> {
   public type = CRDT_MAP;
 
   private _changes: MapChanges<T>[] = [];

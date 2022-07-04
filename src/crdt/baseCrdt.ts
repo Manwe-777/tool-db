@@ -4,7 +4,7 @@ export const CRDT_LIST = "LIST";
 
 export const CRDT_COUNTER = "COUNTER";
 
-export default class BaseCrdt<T = any, Changes = any, Value = any> {
+export class BaseCrdt<T = any, Changes = any, Value = any> {
   public type: string = "";
 
   public mergeChanges(changes: Changes[]) {

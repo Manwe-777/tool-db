@@ -19,11 +19,7 @@ export interface SubCounterChange extends ChangeCounterBase {
 
 export type CounterChanges = AddCounterChange | SubCounterChange;
 
-export default class CounterCrdt<T> extends BaseCrdt<
-  number,
-  CounterChanges,
-  number
-> {
+export class CounterCrdt<T> extends BaseCrdt<number, CounterChanges, number> {
   public type = CRDT_LIST;
 
   public _changes: CounterChanges[] = [];
