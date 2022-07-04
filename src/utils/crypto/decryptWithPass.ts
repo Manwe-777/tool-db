@@ -1,6 +1,8 @@
-import arrayBufferToString from "../encoding/arrayBufferToString";
-import catchReturn from "../catchReturn";
-import generateKeyFromPassword from "./generateKeyFromPassword";
+import {
+  arrayBufferToString,
+  catchReturn,
+  generateKeyFromPassword,
+} from "../..";
 
 import getCrypto from "../../getCrypto";
 

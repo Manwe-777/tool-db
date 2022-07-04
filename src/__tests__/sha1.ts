@@ -1,4 +1,4 @@
-import sha1 from "../utils/sha1";
+import { sha1 } from "..";
 
 it("Hashes with sha1/hex", () => {
   const TestValue = "SomeVeryTest-yValue2";

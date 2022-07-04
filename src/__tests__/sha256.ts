@@ -1,4 +1,4 @@
-import sha256 from "../utils/sha256";
+import { sha256 } from "..";
 
 it("Hashes with sha256/hex", () => {
   const TestValue = "SomeVeryTest-yValue2";

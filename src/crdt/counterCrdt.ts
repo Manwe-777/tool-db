@@ -1,4 +1,4 @@
-import BaseCrdt, { CRDT_LIST } from "./baseCrdt";
+import { BaseCrdt, CRDT_LIST } from "..";
 
 export type CounterOperations = "ADD" | "SUB";
 

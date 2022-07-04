@@ -1,9 +1,12 @@
 jest.mock("../getCrypto.ts");
 
-import { textRandom, ToolDb, VerificationData } from "..";
-import MapCrdt from "../crdt/mapCrdt";
-
-import { ToolDbLeveldb } from "..";
+import {
+  textRandom,
+  ToolDb,
+  MapCrdt,
+  VerificationData,
+  ToolDbLeveldb,
+} from "..";
 
 jest.setTimeout(15000);
 

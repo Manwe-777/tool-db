@@ -1,4 +1,4 @@
-import BaseCrdt, { CRDT_MAP } from "./baseCrdt";
+import { BaseCrdt, CRDT_MAP } from "..";
 
 export type MapOperations = "SET" | "DEL";
 

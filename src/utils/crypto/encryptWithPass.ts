@@ -1,6 +1,9 @@
-import catchReturn from "../catchReturn";
-import generateKeyFromPassword from "./generateKeyFromPassword";
-import stringToArrayBuffer from "../encoding/stringToArrayBuffer";
+import {
+  catchReturn,
+  generateKeyFromPassword,
+  stringToArrayBuffer,
+} from "../..";
+
 import getCrypto from "../../getCrypto";
 
 export default function encryptWithPass(

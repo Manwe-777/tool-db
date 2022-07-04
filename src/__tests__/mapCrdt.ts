@@ -1,4 +1,4 @@
-import MapCrdt from "../crdt/mapCrdt";
+import { MapCrdt } from "..";
 
 it("Can do t1 and t2", () => {
   const Alice = new MapCrdt<number>("Alice");

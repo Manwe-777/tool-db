@@ -1,7 +1,4 @@
-import decryptWithPass from "../utils/crypto/decryptWithPass";
-
-import encryptWithPass from "../utils/crypto/encryptWithPass";
-import generateIv from "../utils/generateIv";
+import { decryptWithPass, encryptWithPass, generateIv } from "..";
 
 jest.mock("../getCrypto.ts");
 

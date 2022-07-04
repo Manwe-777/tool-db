@@ -1,4 +1,4 @@
-import ListCrdt from "../crdt/listCrdt";
+import { ListCrdt } from "..";
 
 it("Can do continnuous test", () => {
   const Alice = new ListCrdt<string>("Alice");

@@ -1,10 +1,17 @@
 import EventEmitter from "events";
 
 import {
-  ToolDbMessage,
   VerificationData,
   verifyMessage,
   randomAnimal,
+  ToolDbLeveldb,
+  ToolDbIndexedb,
+  ToolDbWeb3User,
+  ToolDbOptions,
+  ToolDbStorageAdapter,
+  ToolDbUserAdapter,
+  ToolDbMessage,
+  Peer,
 } from ".";
 
 import toolDbGet from "./toolDbGet";
@@ -19,13 +26,9 @@ import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 
-import ToolDbLeveldb from "./adapters/toolDbLeveldb";
-import ToolDbIndexedb from "./adapters/toolDbIndexedb";
-
-import toolDbSubscribe from "./toolDbSubscribe";
-
 import toolDbQueryKeys from "./toolDbQueryKeys";
 import toolDbKeysSignIn from "./toolDbKeysSignIn";
+import toolDbSubscribe from "./toolDbSubscribe";
 
 import handleGet from "./messageHandlers/handleGet";
 import handlePut from "./messageHandlers/handlePut";
@@ -36,12 +39,7 @@ import handleCrdtGet from "./messageHandlers/handleCrdtGet";
 import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
-import { Peer, ToolDbOptions } from "./types/tooldb";
-
-import ToolDbWeb3User from "./adapters/toolDbWeb3User";
 import logger from "./logger";
-import ToolDbStorageAdapter from "./adapters-base/storageAdapter";
-import ToolDbUserAdapter from "./adapters-base/userAdapter";
 
 export interface Listener<T = any> {
   key: string;

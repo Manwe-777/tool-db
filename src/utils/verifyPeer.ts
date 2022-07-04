@@ -1,8 +1,4 @@
-import sha256 from "./sha256";
-
-import { Peer } from "../types/tooldb";
-
-import ToolDb from "../tooldb";
+import { ToolDb, sha256, Peer } from "..";
 
 export default function verifyPeer(tooldb: ToolDb, peer: Peer) {
   const data = sha256(

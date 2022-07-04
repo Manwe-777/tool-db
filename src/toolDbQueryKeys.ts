@@ -1,5 +1,4 @@
-import { ToolDb, textRandom } from ".";
-import uniq from "./utils/uniq";
+import { ToolDb, textRandom, uniq } from ".";
 
 /**
  * Triggers a QUERY request to other peers.

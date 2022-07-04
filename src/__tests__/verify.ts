@@ -1,10 +1,13 @@
-import { VerifyResult } from "../types/message";
-
-import catchReturn from "../utils/catchReturn";
-
-import { Peer, ToolDb, ToolDbLeveldb, VerificationData } from "..";
-import getPeerSignature from "../utils/getPeerSignature";
-import verifyPeer from "../utils/verifyPeer";
+import {
+  Peer,
+  ToolDb,
+  ToolDbLeveldb,
+  VerificationData,
+  catchReturn,
+  VerifyResult,
+  getPeerSignature,
+  verifyPeer,
+} from "..";
 
 jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);

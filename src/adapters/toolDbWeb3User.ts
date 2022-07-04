@@ -2,9 +2,7 @@ import w3 from "web3";
 
 import { EncryptedKeystoreV3Json, Account } from "web3-core";
 
-import { ToolDb, VerificationData, ToolDbUserAdapter } from "..";
-
-import randomAnimal from "../utils/randomAnimal";
+import { ToolDb, VerificationData, ToolDbUserAdapter, randomAnimal } from "..";
 
 export default class ToolDbWeb3User extends ToolDbUserAdapter {
   public web3: w3;

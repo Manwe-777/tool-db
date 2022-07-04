@@ -1,5 +1,6 @@
+import { stringToArrayBuffer } from "../..";
+
 import getCrypto from "../../getCrypto";
-import stringToArrayBuffer from "../encoding/stringToArrayBuffer";
 
 export default function generateKeyFromPassword(password: string) {
   const crypto = getCrypto();

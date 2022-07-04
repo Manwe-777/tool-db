@@ -1,4 +1,4 @@
-import CounterCrdt from "../crdt/counterCrdt";
+import { CounterCrdt } from "..";
 
 it("Can add separately", () => {
   const Alice = new CounterCrdt("Alice");

@@ -5,8 +5,8 @@ import {
   Peer,
   getPeerSignature,
   textRandom,
+  uniq,
 } from "..";
-import uniq from "../utils/uniq";
 
 export default class ToolDbNetworkAdapter {
   private _clientToSend: Record<string, (message: string) => void> = {};

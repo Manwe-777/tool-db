@@ -1,4 +1,4 @@
-import textRandom from "../utils/textRandom";
+import { textRandom } from "..";
 
 it("Creates random text", () => {
   expect(textRandom(10)).toHaveLength(10);

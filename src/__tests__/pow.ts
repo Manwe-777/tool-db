@@ -1,5 +1,4 @@
-import proofOfWork from "../utils/proofOfWork";
-import sha256 from "../utils/sha256";
+import { proofOfWork, sha256 } from "..";
 
 jest.mock("../getCrypto.ts");
 
