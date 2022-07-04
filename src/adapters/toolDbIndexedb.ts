@@ -4,9 +4,9 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   private database: IDBDatabase | undefined;
 
   private dbStart() {
-    const open = indexedDB.open(this.tooldb.options.storageName, 1);
+    const open = indexedDB.open(this.storageName, 1);
     open.onupgradeneeded = (eve: any) => {
-      eve.target.result.createObjectStore(this.tooldb.options.storageName);
+      eve.target.result.createObjectStore(this.storageName);
     };
     open.onsuccess = () => {
       this.database = open.result;
@@ -16,8 +16,8 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
     };
   }
 
-  constructor(db: ToolDb) {
-    super(db);
+  constructor(db: ToolDb, forceStorageName?: string) {
+    super(db, forceStorageName);
 
     this.dbStart();
 
@@ -36,11 +36,8 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
         }, 5);
         return;
       }
-      const tx = this.database.transaction(
-        [this.tooldb.options.storageName],
-        "readwrite"
-      );
-      const obj = tx.objectStore(this.tooldb.options.storageName);
+      const tx = this.database.transaction([this.storageName], "readwrite");
+      const obj = tx.objectStore(this.storageName);
       const req = obj.put(data, "" + key);
 
       req.onsuccess =
@@ -71,11 +68,8 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
         }, 5);
         return;
       }
-      const tx = this.database.transaction(
-        [this.tooldb.options.storageName],
-        "readonly"
-      );
-      const obj = tx.objectStore(this.tooldb.options.storageName);
+      const tx = this.database.transaction([this.storageName], "readonly");
+      const obj = tx.objectStore(this.storageName);
       const req = obj.get("" + key);
       req.onsuccess = () => {
         resolve(req.result);
@@ -100,11 +94,8 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
       try {
         const keyRange = IDBKeyRange.bound(key, key + "|", true, true);
 
-        const tx = this.database.transaction(
-          [this.tooldb.options.storageName],
-          "readonly"
-        );
-        const obj = tx.objectStore(this.tooldb.options.storageName);
+        const tx = this.database.transaction([this.storageName], "readonly");
+        const obj = tx.objectStore(this.storageName);
 
         const keysArray: string[] = [];
         obj.openCursor(keyRange).onsuccess = function (event: any) {

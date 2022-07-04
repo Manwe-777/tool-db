@@ -9,7 +9,6 @@ export default class ToolDbUserAdapter {
 
   constructor(db: ToolDb) {
     this._tooldb = db;
-    //
   }
 
   public anonUser() {

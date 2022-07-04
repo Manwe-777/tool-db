@@ -283,7 +283,10 @@ export default class ToolDb extends EventEmitter {
 
     const DEFAULT_KEYS = "%default-peer%";
 
-    this.store
+    // DO NOT USE THE DEFAULT STORE FOR KEYS
+    const tempStore = new this.options.storageAdapter(this, "%peer%");
+
+    tempStore
       .get(DEFAULT_KEYS)
       .then((val) => {
         this.peerAccount
@@ -297,7 +300,7 @@ export default class ToolDb extends EventEmitter {
       })
       .catch((_e) => {
         this.peerAccount.encryptAccount(DEFAULT_KEYS).then((a) => {
-          this.store
+          tempStore
             .put(DEFAULT_KEYS, JSON.stringify(a))
             .catch(() => {
               // nothing

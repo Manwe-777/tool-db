@@ -3,11 +3,11 @@ import { ToolDb, ToolDbStorageAdapter } from "..";
 export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database;
 
-  constructor(db: ToolDb) {
-    super(db);
+  constructor(db: ToolDb, forceStorageName?: string) {
+    super(db, forceStorageName);
 
     const level = require("level");
-    this.database = level(this.tooldb.options.storageName);
+    this.database = level(this.storageName);
     this.database.open();
   }
 
@@ -22,7 +22,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
         }, 5);
         return;
       }
-      // console.warn(this.tooldb.options.storageName, "put", key);
+      // console.warn(this.storageName, "put", key);
 
       this.database.put(key, data, (err: any) => {
         // this.logger("put", key, err, err?.message);
@@ -59,7 +59,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   }
 
   public query(key: string) {
-    // console.warn(this.tooldb.options.storageName, "QUERY", key);
+    // console.warn(this.storageName, "QUERY", key);
     return new Promise<string[]>((resolve, reject) => {
       if (
         !this.database ||
