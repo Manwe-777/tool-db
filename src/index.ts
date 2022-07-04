@@ -1,10 +1,6 @@
 /* eslint-disable no-undef */
 /* eslint-disable global-require */
 
-if (typeof window === "undefined") {
-  global.crypto = require("crypto").webcrypto;
-}
-
 export { default as proofOfWork } from "./utils/proofOfWork";
 export { default as sha1 } from "./utils/sha1";
 export { default as sha256 } from "./utils/sha256";
@@ -15,7 +11,7 @@ export { default as verifyMessage } from "./utils/verifyMessage";
 export { default as getPeerSignature } from "./utils/getPeerSignature";
 export { default as verifyPeer } from "./utils/verifyPeer";
 export { default as textRandom } from "./utils/textRandom";
-export { default as generateIv } from "./utils/generateIv";
+
 export { default as catchReturn } from "./utils/catchReturn";
 
 export { default as stringToArrayBuffer } from "./utils/encoding/stringToArrayBuffer";
