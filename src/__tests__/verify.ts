@@ -9,7 +9,6 @@ import {
   verifyPeer,
 } from "..";
 
-jest.mock("../getCrypto.ts");
 jest.setTimeout(10000);
 
 let ClientA: ToolDb;

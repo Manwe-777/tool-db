@@ -1,5 +1,3 @@
-jest.mock("../getCrypto.ts");
-
 import { ToolDb, ToolDbLeveldb } from "..";
 
 jest.setTimeout(20000);

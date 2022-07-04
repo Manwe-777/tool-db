@@ -1,5 +1,3 @@
-jest.mock("../getCrypto.ts");
-
 import {
   textRandom,
   ToolDb,
