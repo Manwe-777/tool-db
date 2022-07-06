@@ -1,16 +1,14 @@
 {
   "name": "@tool-db/tool-db",
-  "version": "2.3.1",
-  "private": true,
-  "description": "A decentralized database model for federated p2p networks.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "0.0.0",
+  "description": "A decentralized database model for p2p networks.",
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "clean": "lerna run --parallel clean",
-    "release": "lerna publish"
+    "release": "lerna publish",
+    "tsc": "tsc"
   },
-  "author": "Manuel Etchegaray",
+  "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "license": "ISC",
   "dependencies": {
   },
@@ -25,13 +23,5 @@
   ],
   "engines": {
     "node": ">=16.0.0"
-  },
-  "watch": {
-    "build": {
-      "patterns": [
-        "src"
-      ],
-      "extensions": "js,ts"
-    }
   }
 }

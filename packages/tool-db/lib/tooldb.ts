@@ -201,6 +201,7 @@ export default class ToolDb extends EventEmitter {
         }
         listener.timeout = setTimeout(
           () => listener.fn(message),
+
           this.options.triggerDebouce
         ) as any;
       }

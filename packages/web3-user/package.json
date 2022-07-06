@@ -18,7 +18,8 @@
     "url": "git+https://github.com/Manwe-777/tool-db.git"
   },
   "scripts": {
-    "test": "echo \"Error: run tests from root\" && exit 1"
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "build": "tsc"
   },
   "bugs": {
     "url": "https://github.com/Manwe-777/tool-db/issues"
@@ -26,5 +27,8 @@
   "dependencies": {
     "web3": "^1.7.4",
     "web3-core": "^1.7.4"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
   }
 }
