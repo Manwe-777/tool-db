@@ -1,7 +1,6 @@
-import _ from "lodash";
 import WebSocket from "ws";
 
-import { ToolDb, textRandom, ToolDbNetworkAdapter } from "..";
+import { ToolDb, textRandom, ToolDbNetworkAdapter } from "tool-db";
 
 interface ConnectionAwaiting {
   socket: WebSocket;

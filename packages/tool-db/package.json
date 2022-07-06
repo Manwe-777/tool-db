@@ -1,0 +1,38 @@
+{
+  "name": "@tool-db/tool-db",
+  "version": "2.4.0",
+  "description": "A decentralized database model for federated p2p networks.n",
+  "author": "Manwe <manuel.etchegaray7@gmail.com>",
+  "homepage": "https://github.com/Manwe-777/tool-db#readme",
+  "license": "ISC",
+  "main": "lib/tool-db.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Manwe-777/tool-db.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/Manwe-777/tool-db/issues"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@tool-db/indexeddb-store": "^0.0.0",
+    "@tool-db/leveldb-store": "^0.0.0",
+    "@tool-db/web3-user": "^0.0.0",
+    "@tool-db/websocket-network": "^0.0.0"
+  }
+}

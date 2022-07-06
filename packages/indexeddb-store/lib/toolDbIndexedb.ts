@@ -1,4 +1,4 @@
-import { ToolDb, ToolDbStorageAdapter } from "..";
+import { ToolDb, ToolDbStorageAdapter } from "tool-db";
 
 export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   private database: IDBDatabase | undefined;

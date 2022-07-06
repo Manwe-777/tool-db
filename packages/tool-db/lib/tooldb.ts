@@ -4,9 +4,6 @@ import {
   VerificationData,
   verifyMessage,
   randomAnimal,
-  ToolDbLeveldb,
-  ToolDbIndexedb,
-  ToolDbWeb3User,
   ToolDbOptions,
   ToolDbStorageAdapter,
   ToolDbUserAdapter,
@@ -20,7 +17,6 @@ import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbCrdtGet from "./toolDbCrdtGet";
 import toolDbCrdtPut from "./toolDbCrdtPut";
-import ToolDbWebsocket from "./adapters/toolDbWebsocket";
 
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
@@ -40,6 +36,11 @@ import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 import logger from "./logger";
+
+import ToolDbWebsocket from "@tool-db/websocket-network";
+import ToolDbWeb3User from "@tool-db/web3-user";
+import ToolDbLeveldb from "@tool-db/leveldb-store";
+import ToolDbIndexedb from "@tool-db/indexeddb-store";
 
 export interface Listener<T = any> {
   key: string;

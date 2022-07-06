@@ -1,0 +1,34 @@
+{
+  "name": "@tool-db/webrtc-network",
+  "version": "1.0.0",
+  "description": "> TODO: description",
+  "author": "Manwe <manuel.etchegaray7@gmail.com>",
+  "homepage": "https://github.com/Manwe-777/tool-db#readme",
+  "license": "ISC",
+  "main": "lib/tool-db-webrtc.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Manwe-777/tool-db.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/Manwe-777/tool-db/issues"
+  },
+  "dependencies": {
+    "simple-peer": "^9.11.1",
+    "tool-db": "*",
+    "ws": "^8.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  }
+}

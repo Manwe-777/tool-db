@@ -1,56 +1,28 @@
 {
-  "name": "tool-db",
+  "name": "@tool-db/tool-db",
   "version": "2.3.1",
-  "private": false,
+  "private": true,
   "description": "A decentralized database model for federated p2p networks.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "eslint:fix": "eslint --fix . --ext .ts",
-    "bundle": "browserify ./dist/index.js --standalone tooldb | uglifyjs -cm > ./bundle.js",
-    "build": "tsc && npm run bundle",
-    "tsc": "tsc",
-    "publish": "np",
-    "prepublish": "npm run build",
-    "test": "jest --clearCache && jest ./src --detectOpenHandles",
-    "test:watch": "jest --watch ./src",
-    "server": "npm run build && node dist/server.js"
+    "bootstrap": "lerna bootstrap",
+    "clean": "lerna run --parallel clean",
+    "release": "lerna publish"
   },
   "author": "Manuel Etchegaray",
   "license": "ISC",
   "dependencies": {
-    "level": "^7.0.0",
-    "simple-peer": "^9.11.1",
-    "web3": "^1.7.4",
-    "ws": "^7.5.8"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.18.6",
-    "@babel/preset-typescript": "^7.18.6",
-    "@types/jest": "^26.0.24",
-    "@types/lodash": "^4.14.182",
-    "@types/node": "^15.0.1",
-    "@types/simple-peer": "^9.11.4",
-    "@types/ws": "^7.4.7",
-    "@typescript-eslint/eslint-plugin": "^4.29.1",
-    "babel": "^6.23.0",
-    "browserify": "^17.0.0",
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb": "^18.2.1",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jest": "^24.3.6",
-    "eslint-plugin-prettier": "^3.4.0",
-    "jest": "^27.5.1",
-    "jest-environment-jsdom": "^27.5.1",
+    "lerna": "^4.0.0",
     "np": "^7.6.2",
     "npm-watch": "^0.11.0",
-    "prettier": "^2.7.1",
-    "ts-node": "^10.8.2",
-    "typescript": "^4.7.4",
-    "typescript-eslint": "0.0.1-alpha.0",
-    "uglify-js": "^3.16.1"
+    "nx": "^14.4.2"
   },
+  "workspaces": [
+     "packages/*"
+  ],
   "engines": {
     "node": ">=16.0.0"
   },

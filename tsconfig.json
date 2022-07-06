@@ -72,6 +72,7 @@
     "*/__mocks__"
   ],
   "include": [
-    "src"
+    "src",
+    "packages/**",
   ]
 }

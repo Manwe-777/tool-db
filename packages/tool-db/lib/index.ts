@@ -23,12 +23,6 @@ export { default as ToolDbNetworkAdapter } from "./adapters-base/networkAdapter"
 export { default as ToolDbStorageAdapter } from "./adapters-base/storageAdapter";
 export { default as ToolDbUserAdapter } from "./adapters-base/userAdapter";
 
-export { default as ToolDbWebsocket } from "./adapters/toolDbWebsocket";
-export { default as ToolDbWebrtc } from "./adapters/toolDbWebrtc";
-export { default as ToolDbWeb3User } from "./adapters/toolDbWeb3User";
-export { default as ToolDbIndexedb } from "./adapters/toolDbIndexedb";
-export { default as ToolDbLeveldb } from "./adapters/toolDbLeveldb";
-
 export * from "./types/tooldb";
 export * from "./types/message";
 export * from "./crdt/baseCrdt";
