@@ -5,6 +5,7 @@ import {
   verifyMessage,
   randomAnimal,
   ToolDbOptions,
+  ToolDbNetworkAdapter,
   ToolDbStorageAdapter,
   ToolDbUserAdapter,
   ToolDbMessage,
@@ -36,11 +37,6 @@ import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 import logger from "./logger";
-
-import ToolDbWebsocket from "@tool-db/websocket-network";
-import ToolDbWeb3User from "@tool-db/web3-user";
-import ToolDbLeveldb from "@tool-db/leveldb-store";
-import ToolDbIndexedb from "@tool-db/indexeddb-store";
 
 export interface Listener<T = any> {
   key: string;
@@ -241,11 +237,10 @@ export default class ToolDb extends EventEmitter {
     port: 8080,
     debug: false,
     httpServer: undefined,
-    networkAdapter: ToolDbWebsocket,
-    userAdapter: ToolDbWeb3User,
+    networkAdapter: ToolDbNetworkAdapter,
+    storageAdapter: ToolDbStorageAdapter,
+    userAdapter: ToolDbUserAdapter,
     storageName: "tooldb",
-    storageAdapter:
-      typeof window === "undefined" ? ToolDbLeveldb : ToolDbIndexedb,
     topic: "tool-db-default",
   };
 

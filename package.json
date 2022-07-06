@@ -4,6 +4,7 @@
   "description": "A decentralized database model for p2p networks.",
   "scripts": {
     "bootstrap": "lerna bootstrap",
+    "build": "lerna run build",
     "clean": "lerna run --parallel clean",
     "release": "lerna publish",
     "tsc": "tsc"
