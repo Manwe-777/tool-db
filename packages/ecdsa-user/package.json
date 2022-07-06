@@ -29,6 +29,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "crypto": "^1.0.1"
+    "crypto": "^1.0.1",
+    "tool-db": "^2.4.0"
   }
 }

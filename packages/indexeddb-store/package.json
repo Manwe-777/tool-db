@@ -27,5 +27,8 @@
   },
   "devDependencies": {
     "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "tool-db": "^2.4.0"
   }
 }

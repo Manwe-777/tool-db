@@ -4,8 +4,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "outDir": "./dist",
-    "rootDir": "./",
-    "baseUrl": "./"
   },
   "include": [
     "lib"

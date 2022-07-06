@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "simple-peer": "^9.11.1",
-    "tool-db": "*",
+    "tool-db": "^2.4.0",
     "ws": "^8.8.0"
   },
   "devDependencies": {

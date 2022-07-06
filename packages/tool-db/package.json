@@ -1,5 +1,5 @@
 {
-  "name": "@tool-db/tool-db",
+  "name": "tool-db",
   "version": "2.4.0",
   "description": "A decentralized database model for federated p2p networks.n",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",

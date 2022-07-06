@@ -68,16 +68,19 @@
     "forceConsistentCasingInFileNames": true,  /* Disallow inconsistently-cased references to the same file. */
     "baseUrl": "./packages",
     "paths": {
-      "@tool-db/ecdsa-user": ["ecdsa-user/lib"],
-      "@tool-db/web3-user": ["web3-user/lib"],
-      "@tool-db/indexeddb-store": ["indexeddb-store/lib"],
-      "@tool-db/leveldb-store": ["leveldb-store/lib"],
-      "@tool-db/webrtc-network": ["webrtc-network/lib"],
-      "@tool-db/websocket-network": ["websocket-network/lib"]
+      "@tool-db/ecdsa-user": ["ecdsa-user/lib/*"],
+      "@tool-db/web3-user": ["web3-user/lib/*"],
+      "@tool-db/indexeddb-store": ["indexeddb-store/lib/*"],
+      "@tool-db/leveldb-store": ["leveldb-store/lib/*"],
+      "@tool-db/websocket-network": ["websocket-network/lib/*"],
+      "@tool-db/webrtc-network": ["webrtc-network/lib/*"],
     }
   },
   "exclude": [
     "*/__tests__",
     "*/__mocks__"
+  ],
+  "include": [
+    "lib"
   ]
 }
