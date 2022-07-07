@@ -54,7 +54,7 @@ export default {
   // forceCoverageMatch: [],
 
   // A path to a module which exports an async function that is triggered once before all test suites
-  // globalSetup: undefined,
+  // globalSetup: "./jest.setup.js",
 
   // A path to a module which exports an async function that is triggered once after all test suites
   // globalTeardown: undefined,
@@ -138,7 +138,7 @@ export default {
 
   // The test environment that will be used for testing
   // testEnvironment: "jsdom",
-  testEnvironment: "jsdom",
+  testEnvironment: "./custom-test-env.js",
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},

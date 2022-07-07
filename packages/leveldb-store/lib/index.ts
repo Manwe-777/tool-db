@@ -1,4 +1,5 @@
 import { ToolDb, ToolDbStorageAdapter } from "tool-db";
+import level from "level";
 
 export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database;
@@ -6,7 +7,6 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
 
-    const level = require("level");
     this.database = level(this.storageName);
     this.database.open();
   }

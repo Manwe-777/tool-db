@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/ws": "^8.5.3",
+    "level": "^7.0.0",
     "simple-peer": "^9.11.1",
     "web3": "^1.7.4",
     "web3-core": "^1.7.4",
@@ -23,6 +24,7 @@
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@types/jest": "^28.1.4",
+    "@types/level": "^6.0.1",
     "@types/simple-peer": "^9.11.4",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "eslint": "^8.19.0",
@@ -32,6 +34,7 @@
     "eslint-plugin-jest": "^26.5.3",
     "jest": "^28.1.2",
     "jest-environment-jsdom": "^28.1.2",
+    "jest-environment-jsdom-global": "^3.1.2",
     "lerna": "^4.0.0",
     "np": "^7.6.2",
     "npm-watch": "^0.11.0",
