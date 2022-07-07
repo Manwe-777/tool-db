@@ -7,22 +7,45 @@
     "build": "lerna run build",
     "clean": "lerna run --parallel clean",
     "release": "lerna publish",
-    "tsc": "tsc"
+    "test": "jest --clearCache && jest ./ --detectOpenHandles",
+    "test:watch": "jest --watch ./"
   },
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "license": "ISC",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@babel/preset-env": "^7.18.6",
+    "@babel/preset-typescript": "^7.18.6",
+    "@types/jest": "^28.1.4",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "eslint": "^8.19.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jest": "^26.5.3",
+    "jest": "^28.1.2",
+    "jest-environment-jsdom": "^28.1.2",
     "lerna": "^4.0.0",
     "np": "^7.6.2",
     "npm-watch": "^0.11.0",
-    "nx": "^14.4.2"
+    "prettier": "^2.7.1",
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.4",
+    "typescript-eslint": "0.0.1-alpha.0",
+    "uglify-js": "^3.16.2"
   },
   "workspaces": [
-     "packages/*"
+    "packages/*"
   ],
   "engines": {
     "node": ">=16.0.0"
+  },
+  "watch": {
+    "build": {
+      "patterns": [
+        "*/lib"
+      ],
+      "extensions": "js,ts"
+    }
   }
 }

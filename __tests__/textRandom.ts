@@ -1,4 +1,4 @@
-import { textRandom } from "..";
+import { textRandom } from "../packages/tool-db";
 
 it("Creates random text", () => {
   expect(textRandom(10)).toHaveLength(10);

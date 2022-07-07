@@ -1,13 +1,16 @@
 import {
   Peer,
   ToolDb,
-  ToolDbLeveldb,
   VerificationData,
   catchReturn,
   VerifyResult,
   getPeerSignature,
   verifyPeer,
-} from "..";
+} from "../packages/tool-db";
+
+import ToolDbLeveldb from "../packages/leveldb-store";
+import ToolDbWebsockets from "../packages/websocket-network";
+import ToolDbWeb3 from "../packages/web3-user";
 
 jest.setTimeout(10000);
 
@@ -19,6 +22,8 @@ beforeAll((done) => {
     host: "127.0.0.1",
     port: 8888,
     storageAdapter: ToolDbLeveldb,
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
     storageName: "test-verify-a",
   });
   ClientA.anonSignIn();

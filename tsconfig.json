@@ -68,6 +68,7 @@
     "forceConsistentCasingInFileNames": true,  /* Disallow inconsistently-cased references to the same file. */
     "baseUrl": "./packages",
     "paths": {
+      "tool-db": ["tool-db/lib/*"],
       "@tool-db/ecdsa-user": ["ecdsa-user/lib/*"],
       "@tool-db/web3-user": ["web3-user/lib/*"],
       "@tool-db/indexeddb-store": ["indexeddb-store/lib/*"],
@@ -77,8 +78,9 @@
     }
   },
   "exclude": [
-    "*/__tests__",
-    "*/__mocks__"
+    "__tests__/**",
+    "__tests__",
+    "__mocks__"
   ],
   "include": [
     "lib"

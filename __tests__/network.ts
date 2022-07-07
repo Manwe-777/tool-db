@@ -3,8 +3,11 @@ import {
   ToolDb,
   MapCrdt,
   VerificationData,
-  ToolDbLeveldb,
-} from "..";
+} from "../packages/tool-db";
+
+import ToolDbLeveldb from "../packages/leveldb-store";
+import ToolDbWebsockets from "../packages/websocket-network";
+import ToolDbWeb3 from "../packages/web3-user";
 
 jest.setTimeout(15000);
 
@@ -21,6 +24,8 @@ beforeAll((done) => {
     port: 9000,
     storageName: "test-node-a",
     storageAdapter: ToolDbLeveldb,
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
   });
   nodeA.onConnect = () => checkIfOk(nodeA.peerAccount.getAddress() || "");
 
@@ -32,6 +37,8 @@ beforeAll((done) => {
     port: 8000,
     storageName: "test-node-b",
     storageAdapter: ToolDbLeveldb,
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
   });
   nodeB.onConnect = () => checkIfOk(nodeB.peerAccount.getAddress() || "");
 
@@ -40,6 +47,8 @@ beforeAll((done) => {
     peers: [{ host: "localhost", port: 9000 }],
     storageName: "test-alice",
     storageAdapter: ToolDbLeveldb,
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
   });
   Alice.onConnect = () => checkIfOk(Alice.peerAccount.getAddress() || "");
 
@@ -48,6 +57,8 @@ beforeAll((done) => {
     peers: [{ host: "localhost", port: 8000 }],
     storageName: "test-bob",
     storageAdapter: ToolDbLeveldb,
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
   });
   Bob.onConnect = () => checkIfOk(Bob.peerAccount.getAddress() || "");
 
@@ -56,6 +67,8 @@ beforeAll((done) => {
     peers: [{ host: "localhost", port: 9000 }],
     storageName: "test-chris",
     storageAdapter: ToolDbLeveldb,
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
   });
   Chris.onConnect = () => checkIfOk(Chris.peerAccount.getAddress() || "");
 

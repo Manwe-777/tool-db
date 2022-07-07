@@ -1,4 +1,4 @@
-import { proofOfWork, sha256 } from "..";
+import { proofOfWork, sha256 } from "../packages/tool-db";
 
 it("Proof of work values are correct", () => {
   const TestValue = "SomeVeryTest-yValue";

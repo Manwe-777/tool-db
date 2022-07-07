@@ -1,4 +1,4 @@
-import { MapCrdt } from "..";
+import { MapCrdt } from "../packages/tool-db";
 
 it("Can do t1 and t2", () => {
   const Alice = new MapCrdt<number>("Alice");
