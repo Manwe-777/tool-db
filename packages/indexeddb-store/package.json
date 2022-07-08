@@ -1,33 +1,24 @@
 {
   "name": "@tool-db/indexeddb-store",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "> TODO: description",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
   "license": "ISC",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
-  "files": [
-    "lib"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Manwe-777/tool-db.git"
   },
   "scripts": {
-    "test": "echo \"Error: run tests from root\" && exit 1",
     "build": "tsc"
   },
   "bugs": {
     "url": "https://github.com/Manwe-777/tool-db/issues"
   },
   "devDependencies": {
-    "typescript": "^4.7.4",
-    "uglify-js": "^3.16.2"
+    "typescript": "^4.7.4"
   },
   "dependencies": {
     "tool-db": "^2.4.0"

@@ -1,4 +1,5 @@
 node_modules
+.yarn
 coverage
 dist
 test-alice

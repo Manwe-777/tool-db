@@ -7,12 +7,6 @@
   "license": "ISC",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "directories": {
-    "lib": "lib"
-  },
-  "files": [
-    "lib"
-  ],
   "engines": {
     "node": ">=16.0.0"
   },
@@ -21,14 +15,16 @@
     "url": "git+https://github.com/Manwe-777/tool-db.git"
   },
   "scripts": {
-    "build": "tsc"
+    "bundle": "browserify ./dist/index.js --standalone tooldb | uglifyjs -cm > ./bundle.js",
+    "build": "tsc && npm run bundle",
+    "tsc": "tsc"
   },
   "bugs": {
     "url": "https://github.com/Manwe-777/tool-db/issues"
   },
   "devDependencies": {
+    "browserify": "^17.0.0",
     "typescript": "^4.7.4",
     "uglify-js": "^3.16.2"
-  },
-  "dependencies": {}
+  }
 }

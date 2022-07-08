@@ -4,7 +4,7 @@
   "description": "A decentralized database model for p2p networks.",
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "build": "lerna run build",
+    "build": "lerna run --parallel build",
     "clean": "lerna run --parallel clean",
     "release": "lerna publish",
     "test": "jest --clearCache && jest ./ --detectOpenHandles",
@@ -12,8 +12,7 @@
   },
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "license": "ISC",
-  "dependencies": {
-    "@types/ws": "^8.5.3",
+  "optionalDependencies": {
     "level": "^7.0.0",
     "simple-peer": "^9.11.1",
     "web3": "^1.7.4",
@@ -21,12 +20,14 @@
     "ws": "^8.8.0"
   },
   "devDependencies": {
+    "@types/ws": "^8.5.3",
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@types/jest": "^28.1.4",
     "@types/level": "^6.0.1",
     "@types/simple-peer": "^9.11.4",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "browserify": "^17.0.0",
     "eslint": "^8.19.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^8.5.0",
@@ -40,6 +41,7 @@
     "npm-watch": "^0.11.0",
     "prettier": "^2.7.1",
     "ts-node": "^10.8.2",
+    "tsconfig-paths": "^4.0.0",
     "typescript": "^4.7.4",
     "typescript-eslint": "0.0.1-alpha.0",
     "uglify-js": "^3.16.2"
@@ -53,7 +55,7 @@
   "watch": {
     "build": {
       "patterns": [
-        "*/lib"
+        "packages/*/lib/*"
       ],
       "extensions": "js,ts"
     }

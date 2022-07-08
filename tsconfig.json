@@ -4,7 +4,7 @@
 
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
-    "target": "es5",                          /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
+    "target": "es5",                       /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
     "module": "commonjs",                     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
     "lib": ["DOM"],                           /* Specify library files to be included in the compilation. */
     // "allowJs": true,                       /* Allow javascript files to be compiled. */
@@ -14,7 +14,7 @@
     // "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */
     "sourceMap": true,                        /* Generates corresponding '.map' file. */
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
-    "outDir": "./dist",                       /* Redirect output structure to the directory. */
+    // "outDir": "..",                       /* Redirect output structure to the directory. */
     // "rootDir": "./",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     // "composite": true,                     /* Enable project compilation */
     // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
@@ -66,23 +66,20 @@
     /* Advanced Options */
     "skipLibCheck": true,                     /* Skip type checking of declaration files. */
     "forceConsistentCasingInFileNames": true,  /* Disallow inconsistently-cased references to the same file. */
-    "baseUrl": "./packages",
+    "baseUrl": ".",
     "paths": {
-      "@tool-db/websocket-network": ["websocket-network"],
-      "@tool-db/webrtc-network": ["webrtc-network"],
-      "@tool-db/indexeddb-store": ["indexeddb-store"],
-      "@tool-db/leveldb-store": ["leveldb-store"],
-      "@tool-db/ecdsa-user": ["ecdsa-user"],
-      "@tool-db/web3-user": ["web3-user"],
-      "tool-db": ["tool-db"],      
+      "@tool-db/websocket-network": ["../websocket-network"],
+      "@tool-db/webrtc-network": ["../webrtc-network"],
+      "@tool-db/indexeddb-store": ["../indexeddb-store"],
+      "@tool-db/leveldb-store": ["../leveldb-store"],
+      "@tool-db/ecdsa-user": ["../ecdsa-user"],
+      "@tool-db/web3-user": ["../web3-user"],
+      "tool-db": ["../tool-db"],
     }
   },
   "exclude": [
     "__tests__/**",
     "__tests__",
     "__mocks__"
-  ],
-  "include": [
-    "lib"
   ]
 }
