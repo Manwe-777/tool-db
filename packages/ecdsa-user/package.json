@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/ecdsa-user",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ECDSA user adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
