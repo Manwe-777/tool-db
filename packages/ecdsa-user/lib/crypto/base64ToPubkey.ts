@@ -13,7 +13,10 @@ export default function base64ToPubkey(str: string) {
       x: str.slice(0, 43),
       y: str.slice(43),
     },
-    "ECDSA",
+    {
+      name: "ECDSA",
+      namedCurve: "P-256",
+    },
     true,
     ["verify"]
   );
