@@ -12,7 +12,8 @@
     "url": "git+https://github.com/Manwe-777/tool-db.git"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepublish": "npm run build"
   },
   "bugs": {
     "url": "https://github.com/Manwe-777/tool-db/issues"

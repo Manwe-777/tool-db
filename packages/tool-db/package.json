@@ -17,7 +17,8 @@
   "scripts": {
     "bundle": "browserify ./dist/index.js --standalone tooldb | uglifyjs -cm > ./bundle.js",
     "build": "tsc && npm run bundle",
-    "tsc": "tsc"
+    "tsc": "tsc",
+    "prepublish": "npm run build"
   },
   "bugs": {
     "url": "https://github.com/Manwe-777/tool-db/issues"
