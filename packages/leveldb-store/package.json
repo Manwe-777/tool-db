@@ -1,7 +1,7 @@
 {
   "name": "@tool-db/leveldb-store",
   "version": "1.0.0",
-  "description": "> TODO: description",
+  "description": "LevelDb store adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
   "license": "ISC",

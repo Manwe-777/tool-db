@@ -57,13 +57,21 @@ const { ToolDb, sha256 } = tooldb;
 Creating a webrtc peers network is as easy as;
 
 ```
-import { ToolDb, ToolDbWebrtc } from "tool-db";
+import { ToolDb } from "tool-db";
+import ToolDbWebrtc from "@tool-db/webrtc-network";
+import ToolDbECDSA from "@tool-db/ecdsa-user";
+import ToolDbIndexedDb from "@tool-db/indexeddb-store";
 
 const db = new ToolDb({
-  networkAdapter: ToolDbWebrtc,
   debug: true,
+  networkAdapter: ToolDbWebrtc,
+  storageAdapter: ToolDbIndexedDb,
+  userAdapter: ToolDbECDSA,
 });
 ```
+
+Notice we imported the required adapter modules; All three adapters are required and they are not included in this module by default; You should import each of them separately.
+
 
 From there you can put and get data using the api;
 
