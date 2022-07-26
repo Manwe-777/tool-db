@@ -70,7 +70,9 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
         };
 
         this._username = account.name;
-        this._address = account.pub;
+        pubkeyToBase64(spub).then((addr) => {
+          this._address = addr;
+        });
       })
     );
   }
