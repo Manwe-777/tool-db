@@ -1,7 +1,7 @@
 {
-  "name": "@tool-db/hybrid-network",
-  "version": "1.0.0",
-  "description": "Hybrid network adapter for tool-db",
+  "name": "@tool-db/webrtc-network",
+  "version": "1.0.1",
+  "description": "WebRTC network adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
   "license": "ISC",
