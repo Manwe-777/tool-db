@@ -16,7 +16,7 @@ type IOffers = Record<
 const offerPoolSize = 5;
 const maxPeers = 4;
 const announceSecs = 30;
-const maxAnnounceSecs = 86400;
+const maxAnnounceSecs = 99999999;
 
 const defaultTrackerUrls = [
   "wss://tooldb-tracker.herokuapp.com/",
@@ -380,6 +380,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         const { peer } = offer;
 
         if (peer.destroyed) {
+          this.onDisconnect(val.peer_id, "destroyed");
           return;
         }
 

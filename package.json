@@ -21,12 +21,12 @@
     "ws": "^8.8.0"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.3",
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@types/jest": "^28.1.4",
     "@types/level": "^6.0.1",
     "@types/simple-peer": "^9.11.4",
+    "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "browserify": "^17.0.0",
     "eslint": "^8.19.0",

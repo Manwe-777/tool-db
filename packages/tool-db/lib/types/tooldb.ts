@@ -66,6 +66,10 @@ export interface ToolDbOptions {
    */
   port: number;
   /**
+   * If we are listening over SSL or not
+   */
+  ssl: boolean;
+  /**
    * Our storage namespace (default is "tooldb")
    */
   storageName: string;
@@ -85,5 +89,9 @@ export interface ToolDbOptions {
    * The namespace/topic of our app (default is "tool-db-default")
    */
   topic: string;
+  /*
+   * The name of the server (works like a domain)
+   */
+  serverName: string | undefined;
   // [extra: string]: any;
 }

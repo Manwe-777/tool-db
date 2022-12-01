@@ -68,6 +68,7 @@
     "forceConsistentCasingInFileNames": true,  /* Disallow inconsistently-cased references to the same file. */
     "baseUrl": ".",
     "paths": {
+      "@tool-db/hybrid-network": ["../hybrid-network"],
       "@tool-db/websocket-network": ["../websocket-network"],
       "@tool-db/webrtc-network": ["../webrtc-network"],
       "@tool-db/indexeddb-store": ["../indexeddb-store"],

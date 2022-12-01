@@ -20,11 +20,13 @@ export default class ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     this._tooldb = db;
 
-    if (this.tooldb.options.server) {
-      this.getMeAsPeer().then((meAsPeer) => {
-        this.tooldb.serverPeers.push(meAsPeer);
-      });
-    }
+    setTimeout(() => {
+      if (this.tooldb.options.server) {
+        this.getMeAsPeer().then((meAsPeer) => {
+          this.tooldb.serverPeers.push(meAsPeer);
+        });
+      }
+    }, 100);
   }
 
   get clientToSend() {

@@ -242,6 +242,8 @@ export default class ToolDb extends EventEmitter {
     userAdapter: ToolDbUserAdapter,
     storageName: "tooldb",
     topic: "tool-db-default",
+    serverName: undefined,
+    ssl: false,
   };
 
   get options() {

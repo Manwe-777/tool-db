@@ -21,3 +21,4 @@ tooldb
 _____peer
 _____peer_**
 lerna-debug.log
+.DS_Store

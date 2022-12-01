@@ -1,7 +1,7 @@
 {
-  "name": "@tool-db/hybrid-network",
-  "version": "1.0.0",
-  "description": "Hybrid network adapter for tool-db",
+  "name": "@tool-db/webrtc-network",
+  "version": "1.0.1",
+  "description": "WebRTC network adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
   "license": "ISC",
@@ -19,10 +19,12 @@
     "url": "https://github.com/Manwe-777/tool-db/issues"
   },
   "dependencies": {
+    "simple-peer": "^9.11.1",
     "tool-db": "^2.5.1",
     "ws": "^8.8.0"
   },
   "devDependencies": {
+    "@types/simple-peer": "^9.11.4",
     "@types/ws": "^8.5.3",
     "typescript": "^4.7.4"
   },
