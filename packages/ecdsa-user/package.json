@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "crypto": "^1.0.1",
-    "tool-db": "^2.5.1"
+    "tool-db": "^2.5.2"
   },
   "gitHead": "c7db936276e09859edd3748411c9431b60e2b284"
 }

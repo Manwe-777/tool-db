@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "level": "^7.0.0",
-    "tool-db": "^2.5.1"
+    "tool-db": "^2.5.2"
   },
   "devDependencies": {
     "typescript": "^4.7.4"
