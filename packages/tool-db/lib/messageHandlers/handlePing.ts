@@ -33,7 +33,7 @@ export default function handlePing(
 
       this.onPeerConnect(this.peerAccount.getAddress() || "");
     } else {
-      this.logger("Blocked a remote peer from joining; ", message);
+      this.logger("Blocked a remote peer from joining; ", verified, message);
       // Drop connection here!
     }
   });

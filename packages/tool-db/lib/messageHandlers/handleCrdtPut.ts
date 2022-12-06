@@ -24,19 +24,24 @@ export default function handleCrdtPut(
   toolDbVerificationWrapper.call(this, message.data).then((value) => {
     // this.logger("Verification wrapper result: ", value, message.k);
     if (value === VerifyResult.Verified) {
-      this.emit("crdtput", message);
-      this.emit("data", message.data);
-      this.emit("verified", message);
+      const finalMessage: CrdtPutMessage = {
+        ...message,
+        to: [...message.to, remotePeerId],
+      };
+
+      this.emit("crdtput", finalMessage);
+      this.emit("data", finalMessage.data);
+      this.emit("verified", finalMessage);
       // relay to other servers !!!
-      this.network.sendToAll(message, true);
+      this.network.sendToAll(finalMessage, true);
 
       this.store
-        .get(message.data.k)
+        .get(finalMessage.data.k)
         .then((oldData) => {
           try {
             const parsedOldData: VerificationData<any> = JSON.parse(oldData);
 
-            let newMessage = message;
+            let newMessage = finalMessage;
 
             // Merge old document with new data incoming and save it
             // Add handles for all kinds of CRDT we add
@@ -73,15 +78,15 @@ export default function handleCrdtPut(
               | CounterChanges[] = [];
 
             if (oldDoc) {
-              oldDoc.mergeChanges(message.data.v);
+              oldDoc.mergeChanges(finalMessage.data.v);
               changesMerged = oldDoc.getChanges();
             }
             newMessage = {
-              ...message,
+              ...finalMessage,
             };
             newMessage.data.v = changesMerged;
 
-            if (parsedOldData.t < message.data.t) {
+            if (parsedOldData.t < finalMessage.data.t) {
               const key = newMessage.data.k;
               this.triggerKeyListener(key, newMessage.data);
               this.store
@@ -103,10 +108,10 @@ export default function handleCrdtPut(
           }
         })
         .catch((e) => {
-          const key = message.data.k;
-          this.triggerKeyListener(key, message.data);
+          const key = finalMessage.data.k;
+          this.triggerKeyListener(key, finalMessage.data);
           this.store
-            .put(message.data.k, JSON.stringify(message.data))
+            .put(finalMessage.data.k, JSON.stringify(finalMessage.data))
             .catch((e) => {
               // do nothing
             });

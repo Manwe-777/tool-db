@@ -10,7 +10,8 @@ import { ToolDb, textRandom } from ".";
 export default function toolDbSubscribe(
   this: ToolDb,
   key: string,
-  userNamespaced = false
+  userNamespaced = false,
+  to?: string[]
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     if (userNamespaced && this.userAccount.getAddress() === undefined) {
@@ -29,7 +30,7 @@ export default function toolDbSubscribe(
     this.network.sendToAll({
       type: "subscribe",
       key: finalKey,
-      to: [],
+      to: to || [],
       id: msgId,
     });
 

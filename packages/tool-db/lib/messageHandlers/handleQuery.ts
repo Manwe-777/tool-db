@@ -20,6 +20,11 @@ export default function handleQuery(
     });
 
   if (this.options.server) {
-    this.network.sendToAll(message, true);
+    const finalMessage: QueryMessage = {
+      ...message,
+      to: [...message.to, remotePeerId],
+    };
+
+    this.network.sendToAll(finalMessage, true);
   }
 }

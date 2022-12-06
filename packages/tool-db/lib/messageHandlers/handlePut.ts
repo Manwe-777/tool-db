@@ -14,22 +14,27 @@ export default function handlePut(
       this.emit("data", message.data);
       this.emit("verified", message);
       // relay to other servers !!!
-      this.network.sendToAll(message, true);
+      const finalMessage: PutMessage = {
+        ...message,
+        to: [...message.to, remotePeerId],
+      };
+
+      this.network.sendToAll(finalMessage, true);
 
       this.store
-        .get(message.data.k)
+        .get(finalMessage.data.k)
         .then((oldData) => {
           const parsedOldData = JSON.parse(oldData);
-          if (parsedOldData.t < message.data.t) {
-            const key = message.data.k;
-            this.triggerKeyListener(key, message.data);
+          if (parsedOldData.t < finalMessage.data.t) {
+            const key = finalMessage.data.k;
+            this.triggerKeyListener(key, finalMessage.data);
             this.store
-              .put(message.data.k, JSON.stringify(message.data))
+              .put(finalMessage.data.k, JSON.stringify(finalMessage.data))
               .catch((e) => {
                 // do nothing
               });
           } else {
-            const key = message.data.k;
+            const key = finalMessage.data.k;
             this.triggerKeyListener(key, parsedOldData);
           }
           // } else {

@@ -10,7 +10,8 @@ export default function toolDbQueryKeys(
   this: ToolDb,
   key: string,
   userNamespaced = false,
-  timeoutMs = 1000
+  timeoutMs = 1000,
+  to?: string[]
 ): Promise<string[] | null> {
   const user = this.userAccount;
 
@@ -56,7 +57,7 @@ export default function toolDbQueryKeys(
     // Do get
     this.network.sendToAll({
       type: "query",
-      to: [],
+      to: to || [],
       key: finalKey,
       id: msgId,
     });

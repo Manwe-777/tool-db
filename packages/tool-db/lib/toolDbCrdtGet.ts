@@ -12,7 +12,8 @@ export default function toolDbCrdtGet<T = any>(
   key: string,
   crdt: BaseCrdt<T, any, any>,
   userNamespaced = false,
-  timeoutMs = 1000
+  timeoutMs = 1000,
+  to?: string[]
 ): Promise<CrdtPutMessage<T> | null> {
   return new Promise((resolve, reject) => {
     if (userNamespaced && this.userAccount.getAddress() === undefined) {
@@ -74,7 +75,7 @@ export default function toolDbCrdtGet<T = any>(
     // Do get
     this.network.sendToAll({
       type: "crdtGet",
-      to: [],
+      to: to || [],
       key: finalKey,
       id: msgId,
     });

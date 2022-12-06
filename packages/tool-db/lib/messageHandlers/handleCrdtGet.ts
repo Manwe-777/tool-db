@@ -23,7 +23,12 @@ export default function handleCrdtGet(
       }
     })
     .catch((e) => {
-      this.logger("Local key not found, relay", JSON.stringify(message));
-      this.network.sendToAll(message, false);
+      const finalMessage: CrdtGetMessage = {
+        ...message,
+        to: [...message.to, remotePeerId],
+      };
+
+      this.logger("Local key not found, relay", JSON.stringify(finalMessage));
+      this.network.sendToAll(finalMessage, false);
     });
 }

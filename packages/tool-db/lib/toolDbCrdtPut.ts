@@ -18,7 +18,8 @@ export default function toolDbCrdtPut<T = any>(
   this: ToolDb,
   key: string,
   crdt: BaseCrdt<T, any, any>,
-  userNamespaced = false
+  userNamespaced = false,
+  to?: string[]
 ): Promise<CrdtPutMessage | null> {
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
@@ -64,7 +65,7 @@ export default function toolDbCrdtPut<T = any>(
             const finalMessage: CrdtPutMessage<any> = {
               type: "crdtPut",
               id: textRandom(10),
-              to: [],
+              to: to || [],
               data,
             };
             this.network.sendToAll(finalMessage);

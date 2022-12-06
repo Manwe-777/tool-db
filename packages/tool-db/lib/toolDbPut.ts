@@ -17,7 +17,8 @@ export default function toolDbPut<T = any>(
   this: ToolDb,
   key: string,
   value: T,
-  userNamespaced = false
+  userNamespaced = false,
+  to?: string[]
 ): Promise<PutMessage<T> | null> {
   return new Promise((resolve, reject) => {
     if (key.includes(".")) {
@@ -62,7 +63,7 @@ export default function toolDbPut<T = any>(
             const finalMessage: PutMessage = {
               type: "put",
               id: textRandom(10),
-              to: [],
+              to: to || [],
               data,
             };
 

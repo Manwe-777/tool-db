@@ -10,11 +10,12 @@ import {
 export default async function toolDbSignUp(
   this: ToolDb,
   user: string,
-  password: string
+  password: string,
+  to?: string[]
 ): Promise<PutMessage<any>> {
   const userRoot = `==${user}`;
   return new Promise((resolve, reject) => {
-    this.getData(userRoot, false, 3000)
+    this.getData(userRoot, false, 3000, to)
       .then((data) => {
         if (data === null) {
           const account = new this.options.userAdapter(this);
@@ -43,7 +44,7 @@ export default async function toolDbSignUp(
                   const finalMsg = {
                     type: "put",
                     id: textRandom(10),
-                    to: [],
+                    to: to || [],
                     data: signupMessage,
                   } as PutMessage;
 

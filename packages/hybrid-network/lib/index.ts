@@ -6,6 +6,7 @@ import {
   textRandom,
   ToolDbNetworkAdapter,
   sha256,
+  ToolDbMessage,
 } from "tool-db";
 
 type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
@@ -52,6 +53,8 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
   private connectedServers: Record<string, WebSocket> = {};
 
+  private serversFinding: string[] = [];
+
   public announceInterval: any;
 
   private trackerUrls = defaultTrackerUrls; // .slice(0, 2);
@@ -59,6 +62,18 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   private handledOffers: Record<string, boolean> = {};
 
   private _awaitingConnections: ConnectionAwaiting[] = [];
+
+  // We need to create a queue to handle a situation when we need
+  // to contact a server, but we havent connected to it yet.
+  private _messageQueue: ToolDbMessage[] = [];
+
+  get messageQueue() {
+    return this._messageQueue;
+  }
+
+  public pushToMessageQueue(msg: ToolDbMessage) {
+    this._messageQueue.push(msg);
+  }
 
   private removeFromAwaiting = (pubkey: string) => {
     const index = this._awaitingConnections.findIndex(
@@ -173,14 +188,17 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
    * Connects to it if found
    */
   public findServer = async (serverName: string) => {
-    const infoHash = sha256(serverName).slice(-20);
+    if (!this.serversFinding.includes(serverName)) {
+      this.serversFinding.push(serverName);
+      const infoHash = sha256(serverName).slice(-20);
 
-    this.trackerUrls.forEach(async (url: string) => {
-      const socket = await this.makeSocket(url);
-      if (socket && socket.readyState === 1) {
-        this.announce(socket, infoHash);
-      }
-    });
+      this.trackerUrls.forEach(async (url: string) => {
+        const socket = await this.makeSocket(url);
+        if (socket && socket.readyState === 1) {
+          this.announce(socket, infoHash);
+        }
+      });
+    }
   };
 
   /**
@@ -308,11 +326,24 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
         : "ws://" + serverPeer.host + ":" + serverPeer.port;
 
       const wss = new this.wss(wsUrl);
-      let clientId = "";
+      let clientId = serverPeer.pubKey;
+
+      // Unlike other network adapters, we can just use the server name
+      // to identify connections.
+      // Therefore, we dont have to wait for a pong message to
+      // initialize these internal functions
+      this.isClientConnected[serverPeer.name] = () => {
+        return wss.readyState === wss.OPEN;
+      };
+
+      this.clientToSend[serverPeer.name] = (_msg: string) => {
+        wss.send(_msg);
+      };
 
       const previousConnection = this._awaitingConnections.filter(
         (c) => c.server.pubKey === serverPeer.pubKey
       )[0];
+
       if (serverPeer.pubKey && previousConnection) {
         previousConnection.socket = wss;
       } else {
@@ -357,13 +388,6 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
         this.onClientMessage(msg.data as string, clientId, (id) => {
           clientId = id;
-
-          this.isClientConnected[id] = () => {
-            return wss.readyState === wss.OPEN;
-          };
-          this.clientToSend[id] = (_msg: string) => {
-            wss.send(_msg);
-          };
         });
       };
 
@@ -407,5 +431,44 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
   public close(clientId: string): void {
     //
+  }
+
+  public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
+    this.pushToMessageQueue({ ...msg });
+    this.tryExecuteMessageQueue();
+  }
+
+  public sendToClientId(clientId: string, msg: ToolDbMessage): void {
+    this.pushToMessageQueue({ ...msg, to: [clientId] });
+    this.tryExecuteMessageQueue();
+  }
+
+  private tryExecuteMessageQueue() {
+    const sentMessageIDs: string[] = [];
+    this._messageQueue.forEach((message) => {
+      const clientId = message.to[0];
+      if (
+        this.isClientConnected[clientId] &&
+        this.isClientConnected[clientId]()
+      ) {
+        this.clientToSend[clientId](JSON.stringify(message));
+        sentMessageIDs.push(message.id);
+      }
+
+      if (this.connectedServers[clientId] === undefined) {
+        this.findServer(clientId);
+      }
+    });
+
+    sentMessageIDs.forEach((id) => {
+      const index = this._messageQueue.findIndex((msg) => msg.id === id);
+      this._messageQueue.splice(index, 1);
+    });
+
+    if (this._messageQueue.length > 0) {
+      setTimeout(() => {
+        this.tryExecuteMessageQueue();
+      }, 250);
+    }
   }
 }
