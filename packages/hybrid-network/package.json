@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/hybrid-network",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Hybrid network adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "simple-peer": "^9.11.1",
-    "tool-db": "^2.5.3",
+    "tool-db": "^2.5.4",
     "ws": "^8.8.0"
   },
   "devDependencies": {
