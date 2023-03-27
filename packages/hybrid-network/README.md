@@ -6,9 +6,6 @@ We use trackers to announce the server via a given name (like a domain or hostna
 
 The goal is to be able to reach for any server, anywhere, without going trough censorable channels, removing the most usual points of failure for hosts and allowing servers to move between regions seamlessly, or even having multiple replicas and backups hosted at many places at once.
 
-# Usage
-
-client tbd!
 # Future work
 
 Once we identify servers by name we can do all sorts of network schemas, but the most interesting is federations, where clients can choose where to store their data, sign up at those servers and point other users to where their data is stored; Simply using a name like a domain, without caring much about where the server is hosted.
