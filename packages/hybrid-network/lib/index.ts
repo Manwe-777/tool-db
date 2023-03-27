@@ -2,7 +2,6 @@ import WebSocket from "ws";
 
 import {
   ToolDb,
-  sha1,
   textRandom,
   ToolDbNetworkAdapter,
   sha256,
@@ -28,7 +27,6 @@ interface ConnectionAwaiting {
 }
 
 const announceSecs = 30;
-const maxAnnounceSecs = 99999999;
 
 const defaultTrackerUrls = [
   "wss://tooldb-tracker.herokuapp.com/",
@@ -38,6 +36,12 @@ const defaultTrackerUrls = [
   "wss://tracker.files.fm:7073/announce",
   "wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
 ];
+
+function makeDelay(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   private wnd =
@@ -106,8 +110,10 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
           // eslint-disable-next-line func-names
           socket.onerror = () => {
-            const index = this.trackerUrls.indexOf(url);
-            this.trackerUrls.splice(index, 1);
+            // removing trackers just because the error event seems like a mistake
+            // trackers can get disconnected and be absolutely healthy.
+            // const index = this.trackerUrls.indexOf(url);
+            // this.trackerUrls.splice(index, 1);
             resolve(null);
           };
         } catch (e) {
@@ -168,18 +174,26 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
    */
   private announceAll = async () => {
     const infoHash = sha256(this.tooldb.options.serverName || "").slice(-20);
-    this.tooldb.logger(
-      `announce: "${this.tooldb.options.serverName}" (${infoHash})`
-    );
 
-    this.trackerUrls.forEach(async (url: string) => {
-      const socket = await this.makeSocket(url);
-      //this.tooldb.logger(" ok tracker " + url);
-      // this.tooldb.logger("socket", url, socket);
-      if (socket && socket.readyState === 1) {
-        //this.tooldb.logger("announce to " + url);
-        this.announce(socket, infoHash);
-      }
+    this.tooldb.logger(`announce all start`);
+    this.tooldb.logger(this.trackerUrls);
+    const delayPerTracker = (announceSecs * 1000) / this.trackerUrls.length;
+
+    this.trackerUrls.forEach(async (url: string, index) => {
+      makeDelay(delayPerTracker * index).then(async () => {
+        //
+        this.tooldb.logger(
+          `announce: "${this.tooldb.options.serverName}" (${infoHash})`
+        );
+
+        const socket = await this.makeSocket(url);
+        //this.tooldb.logger(" ok tracker " + url);
+        // this.tooldb.logger("socket", url, index);
+        if (socket && socket.readyState === 1) {
+          //this.tooldb.logger("announce to " + url);
+          this.announce(socket, infoHash);
+        }
+      });
     });
   };
 
