@@ -1,15 +1,16 @@
 import EventEmitter from "events";
 
 import {
-  VerificationData,
-  verifyMessage,
+  Peer,
   randomAnimal,
+  ServerFunction,
   ToolDbOptions,
   ToolDbNetworkAdapter,
   ToolDbStorageAdapter,
   ToolDbUserAdapter,
   ToolDbMessage,
-  Peer,
+  verifyMessage,
+  VerificationData,
 } from ".";
 
 import toolDbGet from "./toolDbGet";
@@ -18,6 +19,7 @@ import toolDbSignIn from "./toolDbSignIn";
 import toolDbSignUp from "./toolDbSignUp";
 import toolDbCrdtGet from "./toolDbCrdtGet";
 import toolDbCrdtPut from "./toolDbCrdtPut";
+import toolDbFunction from "./toolDbFunction";
 
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
@@ -32,6 +34,7 @@ import handlePut from "./messageHandlers/handlePut";
 import handlePing from "./messageHandlers/handlePing";
 import handlePong from "./messageHandlers/handlePong";
 import handleQuery from "./messageHandlers/handleQuery";
+import handleFunction from "./messageHandlers/handleFunction";
 import handleCrdtGet from "./messageHandlers/handleCrdtGet";
 import handleCrdtPut from "./messageHandlers/handleCrdtPut";
 import handleSubscribe from "./messageHandlers/handleSubscribe";
@@ -119,6 +122,8 @@ export default class ToolDb extends EventEmitter {
 
   public queryKeys = toolDbQueryKeys;
 
+  public doFunction = toolDbFunction;
+
   public signIn = toolDbSignIn;
 
   public anonSignIn = toolDbAnonSignIn;
@@ -138,6 +143,7 @@ export default class ToolDb extends EventEmitter {
   public handlePut = handlePut;
   public handleQuery = handleQuery;
   public handleSubscribe = handleSubscribe;
+  public handleFunction = handleFunction;
 
   /**
    * id listeners listen for a specific message ID just once
@@ -154,6 +160,26 @@ export default class ToolDb extends EventEmitter {
 
   public getUserNamespacedKey(key: string) {
     return ":" + (this.userAccount?.getAddress() || "") + "." + key;
+  }
+
+  /**
+   * Server functions allow the server to define functions to be executed by the clients
+   * It is up to the function creator to specify proper security on these.
+   * Server functions are meant to execute on data stored on the server, in a way the clients
+   * dont have to overload the server, use with caution!
+   * Custom functions are expected to be a Promise that resolves to a string, and arguments are
+   * passed as an array of values. Type and sanity checking is up to the developer.
+   */
+  private _functions: Record<string, ServerFunction<any, any>> = {};
+
+  get functions() {
+    return this._functions;
+  }
+  public addServerFunction<A, R>(
+    functionName: string,
+    fn: ServerFunction<A, R>
+  ) {
+    this._functions[functionName] = fn;
   }
 
   /**

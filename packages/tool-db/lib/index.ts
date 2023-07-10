@@ -31,6 +31,7 @@ export * from "./crdt/listCrdt";
 export * from "./crdt/mapCrdt";
 
 export { default as handleSubscribe } from "./messageHandlers/handleSubscribe";
+export { default as handleFunction } from "./messageHandlers/handleFunction";
 export { default as handleCrdtGet } from "./messageHandlers/handleCrdtGet";
 export { default as handleCrdtPut } from "./messageHandlers/handleCrdtPut";
 export { default as handleQuery } from "./messageHandlers/handleQuery";

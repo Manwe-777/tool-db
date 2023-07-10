@@ -69,6 +69,10 @@ export default function toolDbClientOnMessage(
       this.handleQuery(message, remotePeerId);
       break;
 
+    case "function":
+      this.handleFunction(message, remotePeerId);
+      break;
+
     default:
       break;
   }

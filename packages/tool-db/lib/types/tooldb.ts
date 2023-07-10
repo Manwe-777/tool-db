@@ -95,3 +95,38 @@ export interface ToolDbOptions {
   serverName: string | undefined;
   // [extra: string]: any;
 }
+
+export type GenericObject = { [key: string]: any };
+
+export type AllowedFunctionArguments<A = GenericObject> = A;
+
+export type AllowedFunctionReturn<R = unknown> = R;
+
+export type FunctionCodes = "OK" | "ERR" | "NOT_FOUND";
+
+export type ServerFunction<R, A = GenericObject> = (
+  args: AllowedFunctionArguments<A>
+) => Promise<AllowedFunctionReturn<R>>;
+
+export interface FunctionReturnBase {
+  code: FunctionCodes;
+}
+export interface FunctionReturnOk<R> extends FunctionReturnBase {
+  return: AllowedFunctionReturn<R>;
+  code: "OK";
+}
+
+export interface FunctionReturnErr extends FunctionReturnBase {
+  return: string;
+  code: "ERR";
+}
+
+export interface FunctionReturnNotFound extends FunctionReturnBase {
+  return: string;
+  code: "NOT_FOUND";
+}
+
+export type FunctionReturn<R> =
+  | FunctionReturnOk<R>
+  | FunctionReturnErr
+  | FunctionReturnNotFound;
