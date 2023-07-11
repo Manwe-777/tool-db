@@ -73,6 +73,7 @@
       "@tool-db/webrtc-network": ["../webrtc-network"],
       "@tool-db/indexeddb-store": ["../indexeddb-store"],
       "@tool-db/leveldb-store": ["../leveldb-store"],
+      "@tool-db/redis-store": ["../redis-store"],
       "@tool-db/ecdsa-user": ["../ecdsa-user"],
       "@tool-db/web3-user": ["../web3-user"],
       "tool-db": ["../tool-db"],

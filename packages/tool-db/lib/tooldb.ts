@@ -270,6 +270,7 @@ export default class ToolDb extends EventEmitter {
     topic: "tool-db-default",
     serverName: undefined,
     ssl: false,
+    modules: {},
   };
 
   get options() {

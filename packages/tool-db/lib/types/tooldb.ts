@@ -93,7 +93,14 @@ export interface ToolDbOptions {
    * The name of the server (works like a domain)
    */
   serverName: string | undefined;
-  // [extra: string]: any;
+  /*
+   * Used only for modules extra options
+   * Ideally should be uesd as an internal key within
+   * like "db.options.hybrid.url" to avoid conflicts between modules using the same keys
+   */
+  modules: {
+    [module: string]: any;
+  };
 }
 
 export type GenericObject = { [key: string]: any };
