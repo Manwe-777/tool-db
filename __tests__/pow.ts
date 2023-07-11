@@ -13,8 +13,8 @@ it("Proof of work is hard", () => {
   const TestValue = "SomeVeryTest-yValue";
 
   const initTime = new Date().getTime();
-  return proofOfWork(TestValue, 5).then((hash) => {
-    expect(hash.hash.slice(0, 5)).toEqual("00000");
+  return proofOfWork(TestValue, 6).then((hash) => {
+    expect(hash.hash.slice(0, 6)).toEqual("000000");
 
     const endTime = new Date().getTime();
 
