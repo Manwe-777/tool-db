@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/web3-user",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Web3/ETH user adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -19,7 +19,7 @@
     "url": "https://github.com/Manwe-777/tool-db/issues"
   },
   "dependencies": {
-    "tool-db": "^2.5.4",
+    "tool-db": "^2.5.5",
     "web3": "^1.7.4",
     "web3-core": "^1.7.4"
   },
