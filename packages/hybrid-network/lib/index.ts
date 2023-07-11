@@ -26,15 +26,23 @@ interface ConnectionAwaiting {
   server: ServerPeerData;
 }
 
+interface MessageQueue {
+  message: ToolDbMessage;
+  time: number;
+  to: string[];
+}
+
 const announceSecs = 30;
 
 const defaultTrackerUrls = [
-  "wss://tooldb-tracker.herokuapp.com/",
+  "wss://tracker.webtorrent.dev",
   "wss://tracker.openwebtorrent.com",
-  "wss://tracker.btorrent.xyz",
-  "wss://tracker.webtorrent.io",
   "wss://tracker.files.fm:7073/announce",
-  "wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
+  "wss://tooldb-tracker.herokuapp.com/",
+  //"wss://tracker.fastcast.nz/announce",
+  //"wss://tracker.btorrent.xyz/announce",
+  //"wss://tracker.webtorrent.io/announce",
+  //"wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
 ];
 
 function makeDelay(ms: number) {
@@ -69,14 +77,18 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
   // We need to create a queue to handle a situation when we need
   // to contact a server, but we havent connected to it yet.
-  private _messageQueue: ToolDbMessage[] = [];
+  private _messageQueue: MessageQueue[] = [];
 
   get messageQueue() {
     return this._messageQueue;
   }
 
-  public pushToMessageQueue(msg: ToolDbMessage) {
-    this._messageQueue.push(msg);
+  public pushToMessageQueue(msg: ToolDbMessage, to: string[]) {
+    this._messageQueue.push({
+      message: msg,
+      time: Date.now(),
+      to,
+    });
   }
 
   private removeFromAwaiting = (pubkey: string) => {
@@ -446,59 +458,82 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   }
 
   public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
-    this.pushToMessageQueue({ ...msg });
-    this.tryExecuteMessageQueue();
+    // this.tooldb.logger("sendToAll", msg, crossServerOnly);
+    if (crossServerOnly) {
+      this.sendToAllServers(msg);
+    } else {
+      this.pushToMessageQueue(msg, []);
+      this.tryExecuteMessageQueue();
+    }
   }
 
   public sendToClientId(clientId: string, msg: ToolDbMessage): void {
-    this.pushToMessageQueue({ ...msg, to: [clientId] });
+    // this.tooldb.logger("sendToClientId", clientId, msg);
+    this.pushToMessageQueue(msg, [clientId]);
+    this.tryExecuteMessageQueue();
+  }
+
+  public sendToAllServers(msg: ToolDbMessage): void {
+    // this.tooldb.logger("sendToAllServers", msg);
+    this.pushToMessageQueue(
+      msg,
+      this.tooldb.serverPeers
+        .map((s) => s.address)
+        .filter((s) => s !== this.tooldb.peerAccount.getAddress())
+    );
     this.tryExecuteMessageQueue();
   }
 
   private tryExecuteMessageQueue() {
     const sentMessageIDs: string[] = [];
-    this._messageQueue.forEach((message) => {
-      if (message.to.length > 0) {
-        // Send only to select clients
-        // try to connect if not found
-        message.to.forEach((toClient) => {
-          if (
-            !message.to.includes(toClient) &&
-            this.isClientConnected[toClient] &&
-            this.isClientConnected[toClient]()
-          ) {
-            this.clientToSend[toClient](JSON.stringify(message));
-            sentMessageIDs.push(message.id);
-          }
+    this._messageQueue.forEach((q) => {
+      const message = q.message;
 
-          if (this.connectedServers[toClient] === undefined) {
-            this.findServer(toClient);
-          }
-        });
-      } else {
-        // send to all currently connected clients
-        Object.keys(this.clientToSend).forEach((toClient) => {
-          if (
-            !message.to.includes(toClient) &&
-            this.isClientConnected[toClient] &&
-            this.isClientConnected[toClient]()
-          ) {
-            this.clientToSend[toClient](JSON.stringify(message));
-            sentMessageIDs.push(message.id);
-          }
-        });
+      if (q.time + 1000 * 60 < Date.now()) {
+        if (q.to.length > 0) {
+          // Send only to select clients
+          // try to connect if not found
+          message.to.forEach((toClient) => {
+            if (
+              !message.to.includes(toClient) &&
+              this.isClientConnected[toClient] &&
+              this.isClientConnected[toClient]()
+            ) {
+              this.clientToSend[toClient](JSON.stringify(message));
+              sentMessageIDs.push(message.id);
+            }
+
+            if (this.connectedServers[toClient] === undefined) {
+              this.findServer(toClient);
+            }
+          });
+        } else {
+          // send to all currently connected clients
+          Object.keys(this.clientToSend).forEach((toClient) => {
+            if (
+              !message.to.includes(toClient) &&
+              this.isClientConnected[toClient] &&
+              this.isClientConnected[toClient]()
+            ) {
+              this.clientToSend[toClient](JSON.stringify(message));
+              sentMessageIDs.push(message.id);
+            }
+          });
+        }
       }
     });
 
     sentMessageIDs.forEach((id) => {
-      const index = this._messageQueue.findIndex((msg) => msg.id === id);
+      const index = this._messageQueue.findIndex(
+        (msg) => msg.message.id === id
+      );
       this._messageQueue.splice(index, 1);
     });
 
     if (this._messageQueue.length > 0) {
       setTimeout(() => {
         this.tryExecuteMessageQueue();
-      }, 250);
+      }, 50);
     }
   }
 }
