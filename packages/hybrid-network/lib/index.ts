@@ -181,11 +181,9 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
     this.trackerUrls.forEach(async (url: string, index) => {
       makeDelay(delayPerTracker * index).then(async () => {
-        //
-        this.tooldb.logger(
-          `announce: "${this.tooldb.options.serverName}" (${infoHash})`
-        );
-
+        // this.tooldb.logger(
+        //   `announce: "${this.tooldb.options.serverName}" (${infoHash})`
+        // );
         const socket = await this.makeSocket(url);
         //this.tooldb.logger(" ok tracker " + url);
         // this.tooldb.logger("socket", url, index);
@@ -237,7 +235,7 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
     try {
       val = JSON.parse(e.data);
-      this.tooldb.logger("onSocketMessage", socket.url, val);
+      // this.tooldb.logger("onSocketMessage", socket.url, val);
     } catch (_e: any) {
       this.tooldb.logger(`Received malformed JSON`, e.data);
       return;
@@ -268,7 +266,7 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
         this.tooldb.logger("Now we connect to ", serverData);
         this.connectTo(serverData);
       } else {
-        // we alreayd connected, unplug all trackers/unsubscribe
+        // we already connected, unplug all trackers/unsubscribe
       }
 
       return;
@@ -460,17 +458,35 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   private tryExecuteMessageQueue() {
     const sentMessageIDs: string[] = [];
     this._messageQueue.forEach((message) => {
-      const clientId = message.to[0];
-      if (
-        this.isClientConnected[clientId] &&
-        this.isClientConnected[clientId]()
-      ) {
-        this.clientToSend[clientId](JSON.stringify(message));
-        sentMessageIDs.push(message.id);
-      }
+      if (message.to.length > 0) {
+        // Send only to select clients
+        // try to connect if not found
+        message.to.forEach((toClient) => {
+          if (
+            !message.to.includes(toClient) &&
+            this.isClientConnected[toClient] &&
+            this.isClientConnected[toClient]()
+          ) {
+            this.clientToSend[toClient](JSON.stringify(message));
+            sentMessageIDs.push(message.id);
+          }
 
-      if (this.connectedServers[clientId] === undefined) {
-        this.findServer(clientId);
+          if (this.connectedServers[toClient] === undefined) {
+            this.findServer(toClient);
+          }
+        });
+      } else {
+        // send to all currently connected clients
+        Object.keys(this.clientToSend).forEach((toClient) => {
+          if (
+            !message.to.includes(toClient) &&
+            this.isClientConnected[toClient] &&
+            this.isClientConnected[toClient]()
+          ) {
+            this.clientToSend[toClient](JSON.stringify(message));
+            sentMessageIDs.push(message.id);
+          }
+        });
       }
     });
 
