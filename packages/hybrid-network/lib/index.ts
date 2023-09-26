@@ -78,7 +78,6 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   // We need to create a queue to handle a situation when we need
   // to contact a server, but we havent connected to it yet.
   private _messageQueue: MessageQueue[] = [];
-
   get messageQueue() {
     return this._messageQueue;
   }
