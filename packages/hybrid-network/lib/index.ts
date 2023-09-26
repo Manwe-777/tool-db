@@ -288,6 +288,10 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     super(db);
 
+    setInterval(() => {
+      this.tryExecuteMessageQueue();
+    }, 500);
+
     const _this = this;
     setTimeout(function () {
       if (_this.tooldb.options.server) {
@@ -486,10 +490,15 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
 
   private tryExecuteMessageQueue() {
     const sentMessageIDs: string[] = [];
+    const messagesToDelete: string[] = [];
+
     this._messageQueue.forEach((q) => {
       const message = q.message;
 
       if (q.time + 1000 * 60 < Date.now()) {
+        messagesToDelete.push(message.id);
+      } else {
+        const finalMessageString = JSON.stringify(message);
         if (q.to.length > 0) {
           // Send only to select clients
           // try to connect if not found
@@ -499,12 +508,10 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
               this.isClientConnected[toClient] &&
               this.isClientConnected[toClient]()
             ) {
-              this.clientToSend[toClient](JSON.stringify(message));
-              sentMessageIDs.push(message.id);
-            }
-
-            if (this.connectedServers[toClient] === undefined) {
-              this.findServer(toClient);
+              this.clientToSend[toClient](finalMessageString);
+              if (sentMessageIDs.indexOf(message.id) === -1) {
+                sentMessageIDs.push(message.id);
+              }
             }
           });
         } else {
@@ -515,8 +522,10 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
               this.isClientConnected[toClient] &&
               this.isClientConnected[toClient]()
             ) {
-              this.clientToSend[toClient](JSON.stringify(message));
-              sentMessageIDs.push(message.id);
+              this.clientToSend[toClient](finalMessageString);
+              if (sentMessageIDs.indexOf(message.id) === -1) {
+                sentMessageIDs.push(message.id);
+              }
             }
           });
         }
@@ -530,10 +539,11 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
       this._messageQueue.splice(index, 1);
     });
 
-    if (this._messageQueue.length > 0) {
-      setTimeout(() => {
-        this.tryExecuteMessageQueue();
-      }, 50);
-    }
+    messagesToDelete.forEach((id) => {
+      const index = this._messageQueue.findIndex(
+        (msg) => msg.message.id === id
+      );
+      this._messageQueue.splice(index, 1);
+    });
   }
 }
