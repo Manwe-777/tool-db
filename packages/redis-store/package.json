@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/redis-store",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Redis store adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "redis": "^4.6.6",
-    "tool-db": "^2.5.5"
+    "tool-db": "^2.5.6"
   },
   "devDependencies": {
     "typescript": "^4.7.4"
