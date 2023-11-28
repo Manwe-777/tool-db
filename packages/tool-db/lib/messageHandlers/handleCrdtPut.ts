@@ -38,73 +38,83 @@ export default function handleCrdtPut(
       this.store
         .get(finalMessage.data.k)
         .then((oldData) => {
-          try {
-            const parsedOldData: VerificationData<any> = JSON.parse(oldData);
+          if (oldData) {
+            try {
+              const parsedOldData: VerificationData<any> = JSON.parse(oldData);
 
-            let newMessage = finalMessage;
+              let newMessage = finalMessage;
 
-            // Merge old document with new data incoming and save it
-            // Add handles for all kinds of CRDT we add
-            let oldDoc:
-              | MapCrdt<any>
-              | ListCrdt<any>
-              | CounterCrdt<any>
-              | undefined;
+              // Merge old document with new data incoming and save it
+              // Add handles for all kinds of CRDT we add
+              let oldDoc:
+                | MapCrdt<any>
+                | ListCrdt<any>
+                | CounterCrdt<any>
+                | undefined;
 
-            if (parsedOldData.c === CRDT_MAP) {
-              oldDoc = new MapCrdt(
-                this.userAccount.getAddress() || "",
-                parsedOldData.v
-              );
+              if (parsedOldData.c === CRDT_MAP) {
+                oldDoc = new MapCrdt(
+                  this.userAccount.getAddress() || "",
+                  parsedOldData.v
+                );
+              }
+
+              if (parsedOldData.c === CRDT_LIST) {
+                oldDoc = new ListCrdt(
+                  this.userAccount.getAddress() || "",
+                  parsedOldData.v
+                );
+              }
+
+              if (parsedOldData.c === CRDT_COUNTER) {
+                oldDoc = new CounterCrdt(
+                  this.userAccount.getAddress() || "",
+                  parsedOldData.v
+                );
+              }
+
+              let changesMerged:
+                | MapChanges<any>[]
+                | ListChanges<any>[]
+                | CounterChanges[] = [];
+
+              if (oldDoc) {
+                oldDoc.mergeChanges(finalMessage.data.v);
+                changesMerged = oldDoc.getChanges();
+              }
+              newMessage = {
+                ...finalMessage,
+              };
+              newMessage.data.v = changesMerged;
+
+              if (parsedOldData.t < finalMessage.data.t) {
+                const key = newMessage.data.k;
+                this.triggerKeyListener(key, newMessage.data);
+                this.store
+                  .put(newMessage.data.k, JSON.stringify(newMessage.data))
+                  .catch((e) => {
+                    // do nothing
+                  });
+              } else {
+                const key = message.data.k;
+                this.triggerKeyListener(key, parsedOldData);
+              }
+              // } else {
+              //   this.logger(
+              //     `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
+              //   );
+              // }
+            } catch (e) {
+              this.logger("Couldnt parse crdt data", oldData, e);
             }
-
-            if (parsedOldData.c === CRDT_LIST) {
-              oldDoc = new ListCrdt(
-                this.userAccount.getAddress() || "",
-                parsedOldData.v
-              );
-            }
-
-            if (parsedOldData.c === CRDT_COUNTER) {
-              oldDoc = new CounterCrdt(
-                this.userAccount.getAddress() || "",
-                parsedOldData.v
-              );
-            }
-
-            let changesMerged:
-              | MapChanges<any>[]
-              | ListChanges<any>[]
-              | CounterChanges[] = [];
-
-            if (oldDoc) {
-              oldDoc.mergeChanges(finalMessage.data.v);
-              changesMerged = oldDoc.getChanges();
-            }
-            newMessage = {
-              ...finalMessage,
-            };
-            newMessage.data.v = changesMerged;
-
-            if (parsedOldData.t < finalMessage.data.t) {
-              const key = newMessage.data.k;
-              this.triggerKeyListener(key, newMessage.data);
-              this.store
-                .put(newMessage.data.k, JSON.stringify(newMessage.data))
-                .catch((e) => {
-                  // do nothing
-                });
-            } else {
-              const key = message.data.k;
-              this.triggerKeyListener(key, parsedOldData);
-            }
-            // } else {
-            //   this.logger(
-            //     `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
-            //   );
-            // }
-          } catch (e) {
-            this.logger("Couldnt parse crdt data", oldData, e);
+          } else {
+            const key = finalMessage.data.k;
+            this.triggerKeyListener(key, finalMessage.data);
+            this.store
+              .put(finalMessage.data.k, JSON.stringify(finalMessage.data))
+              .catch((e) => {
+                this.logger("Couldnt insert crdt data", e);
+              });
           }
         })
         .catch((e) => {
