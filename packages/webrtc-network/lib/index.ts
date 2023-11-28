@@ -19,12 +19,14 @@ const announceSecs = 30;
 const maxAnnounceSecs = 99999999;
 
 const defaultTrackerUrls = [
-  "wss://tooldb-tracker.herokuapp.com/",
+  "wss://tracker.webtorrent.dev",
   "wss://tracker.openwebtorrent.com",
-  "wss://tracker.btorrent.xyz",
-  "wss://tracker.webtorrent.io",
   "wss://tracker.files.fm:7073/announce",
-  "wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
+  "wss://tooldb-tracker.herokuapp.com/",
+  //"wss://tracker.fastcast.nz/announce",
+  //"wss://tracker.btorrent.xyz/announce",
+  //"wss://tracker.webtorrent.io/announce",
+  //"wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
 ];
 
 export default class toolDbWebrtc extends ToolDbNetworkAdapter {
