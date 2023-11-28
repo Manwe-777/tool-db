@@ -27,6 +27,8 @@ export default function toolDbQueryKeys(
     let foundKeys: string[] = [];
     let timeout: NodeJS.Timeout | undefined;
 
+    let gotLocalKeys = false;
+
     this.store
       .query(finalKey)
       .then((localKeys) => {
@@ -50,7 +52,9 @@ export default function toolDbQueryKeys(
         if (timeout) {
           clearTimeout(timeout);
         }
-        timeout = setTimeout(finishListening, timeoutMs);
+        if (gotLocalKeys) {
+          timeout = setTimeout(finishListening, timeoutMs);
+        }
       }
     });
 
