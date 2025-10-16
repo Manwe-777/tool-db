@@ -3,6 +3,7 @@ import {
   ToolDb,
   MapCrdt,
   VerificationData,
+  ToolDbNetworkAdapter,
 } from "../packages/tool-db";
 
 import ToolDbLeveldb from "../packages/leveldb-store";
@@ -17,6 +18,15 @@ let Alice: ToolDb;
 let Bob: ToolDb;
 let Chris: ToolDb;
 
+// Test setup is:
+// Node A is the server
+// Node B is the server
+// Both servers are connected to each other
+// Alice is a client
+// Bob is a client
+// Chris is a client
+// Alice and Chris are connected to Node B
+// Bob is connected to Node A
 beforeAll((done) => {
   nodeA = new ToolDb({
     server: true,
@@ -106,13 +116,15 @@ beforeAll((done) => {
 });
 
 afterAll((done) => {
-  nodeA.network.server.close();
-  nodeB.network.server.close();
+  // as any, since we dont have the type for the server yet.
+  (nodeA.network as ToolDbWebsockets).server?.close();
+  (nodeB.network as ToolDbWebsockets).server?.close();
 
   setTimeout(done, 1000);
 });
 
 it("All peers have correct servers data", (done) => {
+  // Clients should connect to both servers automatically
   setTimeout(() => {
     expect(Alice.serverPeers.length).toBe(2);
     expect(Bob.serverPeers.length).toBe(2);

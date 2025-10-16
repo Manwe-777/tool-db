@@ -11,19 +11,26 @@ export default function handlePong(
   }
 
   message.servers.forEach((peer) => {
-    verifyPeer(this, peer).then((verified) => {
-      // Verify integrity and topic
-      if (verified && peer.topic === this.options.topic) {
-        // Add this peer to our list of peers
-        const filteredPeers = this.serverPeers.filter(
-          (p) => p.address === peer.address
-        );
-        if (filteredPeers.length === 0 && peer.host && peer.port) {
-          // Add this peer to the list
-          this.serverPeers.push(peer);
+    // Check for duplicates first (synchronously) to avoid race conditions
+    const filteredPeers = this.serverPeers.filter(
+      (p) => p.address === peer.address
+    );
+    
+    if (filteredPeers.length === 0 && peer.host && peer.port) {
+      verifyPeer(this, peer).then((verified) => {
+        // Verify integrity and topic
+        if (verified && peer.topic === this.options.topic) {
+          // Double-check for duplicates after async verification
+          const recheck = this.serverPeers.filter(
+            (p) => p.address === peer.address
+          );
+          if (recheck.length === 0) {
+            // Add this peer to the list
+            this.serverPeers.push(peer);
+          }
         }
-      }
-    });
+      });
+    }
   });
 
   this.onPeerConnect(this.peerAccount.getAddress() || "");

@@ -19,7 +19,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
     ? this.wnd.WebSocket || this.wnd.webkitWebSocket || this.wnd.mozWebSocket
     : WebSocket;
 
-  private server: WebSocket.Server | null = null;
+  public server: WebSocket.Server | null = null;
 
   private _connections: Record<
     string,
