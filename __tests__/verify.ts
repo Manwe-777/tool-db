@@ -31,9 +31,10 @@ beforeAll((done) => {
   done();
 });
 
-afterAll((done) => {
-  ClientA.network.server.close();
-  setTimeout(done, 1000);
+afterAll(async () => {
+  await new Promise<void>((resolve) => {
+    ClientA.network.server.close(() => resolve());
+  });
 });
 
 const putOk: VerificationData<string> = {

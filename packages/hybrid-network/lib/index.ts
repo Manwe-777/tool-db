@@ -287,20 +287,21 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     super(db);
 
+    // Poll message queue periodically
     setInterval(() => {
       this.tryExecuteMessageQueue();
     }, 500);
 
-    const _this = this;
-    setTimeout(function () {
-      if (_this.tooldb.options.server) {
-        _this.announceInterval = setInterval(
-          _this.announceAll,
+    // Wait for initialization before starting announcements
+    this.tooldb.once("init", () => {
+      if (this.tooldb.options.server) {
+        this.announceInterval = setInterval(
+          this.announceAll,
           announceSecs * 1000
         );
-        _this.announceAll();
+        this.announceAll();
       }
-    }, 500);
+    });
 
     // Basically the same as the WS network adapter
     // Only for Node!
