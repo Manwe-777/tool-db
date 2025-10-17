@@ -22,7 +22,7 @@ export default function handleFunction(
         })
         .catch((e) => {
           const messageReturn: FunctionReturnMessage = {
-            return: JSON.stringify(e),
+            return: e.toString(),
             type: "functionReturn",
             id: message.id,
             code: "ERR",

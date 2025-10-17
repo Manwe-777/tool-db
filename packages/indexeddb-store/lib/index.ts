@@ -2,38 +2,52 @@ import { ToolDb, ToolDbStorageAdapter } from "tool-db";
 
 export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   private database: IDBDatabase | undefined;
+  private readyPromise: Promise<void>;
+  private resetInterval: NodeJS.Timeout;
 
   private dbStart() {
-    const open = indexedDB.open(this.storageName, 1);
-    open.onupgradeneeded = (eve: any) => {
-      eve.target.result.createObjectStore(this.storageName);
-    };
-    open.onsuccess = () => {
-      this.database = open.result;
-    };
-    open.onerror = (eve) => {
-      this.tooldb.logger(eve || 1);
-    };
+    return new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open(this.storageName, 1);
+      open.onupgradeneeded = (eve: any) => {
+        eve.target.result.createObjectStore(this.storageName);
+      };
+      open.onsuccess = () => {
+        this.database = open.result;
+        resolve();
+      };
+      open.onerror = (eve) => {
+        this.tooldb.logger(eve || 1);
+        reject(eve);
+      };
+    });
   }
 
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
 
-    this.dbStart();
+    this.readyPromise = this.dbStart();
 
-    // reset webkit bug?
-    setInterval(() => {
-      this.database && this.database.close();
-      this.dbStart();
+    // reset webkit bug? - Periodically reset database connection
+    // Use event-based promise update instead of just calling dbStart
+    this.resetInterval = setInterval(async () => {
+      if (this.database) {
+        this.database.close();
+      }
+      this.readyPromise = this.dbStart();
+      await this.readyPromise;
     }, 1000 * 15);
   }
 
-  public put(key: string, data: string) {
+  private async waitForReady() {
+    await this.readyPromise;
+  }
+
+  public async put(key: string, data: string) {
+    await this.waitForReady();
+    
     return new Promise((resolve, reject) => {
       if (!this.database) {
-        setTimeout(() => {
-          resolve(this.put(key, data));
-        }, 5);
+        reject(new Error("Database not ready"));
         return;
       }
       const tx = this.database.transaction([this.storageName], "readwrite");
@@ -60,12 +74,12 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
     });
   }
 
-  public get(key: string) {
+  public async get(key: string) {
+    await this.waitForReady();
+    
     return new Promise<string>((resolve, reject) => {
       if (!this.database) {
-        setTimeout(() => {
-          resolve(this.get(key));
-        }, 5);
+        reject(new Error("Database not ready"));
         return;
       }
       const tx = this.database.transaction([this.storageName], "readonly");
@@ -83,12 +97,12 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
     });
   }
 
-  public query(key: string) {
+  public async query(key: string) {
+    await this.waitForReady();
+    
     return new Promise<string[]>((resolve, reject) => {
       if (!this.database) {
-        setTimeout(() => {
-          resolve(this.query(key));
-        }, 5);
+        reject(new Error("Database not ready"));
         return;
       }
       try {

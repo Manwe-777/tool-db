@@ -8,14 +8,24 @@ jest.setTimeout(20000);
 
 let nodeA: ToolDb;
 
-afterAll((done) => {
+afterAll(async () => {
   if (nodeA) {
-    (nodeA.network as any).server.close();
+    const closePromise = new Promise<void>((resolve) => {
+      const server = (nodeA.network as any).server;
+      if (server) {
+        server.close(() => resolve());
+      } else {
+        resolve();
+      }
+    });
+    
+    // Add timeout to prevent hanging
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
+    await Promise.race([closePromise, timeout]);
   }
-  setTimeout(done, 500);
 });
 
-it("A can retry connection", (done) => {
+it("A can retry connection", async () => {
   const Alice = new ToolDb({
     server: false,
     maxRetries: 1000,
@@ -26,22 +36,31 @@ it("A can retry connection", (done) => {
     userAdapter: ToolDbWeb3,
   });
   Alice.anonSignIn();
-  Alice.onConnect = () => {
-    expect(Alice.isConnected).toBeTruthy();
-    done();
-  };
+  
+  const connectionPromise = new Promise<void>((resolve) => {
+    Alice.onConnect = () => {
+      expect(Alice.isConnected).toBeTruthy();
+      resolve();
+    };
+  });
 
-  setTimeout(() => {
-    nodeA = new ToolDb({
-      server: true,
-      host: "127.0.0.1",
-      port: 8001,
-      storageName: "test-base-server",
-      storageAdapter: ToolDbLeveldb,
-      networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbWeb3,
-    });
-    nodeA.anonSignIn();
-    expect(Alice.isConnected).toBeFalsy();
-  }, 5000);
+  // Simulate server coming online after client has started attempting to connect
+  // This delay is intentional to test the retry mechanism
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+  
+  expect(Alice.isConnected).toBeFalsy();
+  
+  nodeA = new ToolDb({
+    server: true,
+    host: "127.0.0.1",
+    port: 8001,
+    storageName: "test-base-server",
+    storageAdapter: ToolDbLeveldb,
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
+  });
+  nodeA.anonSignIn();
+  
+  // Wait for Alice to successfully connect
+  await connectionPromise;
 });

@@ -19,23 +19,15 @@ beforeAll((done) => {
   done();
 });
 
-afterAll((done) => {
-  setTimeout(done, 500);
+afterAll(() => {
+  // No cleanup needed - store operations are synchronous/promise-based
 });
 
-it("Can write and read inmediately", (done) => {
-  setTimeout(() => {
-    const testKey = "io-test-" + textRandom(16);
-    const testValue = textRandom(24);
+it("Can write and read inmediately", async () => {
+  const testKey = "io-test-" + textRandom(16);
+  const testValue = textRandom(24);
 
-    Alice.store.put(testKey, testValue).finally(() => {
-      Alice.store
-        .get(testKey)
-        .then((val) => {
-          expect(val).toBe(testValue);
-          done();
-        })
-        .catch(done);
-    });
-  }, 500);
+  await Alice.store.put(testKey, testValue);
+  const val = await Alice.store.get(testKey);
+  expect(val).toBe(testValue);
 });

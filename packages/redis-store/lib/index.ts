@@ -3,66 +3,39 @@ import { createClient } from "redis";
 
 export default class toolDbRedis extends ToolDbStorageAdapter {
   private redisClient = createClient();
-
-  private connected = false;
+  private readyPromise: Promise<void>;
 
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
 
-    this.redisClient.connect().then(() => {
-      this.connected = true;
-    });
+    this.readyPromise = this.redisClient.connect().then(() => {});
   }
 
-  public put(key: string, data: string) {
-    return new Promise<string>((resolve, reject) => {
-      if (this.connected) {
-        this.redisClient
-          .set(key, data)
-          .then(() => resolve(data))
-          .catch(reject);
-      } else {
-        setTimeout(() => {
-          resolve(this.put(key, data));
-        }, 5);
-      }
-    });
+  private async waitForReady() {
+    await this.readyPromise;
   }
 
-  public get(key: string) {
+  public async put(key: string, data: string) {
+    await this.waitForReady();
+    
+    await this.redisClient.set(key, data);
+    return data;
+  }
+
+  public async get(key: string) {
+    await this.waitForReady();
+    
     // console.warn("store get", key);
-    return new Promise<string>((resolve, reject) => {
-      if (this.connected) {
-        this.redisClient
-          .get(key)
-          .then((v) => {
-            if (v) resolve(v);
-            else reject(new Error("Error retrieving data"));
-          })
-          .catch(reject);
-      } else {
-        setTimeout(() => {
-          resolve(this.get(key));
-        }, 5);
-      }
-    });
+    const v = await this.redisClient.get(key);
+    if (v) return v;
+    else throw new Error("Error retrieving data");
   }
 
-  public query(key: string) {
-    return new Promise<string[]>((resolve, reject) => {
-      if (this.connected) {
-        this.redisClient
-          .keys(key + "*")
-          .then((v) => {
-            if (v) resolve(v);
-            else reject(new Error("Error retrieving data"));
-          })
-          .catch(reject);
-      } else {
-        setTimeout(() => {
-          resolve(this.query(key));
-        }, 5);
-      }
-    });
+  public async query(key: string) {
+    await this.waitForReady();
+    
+    const v = await this.redisClient.keys(key + "*");
+    if (v) return v;
+    else throw new Error("Error retrieving data");
   }
 }

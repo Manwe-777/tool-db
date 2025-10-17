@@ -41,7 +41,7 @@ export default function toolDbCrdtGet<T = any>(
             resolve(null);
           }
         })
-        .catch((e) => reject(null));
+        .catch((e) => resolve(null));
     }, timeoutMs);
 
     this.addIdListener(msgId, (msg) => {

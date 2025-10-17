@@ -3,25 +3,33 @@ import level from "level";
 
 export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database;
+  private readyPromise: Promise<void>;
 
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
 
     this.database = level(this.storageName);
-    this.database.open();
+    
+    // Create a promise that resolves when database is ready
+    this.readyPromise = new Promise<void>((resolve, reject) => {
+      this.database.open((err: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
-  public put(key: string, data: string) {
+  private async waitForReady() {
+    await this.readyPromise;
+  }
+
+  public async put(key: string, data: string) {
+    await this.waitForReady();
+    
     return new Promise((resolve, reject) => {
-      if (
-        !this.database ||
-        (this.database.status !== "open" && this.database.status !== "new")
-      ) {
-        setTimeout(() => {
-          resolve(this.put(key, data));
-        }, 5);
-        return;
-      }
       // console.warn(this.storageName, "put", key);
 
       this.database.put(key, data, (err: any) => {
@@ -35,18 +43,10 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     });
   }
 
-  public get(key: string) {
+  public async get(key: string) {
+    await this.waitForReady();
+    
     return new Promise<string>((resolve, reject) => {
-      if (
-        !this.database ||
-        (this.database.status !== "open" && this.database.status !== "new")
-      ) {
-        setTimeout(() => {
-          resolve(this.get(key));
-        }, 5);
-        return;
-      }
-
       this.database.get(key, (err: any, value: any) => {
         // this.logger("get", key, err, err?.message);
         if (err) {
@@ -58,19 +58,11 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     });
   }
 
-  public query(key: string) {
+  public async query(key: string) {
+    await this.waitForReady();
+    
     // console.warn(this.storageName, "QUERY", key);
     return new Promise<string[]>((resolve, reject) => {
-      if (
-        !this.database ||
-        (this.database.status !== "open" && this.database.status !== "new")
-      ) {
-        setTimeout(() => {
-          resolve(this.query(key));
-        }, 5);
-        return;
-      }
-
       try {
         const array: string[] = [];
         this.database
