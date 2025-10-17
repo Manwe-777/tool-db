@@ -56,7 +56,7 @@ export class MapCrdt<T> extends BaseCrdt<T, MapChanges<T>, Record<string, T>> {
   calculate() {
     const temp: Record<string, T> = {};
     // Only update if we have new changes
-    if (Object.values(this._changes).length !== this._lastUpdateSize) {
+    if (this._changes.length !== this._lastUpdateSize) {
       this._changes.sort(this.changesSort).forEach((change) => {
         // Here we apply the model properties
         // Since this is a KV store we dont need much logic,
@@ -68,7 +68,7 @@ export class MapCrdt<T> extends BaseCrdt<T, MapChanges<T>, Record<string, T>> {
         }
         this._keyIndex[change.k] = change.i;
       });
-      this._lastUpdateSize = Object.values(temp).length;
+      this._lastUpdateSize = this._changes.length;
       this._value = temp;
     }
   }
@@ -80,9 +80,9 @@ export class MapCrdt<T> extends BaseCrdt<T, MapChanges<T>, Record<string, T>> {
 
   public mergeChanges(newChanges: MapChanges<T>[]) {
     newChanges.forEach((change) => {
-      // Filter by author and index
+      // Filter by key, author, index, and type
       const filtered = this._changes.filter(
-        (c) => c.i === change.i && c.a === change.a && c.t === change.t
+        (c) => c.k === change.k && c.i === change.i && c.a === change.a && c.t === change.t
       );
       // Only add if there are not matches
       if (filtered.length === 0) {
@@ -105,6 +105,7 @@ export class MapCrdt<T> extends BaseCrdt<T, MapChanges<T>, Record<string, T>> {
       v: value,
       i: this._keyIndex[key],
     });
+    this.calculate();
   }
 
   public DEL(key: string) {
@@ -115,5 +116,6 @@ export class MapCrdt<T> extends BaseCrdt<T, MapChanges<T>, Record<string, T>> {
       a: this._author,
       i: this._keyIndex[key],
     });
+    this.calculate();
   }
 }
