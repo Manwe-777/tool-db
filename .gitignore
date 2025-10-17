@@ -16,6 +16,13 @@ test-verify-b
 test-store
 test-base-server
 test-base-client
+test-map-crdt
+test-list-crdt
+test-counter-crdt
+test-additional**
+test-anon**
+test-fresh**
+test-keys**
 bundle.js
 tooldb
 _____peer

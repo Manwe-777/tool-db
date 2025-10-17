@@ -33,10 +33,12 @@ export default function toolDbQueryKeys(
       .query(finalKey)
       .then((localKeys) => {
         foundKeys = [...foundKeys, ...localKeys];
+        gotLocalKeys = true;
         timeout = setTimeout(finishListening, timeoutMs);
       })
       .catch((e) => {
-        // do nothing
+        gotLocalKeys = true;
+        timeout = setTimeout(finishListening, timeoutMs);
       });
 
     const finishListening = () => {

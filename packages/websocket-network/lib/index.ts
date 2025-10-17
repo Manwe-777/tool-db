@@ -35,7 +35,7 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
   private removeFromAwaiting = (id: string) => {
     const index = this._awaitingConnections.findIndex((c) => c.id === id);
     if (index !== -1) {
-      this._awaitingConnections.slice(index, 1);
+      this._awaitingConnections.splice(index, 1);
     }
   };
 
