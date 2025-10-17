@@ -49,7 +49,7 @@ export class CounterCrdt<T> extends BaseCrdt<number, CounterChanges, number> {
   calculate() {
     let temp: number = 0;
     // Only update if we have new changes
-    if (Object.values(this._changes).length !== this._lastUpdateSize) {
+    if (this._changes.length !== this._lastUpdateSize) {
       this._changes.sort(this.changesSort).forEach((change) => {
         if (change.t === "ADD") {
           temp += change.v;
@@ -58,6 +58,7 @@ export class CounterCrdt<T> extends BaseCrdt<number, CounterChanges, number> {
         }
       });
 
+      this._lastUpdateSize = this._changes.length;
       this._value = temp;
     }
   }

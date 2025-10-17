@@ -61,7 +61,7 @@ export class ListCrdt<T> extends BaseCrdt<T, ListChanges<T>, T[]> {
   calculate() {
     const temp: ListTempCursor<T>[] = [];
     // Only update if we have new changes
-    if (Object.values(this._changes).length !== this._lastUpdateSize) {
+    if (this._changes.length !== this._lastUpdateSize) {
       this._changes.sort(this.changesSort).forEach((change) => {
         if (change.t === "INS") {
           let poisitionToInsert = 0;
@@ -85,7 +85,7 @@ export class ListCrdt<T> extends BaseCrdt<T, ListChanges<T>, T[]> {
           temp[poisitionToInsert].tomb = true;
         }
       });
-      this._lastUpdateSize = Object.values(temp).length;
+      this._lastUpdateSize = this._changes.length;
 
       this._tempValues = temp;
 
