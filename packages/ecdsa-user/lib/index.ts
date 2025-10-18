@@ -45,7 +45,8 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
       global.crypto = require("crypto").webcrypto;
     }
 
-    this.anonUser();
+    // Don't call anonUser() here - it creates a race condition with setUser()
+    // The keys will be set either by setUser() from stored data, or by explicit anonSignIn()
   }
 
   public anonUser() {
@@ -58,11 +59,11 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
     });
   }
 
-  public setUser(account: ECDSAUser, _name: string): void {
+  public setUser(account: ECDSAUser, _name: string): Promise<void> {
     const pub = hexToArrayBuffer(account.pub);
     const priv = hexToArrayBuffer(account.priv);
 
-    importKey(pub, "spki", "ECDSA", ["verify"]).then((spub) =>
+    return importKey(pub, "spki", "ECDSA", ["verify"]).then((spub) =>
       importKey(priv, "pkcs8", "ECDSA", ["sign"]).then((spriv) => {
         this._keys = {
           publicKey: spub,
@@ -70,7 +71,7 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
         };
 
         this._username = account.name;
-        pubkeyToBase64(spub).then((addr) => {
+        return pubkeyToBase64(spub).then((addr) => {
           this._address = addr;
         });
       })

@@ -15,7 +15,9 @@ export default class ToolDbUserAdapter {
     return;
   }
 
-  public setUser(account: unknown | undefined, name: string): void {}
+  public setUser(account: unknown | undefined, name: string): Promise<void> {
+    return Promise.resolve();
+  }
 
   public signData(data: string): Promise<string> {
     return Promise.resolve("");

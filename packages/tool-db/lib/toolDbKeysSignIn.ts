@@ -10,7 +10,7 @@ export default function toolDbKeysSignIn(
   return this.userAccount
     .getAccountFromPrivate(privateKey)
     .then((newAccount) => {
-      this.userAccount.setUser(newAccount, username || randomAnimal());
-      return newAccount;
+      return this.userAccount.setUser(newAccount, username || randomAnimal())
+        .then(() => newAccount);
     });
 }

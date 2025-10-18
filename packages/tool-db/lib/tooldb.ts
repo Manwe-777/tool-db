@@ -305,6 +305,9 @@ export default class ToolDb extends EventEmitter {
     this._peerAccount = new this.options.userAdapter(this);
     this._userAccount = new this.options.userAdapter(this);
 
+    // Initialize userAccount with anonymous keys (will be replaced on signIn)
+    this._userAccount.anonUser();
+
     this._network = new this.options.networkAdapter(this);
 
     const DEFAULT_KEYS = "%default-peer%";
@@ -321,7 +324,7 @@ export default class ToolDb extends EventEmitter {
         this.peerAccount
           .decryptAccount(JSON.parse(val), DEFAULT_KEYS)
           .then((a) => {
-            this.peerAccount.setUser(a, randomAnimal());
+            return this.peerAccount.setUser(a, randomAnimal());
           })
           .finally(() => {
             this.emit("init", this.userAccount.getAddress());
@@ -329,7 +332,7 @@ export default class ToolDb extends EventEmitter {
       })
       .catch((_e) => {
         this.peerAccount.encryptAccount(DEFAULT_KEYS).then((a) => {
-          tempStore
+          return tempStore
             .put(DEFAULT_KEYS, JSON.stringify(a))
             .catch(() => {
               // nothing

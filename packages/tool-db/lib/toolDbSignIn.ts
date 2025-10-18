@@ -17,11 +17,12 @@ export default function toolDbSignIn(
         this.userAccount
           .decryptAccount(_user, sha256(password))
           .then((newAccount) => {
-            this.userAccount.setUser(
+            return this.userAccount.setUser(
               newAccount,
               user || `Anonymous ${randomAnimal()}`
             );
-
+          })
+          .then(() => {
             resolve(_user);
           })
           .catch((e) => {

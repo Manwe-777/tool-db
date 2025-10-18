@@ -22,6 +22,8 @@ const defaultTrackerUrls = [
   "wss://tracker.webtorrent.dev",
   "wss://tracker.openwebtorrent.com",
   "wss://tracker.files.fm:7073/announce",
+  "wss://tracker.ghostchu-services.top:443/announce",
+  "wss://tracker.files.fm:7072/announce",
   "wss://tooldb-tracker.herokuapp.com/",
   //"wss://tracker.fastcast.nz/announce",
   //"wss://tracker.btorrent.xyz/announce",
@@ -166,6 +168,13 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     peer.on("close", (err: any) => this.onDisconnect(id, err));
 
     peer.on("error", (err: any) => this.onDisconnect(id, err));
+
+    // If this is the first peer connection, trigger onConnect callback
+    const wasDisconnected = !this.tooldb.isConnected;
+    if (wasDisconnected) {
+      this.tooldb.isConnected = true;
+      this.tooldb.onConnect();
+    }
 
     this.craftPingMessage().then((msg) => {
       peer.send(msg);

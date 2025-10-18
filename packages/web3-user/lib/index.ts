@@ -26,9 +26,10 @@ export default class ToolDbWeb3User extends ToolDbUserAdapter {
     this._userName = randomAnimal();
   }
 
-  public setUser(account: Account, name: string): void {
+  public setUser(account: Account, name: string): Promise<void> {
     this._user = account;
     this._userName = name;
+    return Promise.resolve();
   }
 
   public signData(data: string) {
