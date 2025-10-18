@@ -18,7 +18,7 @@ afterAll(async () => {
         resolve();
       }
     });
-    
+
     // Add timeout to prevent hanging
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
     await Promise.race([closePromise, timeout]);
@@ -30,13 +30,13 @@ it("A can retry connection", async () => {
     server: false,
     maxRetries: 1000,
     peers: [{ host: "localhost", port: 8001 }],
-    storageName: "test-base-client",
+    storageName: ".test-db/test-base-client",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
   Alice.anonSignIn();
-  
+
   const connectionPromise = new Promise<void>((resolve) => {
     Alice.onConnect = () => {
       expect(Alice.isConnected).toBeTruthy();
@@ -47,20 +47,20 @@ it("A can retry connection", async () => {
   // Simulate server coming online after client has started attempting to connect
   // This delay is intentional to test the retry mechanism
   await new Promise((resolve) => setTimeout(resolve, 5000));
-  
+
   expect(Alice.isConnected).toBeFalsy();
-  
+
   nodeA = new ToolDb({
     server: true,
     host: "127.0.0.1",
     port: 8001,
-    storageName: "test-base-server",
+    storageName: ".test-db/test-base-server",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
   nodeA.anonSignIn();
-  
+
   // Wait for Alice to successfully connect
   await connectionPromise;
 });

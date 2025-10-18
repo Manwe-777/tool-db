@@ -24,7 +24,7 @@ beforeAll((done) => {
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
-    storageName: "test-verify-a",
+    storageName: ".test-db/test-verify-a",
   });
   ClientA.anonSignIn();
 

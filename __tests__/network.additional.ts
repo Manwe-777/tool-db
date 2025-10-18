@@ -4,6 +4,7 @@ import {
   ListCrdt,
   CounterCrdt,
   ToolDbMessage,
+  FunctionReturn,
 } from "../packages/tool-db";
 
 import ToolDbLeveldb from "../packages/leveldb-store";
@@ -32,14 +33,14 @@ beforeAll((done) => {
     server: true,
     host: "127.0.0.1",
     port: 9100,
-    storageName: "test-additional-node-a",
+    storageName: ".test-db/test-additional-node-a",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
   nodeA.onConnect = () => checkIfOk(nodeA.peerAccount.getAddress() || "");
 
-  nodeA.addServerFunction<number, number>("multiply", async (args) => {
+  nodeA.addServerFunction<number, number[]>("multiply", async (args) => {
     const [a, b] = args;
     if (typeof a !== "number" || typeof b !== "number") {
       throw new Error("Invalid arguments");
@@ -47,7 +48,7 @@ beforeAll((done) => {
     return a * b;
   });
 
-  nodeA.addServerFunction<string, { result: string; length: number }>(
+  nodeA.addServerFunction<{ result: string; length: number }, string[]>(
     "processString",
     async (args) => {
       const [str] = args;
@@ -66,7 +67,7 @@ beforeAll((done) => {
     peers: [{ host: "localhost", port: 9100 }],
     host: "127.0.0.1",
     port: 8100,
-    storageName: "test-additional-node-b",
+    storageName: ".test-db/test-additional-node-b",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -74,7 +75,7 @@ beforeAll((done) => {
   nodeB.onConnect = () => checkIfOk(nodeB.peerAccount.getAddress() || "");
 
   // Add same functions to nodeB
-  nodeB.addServerFunction<number, number>("multiply", async (args) => {
+  nodeB.addServerFunction<number, number[]>("multiply", async (args) => {
     const [a, b] = args;
     if (typeof a !== "number" || typeof b !== "number") {
       throw new Error("Invalid arguments");
@@ -82,7 +83,7 @@ beforeAll((done) => {
     return a * b;
   });
 
-  nodeB.addServerFunction<string, { result: string; length: number }>(
+  nodeB.addServerFunction<{ result: string; length: number }, string[]>(
     "processString",
     async (args) => {
       const [str] = args;
@@ -99,7 +100,7 @@ beforeAll((done) => {
   Alice = new ToolDb({
     server: false,
     peers: [{ host: "localhost", port: 9100 }],
-    storageName: "test-additional-alice",
+    storageName: ".test-db/test-additional-alice",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -109,7 +110,7 @@ beforeAll((done) => {
   Bob = new ToolDb({
     server: false,
     peers: [{ host: "localhost", port: 8100 }],
-    storageName: "test-additional-bob",
+    storageName: ".test-db/test-additional-bob",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -119,7 +120,7 @@ beforeAll((done) => {
   Chris = new ToolDb({
     server: false,
     peers: [{ host: "localhost", port: 9100 }],
-    storageName: "test-additional-chris",
+    storageName: ".test-db/test-additional-chris",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -265,7 +266,7 @@ describe("User Namespaced Operations", () => {
     // Bob can't access it with userNamespaced=true if it's Alice's namespace
     // The data is specific to Alice's address
     const bobData = await Bob.getData(key, true);
-    
+
     // Bob gets null because the key is namespaced to Bob's address, not Alice's
     expect(bobData).toBeNull();
   });
@@ -355,7 +356,7 @@ describe("Event Emissions", () => {
 
   it("Emits 'message' event for all messages", async () => {
     const key = "msg-event-" + textRandom(12);
-    
+
     const messageEventPromise = new Promise<void>((resolve) => {
       const handler = (message: ToolDbMessage, remotePeerId: string) => {
         if (message.type === "put" && message.data.k === key) {
@@ -514,7 +515,7 @@ describe("Multiple Subscriptions", () => {
 
     // First put
     await Alice.putData(key, initialValue);
-    
+
     // Wait longer to ensure timestamp difference and propagation
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -529,13 +530,13 @@ describe("Multiple Subscriptions", () => {
 
 describe("Advanced Server Functions", () => {
   it("Can execute server function with complex return type", async () => {
-    const result = await Alice.doFunction("processString", ["hello"]);
+    const result = await Alice.doFunction<{ result: string; length: number }, string[]>("processString", ["hello"]);
 
     expect(result).toBeDefined();
     expect(result.code).toBe("OK");
     expect(result.return).toBeDefined();
-    expect(result.return.result).toBe("HELLO");
-    expect(result.return.length).toBe(5);
+    expect((result.return as { result: string; length: number }).result).toBe("HELLO");
+    expect((result.return as { result: string; length: number }).length).toBe(5);
   });
 
   it("Server function handles numeric operations", async () => {
@@ -646,7 +647,7 @@ describe("Peer Connection Events", () => {
     const tempClient = new ToolDb({
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
-      storageName: "test-additional-temp-" + textRandom(8),
+      storageName: ".test-db/test-additional-temp-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
@@ -675,7 +676,7 @@ describe("Keys Sign In", () => {
     const newClient = new ToolDb({
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
-      storageName: "test-keys-signin-" + textRandom(8),
+      storageName: ".test-db/test-keys-signin-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
@@ -700,7 +701,7 @@ describe("Anonymous Sign In", () => {
     const anonClient = new ToolDb({
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
-      storageName: "test-anon-" + textRandom(8),
+      storageName: ".test-db/test-anon-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,

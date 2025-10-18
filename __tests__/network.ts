@@ -32,7 +32,7 @@ beforeAll((done) => {
     server: true,
     host: "127.0.0.1",
     port: 9000,
-    storageName: "test-node-a",
+    storageName: ".test-db/test-node-a",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -56,7 +56,7 @@ beforeAll((done) => {
     peers: [{ host: "localhost", port: 9000 }],
     host: "127.0.0.1",
     port: 8000,
-    storageName: "test-node-b",
+    storageName: ".test-db/test-node-b",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -66,7 +66,7 @@ beforeAll((done) => {
   Alice = new ToolDb({
     server: false,
     peers: [{ host: "localhost", port: 9000 }],
-    storageName: "test-alice",
+    storageName: ".test-db/test-alice",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -76,7 +76,7 @@ beforeAll((done) => {
   Bob = new ToolDb({
     server: false,
     peers: [{ host: "localhost", port: 8000 }],
-    storageName: "test-bob",
+    storageName: ".test-db/test-bob",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -86,7 +86,7 @@ beforeAll((done) => {
   Chris = new ToolDb({
     server: false,
     peers: [{ host: "localhost", port: 9000 }],
-    storageName: "test-chris",
+    storageName: ".test-db/test-chris",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -122,20 +122,20 @@ afterAll(async () => {
       closedCount++;
       if (closedCount === 2) resolve();
     };
-    
+
     if (serverA) {
       serverA.close(() => checkBothClosed());
     } else {
       checkBothClosed();
     }
-    
+
     if (serverB) {
       serverB.close(() => checkBothClosed());
     } else {
       checkBothClosed();
     }
   });
-  
+
   // Add timeout to prevent hanging
   const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
   await Promise.race([closeServers, timeout]);
@@ -147,7 +147,7 @@ it("All peers have correct servers data", async () => {
   const waitForServerPeers = (client: typeof Alice, maxWaitMs = 3000, checkIntervalMs = 100) => {
     return new Promise<void>((resolve, reject) => {
       const startTime = Date.now();
-      
+
       const check = () => {
         if (client.serverPeers.length >= 2) {
           resolve();
@@ -157,17 +157,17 @@ it("All peers have correct servers data", async () => {
           setTimeout(check, checkIntervalMs);
         }
       };
-      
+
       check();
     });
   };
-  
+
   await Promise.all([
     waitForServerPeers(Alice),
     waitForServerPeers(Bob),
     waitForServerPeers(Chris),
   ]);
-  
+
   expect(Alice.serverPeers.length).toBeGreaterThanOrEqual(2);
   expect(Bob.serverPeers.length).toBeGreaterThanOrEqual(2);
   expect(Chris.serverPeers.length).toBeGreaterThanOrEqual(2);
@@ -185,7 +185,7 @@ it("A can put and get", async () => {
 
   const msg = await Alice.putData(testKey, testValue);
   expect(msg).toBeDefined();
-  
+
   const data = await Alice.getData(testKey);
   expect(data).toBe(testValue);
 });
@@ -209,7 +209,7 @@ it("A and B can communicate trough the swarm", async () => {
 
   // Wait for Bob to receive the data
   await dataPromise;
-  
+
   const data = await Bob.getData(testKey);
   expect(data).toBe(testValue);
 });
@@ -229,7 +229,7 @@ it("A cand send and C can recieve from a subscription", async () => {
   expect(msg).toBeDefined();
 
   const recievedMessage = await subscriptionPromise;
-  
+
   expect(recievedMessage).toBeDefined();
   expect(recievedMessage.v).toBe(testValue);
 });
@@ -237,20 +237,20 @@ it("A cand send and C can recieve from a subscription", async () => {
 it("A can sign up and B can sign in", async () => {
   const testUsername = "test-username-" + textRandom(16);
   const testPassword = "im a password";
-  
+
   try {
     const result = await Alice.signUp(testUsername, testPassword);
     expect(result).toBeDefined();
-    
+
     // Wait for user data to propagate through the network
     const maxWait = 7000;
     const checkInterval = 200;
     const startTime = Date.now();
-    
+
     let signInSuccess = false;
     let lastError: any = null;
     let attemptCount = 0;
-    
+
     while (Date.now() - startTime < maxWait && !signInSuccess) {
       try {
         attemptCount++;
@@ -270,7 +270,7 @@ it("A can sign up and B can sign in", async () => {
         await new Promise(resolve => setTimeout(resolve, checkInterval));
       }
     }
-    
+
     if (!signInSuccess) {
       throw new Error(`Sign in failed after ${attemptCount} attempts over ${maxWait}ms: ${lastError?.message || 'unknown error'}`);
     }
@@ -334,13 +334,13 @@ it("CRDTs", async () => {
   BobDoc.SET("test", "foo");
 
   await Alice.putCrdt(crdtKey, AliceDoc);
-  
+
   // Wait a bit for data to propagate, then get
   // The getCrdt has a timeout, so if data doesn't arrive it will fall back to local store
   await new Promise(resolve => setTimeout(resolve, 300));
-  
+
   await Bob.getCrdt<any>(crdtKey, BobDoc);
-  
+
   expect(BobDoc.value).toStrictEqual({
     key: crdtValue,
     test: "foo",
