@@ -1,0 +1,68 @@
+# Project: tool-db - Testing Guidelines
+
+## Running Tests
+
+### Single File Test
+
+To run a test on a single file, use Jest directly:
+
+```bash
+npx jest __tests__/filename.ts
+```
+
+**Example:**
+
+```bash
+npx jest __tests__/sha256.ts
+```
+
+**Important:** Do NOT use `npm test -- __tests__/filename.ts` as the npm test script runs `jest ./` which will execute all tests regardless of the file path provided.
+
+### All Tests
+
+To run all tests:
+
+```bash
+npm test
+```
+
+This clears the Jest cache and runs all tests with open handles detection.
+
+### Watch Mode
+
+To run tests in watch mode:
+
+```bash
+npm test:watch
+```
+
+Or for a single file in watch mode:
+
+```bash
+npx jest __tests__/filename.ts --watch
+```
+
+### Other Useful Jest Commands
+
+- Run tests matching a pattern: `npx jest --testPathPattern=network`
+- Run with coverage: `npx jest __tests__/filename.ts --coverage`
+- Run only tests with a specific name: `npx jest -t "test name"`
+
+## Test Performance Notes
+
+- Single test file: ~5 seconds
+- All tests: ~180-200 seconds
+- Some tests (like pow.ts) can take 90+ seconds due to proof-of-work calculations
+
+## Project Structure
+
+- Tests are located in `__tests__/` directory
+- Test database files are created in `_____peer_.test-db/` (automatically managed)
+- This is a monorepo using Lerna with packages in `packages/`
+
+## Technology Stack
+
+- Test Framework: Jest v28
+- Language: TypeScript
+- Package Manager: npm with workspaces
+- Monorepo Tool: Lerna

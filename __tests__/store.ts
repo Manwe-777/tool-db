@@ -10,7 +10,7 @@ beforeAll((done) => {
   Alice = new ToolDb({
     server: false,
     peers: [],
-    storageName: "test-store",
+    storageName: ".test-db/test-store",
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,

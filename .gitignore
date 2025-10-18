@@ -2,6 +2,7 @@ node_modules
 .yarn
 coverage
 dist
+.test-db/
 test-alice
 test-alice-speed
 test-bob
