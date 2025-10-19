@@ -20,6 +20,7 @@
     "simple-peer": "^9.11.1",
     "web3": "^1.7.4",
     "web3-core": "^1.7.4",
+    "wrtc": "^0.4.7",
     "ws": "^8.8.0"
   },
   "devDependencies": {
