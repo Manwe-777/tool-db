@@ -18,6 +18,7 @@ let wrtc: any;
 try {
   wrtc = require("wrtc");
 } catch (e) {
+  console.log(e);
   console.log("⚠️  wrtc package not available - WebRTC tests will be skipped");
   console.log("   To run WebRTC tests on Linux/Mac: npm install --save-dev wrtc");
   console.log("   Note: wrtc is not supported on Windows");
