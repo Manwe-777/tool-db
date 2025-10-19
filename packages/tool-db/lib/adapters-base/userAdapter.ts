@@ -11,8 +11,8 @@ export default class ToolDbUserAdapter {
     this._tooldb = db;
   }
 
-  public anonUser() {
-    return;
+  public anonUser(): Promise<void> {
+    return Promise.resolve();
   }
 
   public setUser(account: unknown | undefined, name: string): Promise<void> {

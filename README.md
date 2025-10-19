@@ -2,8 +2,8 @@
 
 ToolDb is a peer-to-peer model for a decentralized database, inspired by GundB
 
-
 It is the mix of a lot of cool concepts into one;
+
 - Cryptographically secure.
 - Offline first.
 - Fully decentralized.
@@ -72,3 +72,28 @@ db.putData("foo-key", "var").then(console.log);
 ```
 
 There is a lot more you can do, like subscribe for updates, built-in users credentials validation based on ECC, create federated networks, run servers on Nodejs, auto-replicate data trough them, etc. Make sure more you read trough the [documentation](https://github.com/Manwe-777/tool-db-docs)!
+
+# Development
+
+## Running the Demo
+
+A Next.js demo application is included in the `demo/` directory. To run it with the latest tooldb build:
+
+```bash
+# Standard run (recommended)
+npm run demo
+
+# Fresh install (cleans node_modules first - use if you have dependency issues)
+npm run demo:fresh
+```
+
+These commands will automatically:
+
+1. Clean all tooldb packages
+2. Build all tooldb packages with dependencies
+3. Install/update demo dependencies
+4. Start the Next.js dev server at http://localhost:3000
+
+## Running Tests
+
+See the project-specific testing guidelines in the repo rules for details on running single tests or the full test suite.

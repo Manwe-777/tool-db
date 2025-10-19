@@ -55,8 +55,8 @@ interface Verificator<T> {
   ) => Promise<boolean>;
 }
 
-export default class ToolDb extends EventEmitter {
-  private _network;
+export default class ToolDb<T extends ToolDbOptions = ToolDbOptions> extends EventEmitter {
+  private _network: ToolDbNetworkAdapter;
   private _store: ToolDbStorageAdapter;
   private _serverPeers: Peer[] = [];
   private _peerAccount: ToolDbUserAdapter;
@@ -252,7 +252,7 @@ export default class ToolDb extends EventEmitter {
     this._customVerificator[id] = null;
   };
 
-  private _options: ToolDbOptions = {
+  private _options: T = {
     peers: [],
     maxRetries: 5,
     triggerDebouce: 100,
@@ -271,7 +271,7 @@ export default class ToolDb extends EventEmitter {
     serverName: undefined,
     ssl: false,
     modules: {},
-  };
+  } as unknown as T;
 
   get options() {
     return this._options;
@@ -297,7 +297,7 @@ export default class ToolDb extends EventEmitter {
     return this._peerAccount;
   }
 
-  constructor(options: Partial<ToolDbOptions> = {}) {
+  constructor(options: Partial<T> = {}) {
     super();
     this._options = { ...this.options, ...options };
 
@@ -306,7 +306,9 @@ export default class ToolDb extends EventEmitter {
     this._userAccount = new this.options.userAdapter(this);
 
     // Initialize userAccount with anonymous keys (will be replaced on signIn)
-    this._userAccount.anonUser();
+    this._userAccount.anonUser().catch(() => {
+      // Ignore errors during initialization
+    });
 
     this._network = new this.options.networkAdapter(this);
 
@@ -318,29 +320,44 @@ export default class ToolDb extends EventEmitter {
       "_____peer_" + this.options.storageName
     );
 
+    this.logger("ToolDb constructor: Starting peer account initialization");
+
     tempStore
       .get(DEFAULT_KEYS)
       .then((val) => {
-        this.peerAccount
+        this.logger("Found existing peer account in storage");
+        return this.peerAccount
           .decryptAccount(JSON.parse(val), DEFAULT_KEYS)
           .then((a) => {
+            this.logger("Decrypted peer account");
             return this.peerAccount.setUser(a, randomAnimal());
           })
-          .finally(() => {
-            this.emit("init", this.userAccount.getAddress());
+          .then(() => {
+            this.logger("Peer account loaded, address:", this.peerAccount.getAddress());
           });
       })
       .catch((_e) => {
-        this.peerAccount.encryptAccount(DEFAULT_KEYS).then((a) => {
-          return tempStore
-            .put(DEFAULT_KEYS, JSON.stringify(a))
-            .catch(() => {
-              // nothing
-            })
-            .finally(() => {
-              this.emit("init", this.userAccount.getAddress());
-            });
-        });
+        this.logger("No existing peer account, creating new one");
+        // No existing peer account - generate new keys first
+        return this.peerAccount.anonUser()
+          .then(() => {
+            this.logger("Generated new peer keys");
+            return this.peerAccount.encryptAccount(DEFAULT_KEYS);
+          })
+          .then((a) => {
+            this.logger("Encrypted peer account");
+            return tempStore.put(DEFAULT_KEYS, JSON.stringify(a));
+          })
+          .then(() => {
+            this.logger("Saved peer account, address:", this.peerAccount.getAddress());
+          })
+          .catch((err) => {
+            this.logger("Error creating peer account:", err);
+          });
+      })
+      .finally(() => {
+        this.logger("Emitting init event");
+        this.emit("init", this.userAccount.getAddress());
       });
   }
 }

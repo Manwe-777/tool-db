@@ -48,10 +48,25 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private connectedPeers: Record<string, boolean> = {};
 
   private onDisconnect = (id: string, err: any) => {
-    this.tooldb.logger(id, err);
+    this.tooldb.logger("Peer disconnected:", id, err);
+
+    // Clean up this peer's connection
     if (this.connectedPeers[id]) delete this.connectedPeers[id];
-    if (this.peerMap[id]) delete this.peerMap[id];
+    if (this.peerMap[id]) {
+      const peer = this.peerMap[id];
+      peer.removeAllListeners();
+      peer.destroy();
+      delete this.peerMap[id];
+    }
+
+    // Clean up from clientToSend
+    if (this.clientToSend[id]) {
+      delete this.clientToSend[id];
+    }
+
+    // Only trigger global disconnect if we have no peers left
     if (Object.keys(this.peerMap).length === 0) {
+      this.tooldb.logger("All peers disconnected");
       this.tooldb.isConnected = false;
       this.tooldb.onDisconnect();
     }
@@ -71,13 +86,15 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       }
     });
 
-    if (Object.keys(this.peerMap).length === 0) {
+    // Only trigger disconnect callback when transitioning from connected to disconnected
+    if (Object.keys(this.peerMap).length === 0 && this.tooldb.isConnected) {
+      this.tooldb.logger("All peers disconnected (peersCheck)");
       this.tooldb.isConnected = false;
       this.tooldb.onDisconnect();
     }
   }
 
-  private announceInterval;
+  private announceInterval: NodeJS.Timeout | undefined;
 
   /**
    * Initialize webrtc peer
@@ -135,9 +152,13 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
    * When we sucessfully connect to a webrtc peer
    */
   private onPeerConnect = (peer: Peer.Instance, id: string) => {
+    // If there's already a peer with this ID, clean it up without triggering disconnect
     if (this.peerMap[id]) {
-      this.peerMap[id].end();
-      this.peerMap[id].destroy();
+      const oldPeer = this.peerMap[id];
+      // Remove event listeners to prevent onDisconnect from firing
+      oldPeer.removeAllListeners("close");
+      oldPeer.removeAllListeners("error");
+      oldPeer.destroy();
       delete this.peerMap[id];
     }
 
@@ -199,13 +220,12 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     Object.entries(this.offerPool).forEach(([id, { peer }]) => {
       if (!this.handledOffers[id] && !this.connectedPeers[id]) {
         // this.tooldb.logger("closed peer " + id);
-        peer.end();
+        // Remove listeners to prevent onDisconnect from firing for offer cleanup
+        peer.removeAllListeners();
         peer.destroy();
         delete this.peerMap[id];
-        if (Object.keys(this.peerMap).length === 0) {
-          this.tooldb.isConnected = false;
-          this.tooldb.onDisconnect();
-        }
+        // Don't call tooldb.onDisconnect() here - these are just offer peers being cleaned up,
+        // not actual established connections disconnecting
       }
     });
 
@@ -409,9 +429,11 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
    * Leave the tracker
    */
   public onLeave = async () => {
-    this.trackerUrls.forEach(
-      (url) => delete this.socketListeners[url][this.infoHash]
-    );
+    this.trackerUrls.forEach((url) => {
+      if (this.socketListeners[url] && this.socketListeners[url][this.infoHash]) {
+        delete this.socketListeners[url][this.infoHash];
+      }
+    });
     clearInterval(this.announceInterval);
     this.cleanPool();
   };
@@ -419,32 +441,36 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     super(db);
 
-    this.announceInterval = setInterval(this.announceAll, announceSecs * 1000);
-
     setInterval(() => this.peersCheck(), 100);
-
-    // Stop announcing after maxAnnounceSecs
-    const intervalStart = new Date().getTime();
-    const checkInterval = setInterval(() => {
-      if (
-        !this.tooldb.options.server &&
-        new Date().getTime() - intervalStart > maxAnnounceSecs * 1000
-      ) {
-        clearInterval(checkInterval);
-        clearInterval(this.announceInterval);
-      }
-    }, 200);
 
     this.infoHash = sha1(`tooldb:${this.tooldb.options.topic}`).slice(20);
 
-    // Do not announce if we hit our max peers cap
-    if (Object.keys(this.peerMap).length < maxPeers) {
-      this.announceAll();
-    } else {
-      if (this.offerPool) {
-        this.cleanPool();
+    // Wait for peerAccount to be initialized before announcing
+    this.tooldb.once("init", () => {
+      // Start announce interval after peerAccount is ready
+      this.announceInterval = setInterval(this.announceAll, announceSecs * 1000);
+
+      // Stop announcing after maxAnnounceSecs
+      const intervalStart = new Date().getTime();
+      const checkInterval = setInterval(() => {
+        if (
+          !this.tooldb.options.server &&
+          new Date().getTime() - intervalStart > maxAnnounceSecs * 1000
+        ) {
+          clearInterval(checkInterval);
+          clearInterval(this.announceInterval);
+        }
+      }, 200);
+
+      // Do not announce if we hit our max peers cap
+      if (Object.keys(this.peerMap).length < maxPeers) {
+        this.announceAll();
+      } else {
+        if (this.offerPool) {
+          this.cleanPool();
+        }
       }
-    }
+    });
 
     // Basically the same as the WS network adapter
     // Only for Node!

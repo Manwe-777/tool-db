@@ -42,8 +42,11 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     super(db);
 
-    this.tooldb.options.peers.forEach((p) => {
-      this.connectTo(p.host, p.port);
+    // Wait for peerAccount to be initialized before connecting
+    this.tooldb.once("init", () => {
+      this.tooldb.options.peers.forEach((p) => {
+        this.connectTo(p.host, p.port);
+      });
     });
 
     if (this.tooldb.options.server) {

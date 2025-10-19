@@ -49,9 +49,9 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
     // The keys will be set either by setUser() from stored data, or by explicit anonSignIn()
   }
 
-  public anonUser() {
-    generateKeysComb().then((keys) => {
-      pubkeyToBase64(keys.publicKey as CryptoKey).then((rawPublic) => {
+  public anonUser(): Promise<void> {
+    return generateKeysComb().then((keys) => {
+      return pubkeyToBase64(keys.publicKey as CryptoKey).then((rawPublic) => {
         this._keys = keys;
         this._address = rawPublic;
         this._username = randomAnimal();
@@ -159,26 +159,15 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
     acc: EncryptedUserdata,
     password: string
   ): Promise<ECDSAUser> {
-    return new Promise((resolve) => {
-      // Wait for keys if undefined
-      if (this._keys === undefined) {
-        setTimeout(() => {
-          resolve(this.decryptAccount(acc, password));
-        }, 10);
-      } else {
-        const rawIv = base64ToUint8(acc.iv);
-        resolve(
-          decryptWithPass(acc.keys, password, rawIv).then((data) => {
-            const hexedKeys: HexedKeys = JSON.parse(data || "");
+    const rawIv = base64ToUint8(acc.iv);
+    return decryptWithPass(acc.keys, password, rawIv).then((data) => {
+      const hexedKeys: HexedKeys = JSON.parse(data || "");
 
-            return {
-              name: acc.name,
-              pub: hexedKeys.pub,
-              priv: hexedKeys.priv,
-            };
-          })
-        );
-      }
+      return {
+        name: acc.name,
+        pub: hexedKeys.pub,
+        priv: hexedKeys.priv,
+      };
     });
   }
 

@@ -9,7 +9,9 @@
     "clean": "lerna run --parallel clean",
     "release": "lerna publish",
     "test": "jest --clearCache && jest ./ --detectOpenHandles",
-    "test:watch": "jest --watch ./"
+    "test:watch": "jest --watch ./",
+    "demo": "node scripts/run-demo.js",
+    "demo:fresh": "node scripts/run-demo.js --clean"
   },
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "license": "ISC",
