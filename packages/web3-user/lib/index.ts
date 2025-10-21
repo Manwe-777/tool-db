@@ -11,28 +11,40 @@ import {
 export default class ToolDbWeb3User extends ToolDbUserAdapter {
   public web3: w3;
 
-  private _user: Account;
-  private _userName: string;
+  private _user!: Account;
+  private _userName!: string;
 
   constructor(db: ToolDb) {
     super(db);
     this.web3 = new w3(w3.givenProvider);
-    this._user = this.web3.eth.accounts.create();
-    this._userName = randomAnimal();
+    // Don't auto-generate anon user - let the caller decide
   }
 
-  public anonUser() {
-    this._user = this.web3.eth.accounts.create();
-    this._userName = randomAnimal();
+  private ensureAccount(force = false) {
+    if (!this._user || force) {
+      const account = this.web3.eth.accounts.create();
+      this._user = account;
+      if (!this._userName || force) {
+        this._userName = randomAnimal();
+      }
+    }
+    return this._user;
   }
 
-  public setUser(account: Account, name: string): void {
+  public anonUser(): Promise<void> {
+    this.ensureAccount(true);
+    return Promise.resolve();
+  }
+
+  public setUser(account: Account, name: string): Promise<void> {
     this._user = account;
     this._userName = name;
+    return Promise.resolve();
   }
 
   public signData(data: string) {
-    const signature = this.web3.eth.accounts.sign(data, this._user.privateKey);
+    const account = this.ensureAccount();
+    const signature = this.web3.eth.accounts.sign(data, account.privateKey);
 
     return Promise.resolve(signature.signature);
   }
@@ -51,7 +63,8 @@ export default class ToolDbWeb3User extends ToolDbUserAdapter {
   }
 
   public encryptAccount(password: string) {
-    return Promise.resolve(this._user.encrypt(password));
+    const account = this.ensureAccount();
+    return Promise.resolve(account.encrypt(password));
   }
 
   public decryptAccount(acc: EncryptedKeystoreV3Json, password: string) {
@@ -64,10 +77,12 @@ export default class ToolDbWeb3User extends ToolDbUserAdapter {
   }
 
   public getAddress(): string {
-    return this._user.address;
+    const account = this.ensureAccount();
+    return account.address;
   }
 
   public getUsername(): string {
+    this.ensureAccount();
     return this._userName;
   }
 }

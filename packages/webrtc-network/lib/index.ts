@@ -1,33 +1,52 @@
-import Peer from "simple-peer";
+import { joinRoom } from "trystero";
+import type { ActionSender, Room } from "trystero";
 import WebSocket from "ws";
 
-import { ToolDb, sha1, textRandom, ToolDbNetworkAdapter } from "tool-db";
+import { ToolDb, ToolDbNetworkAdapter, sha1 } from "tool-db";
+import type { ToolDbMessage } from "tool-db";
 
-type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
+const TOOLDB_ACTION = "tdb-msg";
+const DEFAULT_RELAY_REDUNDANCY = 5;
 
-type IOffers = Record<
-  string,
-  {
-    peer: Peer.Instance;
-    offerP: Promise<Peer.Instance>;
-  }
->;
-
-const offerPoolSize = 5;
-const maxPeers = 4;
-const announceSecs = 30;
-const maxAnnounceSecs = 99999999;
-
-const defaultTrackerUrls = [
-  "wss://tracker.webtorrent.dev",
-  "wss://tracker.openwebtorrent.com",
-  "wss://tracker.files.fm:7073/announce",
-  "wss://tooldb-tracker.herokuapp.com/",
-  //"wss://tracker.fastcast.nz/announce",
-  //"wss://tracker.btorrent.xyz/announce",
-  //"wss://tracker.webtorrent.io/announce",
-  //"wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
+const DEFAULT_NOSTR_RELAY_URLS = [
+  "wss://black.nostrcity.club",
+  "wss://ftp.halifax.rwth-aachen.de/nostr",
+  "wss://nos.lol",
+  "wss://nostr.cool110.xyz",
+  "wss://nostr.data.haus",
+  "wss://nostr.sathoarder.com",
+  "wss://nostr.vulpem.com",
+  "wss://relay.agorist.space",
+  "wss://relay.binaryrobot.com",
+  "wss://relay.damus.io",
+  "wss://relay.fountain.fm",
+  "wss://relay.mostro.network",
+  "wss://relay.nostraddress.com",
+  "wss://relay.nostrdice.com",
+  "wss://relay.nostromo.social",
+  "wss://relay.oldenburg.cool",
+  "wss://relay.verified-nostr.com",
+  "wss://yabu.me/v2",
 ];
+
+type JoinRoomConfig = Parameters<typeof joinRoom>[0];
+
+type TrysteroTurnServer = NonNullable<JoinRoomConfig["turnConfig"]>[number];
+
+interface TrysteroOptions {
+  appId?: string;
+  roomId?: string;
+  relayUrls?: string[];
+  relayRedundancy?: number;
+  password?: string;
+  manualRelayReconnection?: boolean;
+}
+
+interface WebrtcModuleOptions {
+  rtcConfig?: RTCConfiguration;
+  turnConfig?: TrysteroTurnServer[];
+  trystero?: TrysteroOptions;
+}
 
 export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private wnd =
@@ -37,445 +56,244 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     ? this.wnd.WebSocket || this.wnd.webkitWebSocket || this.wnd.mozWebSocket
     : WebSocket;
 
-  private sockets: Record<string, WebSocket | null> = {};
+  private room: Room | null = null;
 
-  private socketListeners: Record<string, Record<string, SocketMessageFn>> = {};
+  private sendMessageAction: ActionSender<string> | null = null;
 
-  private peerMap: Record<string, Peer.Instance> = {};
+  private peerIdToClientId: Record<string, string> = {};
 
-  private connectedPeers: Record<string, boolean> = {};
+  private clientIdToPeerId: Record<string, string> = {};
 
-  private onDisconnect = (id: string, err: any) => {
-    this.tooldb.logger(id, err);
-    if (this.connectedPeers[id]) delete this.connectedPeers[id];
-    if (this.peerMap[id]) delete this.peerMap[id];
-    if (Object.keys(this.peerMap).length === 0) {
-      this.tooldb.isConnected = false;
-      this.tooldb.onDisconnect();
-    }
-  };
-
-  private peersCheck() {
-    Object.keys(this.clientToSend).forEach((id) => {
-      if (!this.isConnected(id)) {
-        this.tooldb.logger("disconnected from " + id);
-        this.onClientDisconnect(id);
-        const peer = this.peerMap[id];
-        if (peer) {
-          peer.destroy();
-        }
-        if (this.connectedPeers[id]) delete this.connectedPeers[id];
-        delete this.peerMap[id];
-      }
-    });
-
-    if (Object.keys(this.peerMap).length === 0) {
-      this.tooldb.isConnected = false;
-      this.tooldb.onDisconnect();
-    }
-  }
-
-  private announceInterval;
-
-  /**
-   * Initialize webrtc peer
-   */
-  private initPeer = (
-    initiator: boolean,
-    trickle: boolean,
-    rtcConfig: any // RTCConfiguration
-  ) => {
-    const peer: Peer.Instance = new Peer({
-      wrtc: (this.tooldb.options as any).wrtc,
-      initiator,
-      trickle,
-      config: rtcConfig,
-    });
-    return peer;
-  };
-
-  private handledOffers: Record<string, boolean> = {};
-
-  private offerPool: Record<
-    string,
-    {
-      peer: Peer.Instance;
-      offerP: Promise<Peer.Instance>;
-    }
-  > = {};
-
-  private trackerUrls = defaultTrackerUrls; // .slice(0, 2);
+  private activePeerIds = new Set<string>();
 
   private infoHash = "";
-
-  /**
-   * Make connection offers (sdp) to send to the tracker
-   */
-  private makeOffers = () => {
-    const offers: IOffers = {};
-
-    new Array(offerPoolSize).fill(0).forEach(() => {
-      try {
-        const peer = this.initPeer(true, false, {});
-        const oid = textRandom(20);
-        offers[oid] = {
-          peer,
-          offerP: new Promise((res) => peer.once("signal", res)),
-        };
-      } catch (e) {
-        this.tooldb.logger(e);
-      }
-    });
-    return offers;
-  };
-
-  /**
-   * When we sucessfully connect to a webrtc peer
-   */
-  private onPeerConnect = (peer: Peer.Instance, id: string) => {
-    if (this.peerMap[id]) {
-      this.peerMap[id].end();
-      this.peerMap[id].destroy();
-      delete this.peerMap[id];
-    }
-
-    let clientId: string | null = null;
-
-    // this.tooldb.logger("onPeerConnect", id);
-
-    const onData = (data: Uint8Array) => {
-      const str = new TextDecoder().decode(data);
-
-      this.onClientMessage(str, clientId || "", (id) => {
-        clientId = id;
-        // Set this socket's functions on the adapter
-        this.isClientConnected[id] = () => {
-          return peer.connected;
-        };
-
-        this.clientToSend[id] = (_msg: string) => {
-          peer.send(_msg);
-        };
-      });
-    };
-
-    this.peerMap[id] = peer;
-
-    peer.on("data", onData);
-
-    peer.on("close", (err: any) => this.onDisconnect(id, err));
-
-    peer.on("error", (err: any) => this.onDisconnect(id, err));
-
-    this.craftPingMessage().then((msg) => {
-      peer.send(msg);
-    });
-  };
-
-  /**
-   * Handle the webrtc peer connection
-   */
-  private onConnect = (peer: Peer.Instance, id: string, offer_id?: string) => {
-    this.onPeerConnect(peer, id);
-    this.connectedPeers[id] = true;
-    if (offer_id) {
-      this.connectedPeers[offer_id] = true;
-    }
-  };
-
-  /**
-   * Clean the announce offers pool
-   */
-  private cleanPool = () => {
-    Object.entries(this.offerPool).forEach(([id, { peer }]) => {
-      if (!this.handledOffers[id] && !this.connectedPeers[id]) {
-        // this.tooldb.logger("closed peer " + id);
-        peer.end();
-        peer.destroy();
-        delete this.peerMap[id];
-        if (Object.keys(this.peerMap).length === 0) {
-          this.tooldb.isConnected = false;
-          this.tooldb.onDisconnect();
-        }
-      }
-    });
-
-    this.handledOffers = {} as Record<string, boolean>;
-  };
-
-  /**
-   * Makes a websocket connection to a tracker
-   */
-  private makeSocket = (url: string, info_hash: string) => {
-    return new Promise<WebSocket | null>((resolve) => {
-      if (!this.sockets[url]) {
-        this.socketListeners[url] = {
-          ...this.socketListeners[url],
-          // eslint-disable-next-line no-use-before-define
-          [info_hash]: this.onSocketMessage,
-        };
-
-        try {
-          const socket = new this.wss(url);
-          // eslint-disable-next-line func-names
-          const socks = this.sockets;
-          socket.onopen = function () {
-            socks[url] = this;
-            resolve(this);
-          };
-          socket.onmessage = (e: any) =>
-            Object.values(this.socketListeners[url]).forEach((f) =>
-              f(socket, e)
-            );
-          // eslint-disable-next-line func-names
-          socket.onerror = () => {
-            const index = this.trackerUrls.indexOf(url);
-            this.trackerUrls.splice(index, 1);
-            resolve(null);
-          };
-        } catch (e) {
-          resolve(null);
-        }
-      } else {
-        resolve(this.sockets[url]);
-      }
-    });
-  };
-
-  /**
-   * Announce ourselves to a tracker (send "announce")
-   */
-  private announce = async (socket: WebSocket, infoHash: string) =>
-    socket.send(
-      JSON.stringify({
-        action: "announce",
-        info_hash: infoHash,
-        numwant: offerPoolSize,
-        peer_id: this.getClientAddress(),
-        offers: await Promise.all(
-          Object.entries(this.offerPool).map(async ([id, { offerP }]) => {
-            const offer = await offerP;
-            // this.tooldb.logger(`Created offer id ${id}`);
-            return {
-              offer_id: id,
-              offer,
-            };
-          })
-        ),
-      })
-    );
-
-  /**
-   * Announce ourselves to all trackers
-   */
-  private announceAll = async () => {
-    if (this.offerPool) {
-      this.cleanPool();
-    }
-
-    this.offerPool = this.makeOffers();
-
-    this.trackerUrls.forEach(async (url: string) => {
-      // this.tooldb.logger("begin tracker connection " + url);
-      const socket = await this.makeSocket(url, this.infoHash);
-      // this.tooldb.logger(" ok tracker " + url);
-      // this.tooldb.logger("socket", url, socket);
-      if (socket && socket.readyState === 1) {
-        // this.tooldb.logger("announce to " + url);
-        this.announce(socket, this.infoHash);
-      }
-    });
-  };
-
-  /**
-   * Handle the tracker messages
-   */
-  private onSocketMessage: SocketMessageFn = async (
-    socket: WebSocket,
-    e: any
-  ) => {
-    let val: {
-      info_hash: string;
-      peer_id: string;
-      "failure reason"?: string;
-      interval?: number;
-      offer?: string;
-      offer_id: string;
-      answer?: string;
-    };
-
-    try {
-      val = JSON.parse(e.data);
-      // this.tooldb.logger("onSocketMessage", socket.url, val);
-    } catch (_e: any) {
-      // this.tooldb.logger(`${libName}: received malformed SDP JSON`);
-      return;
-    }
-
-    const failure = val["failure reason"];
-
-    if (failure) {
-      this.tooldb.logger(`${e.origin}: torrent tracker failure (${failure})`);
-      return;
-    }
-
-    if (val.info_hash !== this.infoHash) {
-      // this.tooldb.logger("Info hash mismatch");
-      return;
-    }
-
-    if (val.peer_id && val.peer_id === this.getClientAddress()) {
-      // this.tooldb.logger("Peer ids mismatch", val.peer_id, selfId);
-      return;
-    }
-
-    if (val.offer && val.offer_id) {
-      if (this.connectedPeers[val.peer_id]) {
-        return;
-      }
-
-      if (this.handledOffers[val.offer_id]) {
-        return;
-      }
-
-      if (Object.keys(this.peerMap).length >= maxPeers) {
-        if (this.offerPool) {
-          this.cleanPool();
-        }
-        return;
-      }
-
-      this.handledOffers[val.offer_id] = true;
-
-      const peer = this.initPeer(false, false, {});
-      peer.once("signal", (answer: any) =>
-        socket.send(
-          JSON.stringify({
-            answer,
-            action: "announce",
-            info_hash: this.infoHash,
-            peer_id: this.getClientAddress(),
-            to_peer_id: val.peer_id,
-            offer_id: val.offer_id,
-          })
-        )
-      );
-
-      peer.on("connect", () => this.onConnect(peer, val.peer_id));
-      peer.on("close", (err: any) => this.onDisconnect(val.peer_id, err));
-      peer.signal(val.offer);
-      return;
-    }
-
-    if (val.answer) {
-      if (this.connectedPeers[val.peer_id]) {
-        return;
-      }
-
-      if (this.handledOffers[val.offer_id]) {
-        return;
-      }
-
-      const offer = this.offerPool[val.offer_id];
-
-      if (offer) {
-        const { peer } = offer;
-
-        if (peer.destroyed) {
-          this.onDisconnect(val.peer_id, "destroyed");
-          return;
-        }
-
-        this.handledOffers[val.offer_id] = true;
-        peer.on("connect", () => {
-          this.onConnect(peer, val.peer_id, val.offer_id);
-        });
-        peer.on("close", (err: any) => this.onDisconnect(val.peer_id, err));
-        peer.signal(val.answer);
-      }
-    }
-  };
-
-  /**
-   * Leave the tracker
-   */
-  public onLeave = async () => {
-    this.trackerUrls.forEach(
-      (url) => delete this.socketListeners[url][this.infoHash]
-    );
-    clearInterval(this.announceInterval);
-    this.cleanPool();
-  };
 
   constructor(db: ToolDb) {
     super(db);
 
-    this.announceInterval = setInterval(this.announceAll, announceSecs * 1000);
+    this.tooldb.ready
+      .then(() => {
+        this.tooldb.logger("webrtc-network constructor (trystero)");
+        this.infoHash = sha1(`tooldb:${this.tooldb.options.topic}`).slice(20);
+        this.initializeRoom();
 
-    setInterval(() => this.peersCheck(), 100);
+        if (this.tooldb.options.server && typeof window === "undefined") {
+          this.setupServerSockets();
+        }
+      })
+      .catch((err) => {
+        this.tooldb.logger("Failed to initialize webrtc network", err);
+      });
+  }
 
-    // Stop announcing after maxAnnounceSecs
-    const intervalStart = new Date().getTime();
-    const checkInterval = setInterval(() => {
-      if (
-        !this.tooldb.options.server &&
-        new Date().getTime() - intervalStart > maxAnnounceSecs * 1000
-      ) {
-        clearInterval(checkInterval);
-        clearInterval(this.announceInterval);
-      }
-    }, 200);
+  private getModuleOptions(): WebrtcModuleOptions {
+    return (
+      (this.tooldb.options.modules?.webrtc as WebrtcModuleOptions | undefined) ??
+      {}
+    );
+  }
 
-    this.infoHash = sha1(`tooldb:${this.tooldb.options.topic}`).slice(20);
+  private initializeRoom() {
+    const moduleOptions = this.getModuleOptions();
+    const trysteroOptions = moduleOptions.trystero ?? {};
 
-    // Do not announce if we hit our max peers cap
-    if (Object.keys(this.peerMap).length < maxPeers) {
-      this.announceAll();
-    } else {
-      if (this.offerPool) {
-        this.cleanPool();
-      }
+    const appId =
+      trysteroOptions.appId || this.tooldb.options.topic || "tool-db";
+    const roomId = trysteroOptions.roomId || this.infoHash;
+
+    const config: JoinRoomConfig = {
+      appId,
+    };
+
+    if (moduleOptions.rtcConfig) {
+      config.rtcConfig = moduleOptions.rtcConfig;
     }
 
-    // Basically the same as the WS network adapter
-    // Only for Node!
-    if (this.tooldb.options.server && typeof window === "undefined") {
-      const server = new WebSocket.Server({
-        port: this.tooldb.options.port,
-        server: this.tooldb.options.httpServer,
+    if (moduleOptions.turnConfig) {
+      config.turnConfig = moduleOptions.turnConfig;
+    }
+
+    if (typeof trysteroOptions.password === "string") {
+      config.password = trysteroOptions.password;
+    }
+
+    if (
+      Array.isArray(trysteroOptions.relayUrls) &&
+      trysteroOptions.relayUrls.length > 0
+    ) {
+      config.relayUrls = trysteroOptions.relayUrls;
+
+      if (typeof trysteroOptions.relayRedundancy === "number") {
+        config.relayRedundancy = trysteroOptions.relayRedundancy;
+      }
+    } else {
+      config.relayUrls = DEFAULT_NOSTR_RELAY_URLS;
+      config.relayRedundancy =
+        trysteroOptions.relayRedundancy ?? DEFAULT_RELAY_REDUNDANCY;
+    }
+
+    this.room = joinRoom(config, roomId, (details) => {
+      this.tooldb.logger(
+        "Trystero join error",
+        `${details.error} (appId: ${appId}, roomId: ${roomId})`
+      );
+    });
+
+    const [sendMessage, receiveMessage] =
+      this.room.makeAction<string>(TOOLDB_ACTION);
+    this.sendMessageAction = sendMessage;
+
+    receiveMessage((payload, peerId) => {
+      this.handleIncomingMessage(peerId, payload);
+    });
+
+    this.room.onPeerJoin((peerId) => this.handlePeerJoin(peerId));
+    this.room.onPeerLeave((peerId) => this.handlePeerLeave(peerId));
+  }
+
+  private handlePeerJoin(peerId: string) {
+    this.tooldb.logger("Trystero peer joined", peerId);
+    this.activePeerIds.add(peerId);
+
+    this.craftPingMessage()
+      .then((msg) => this.sendToPeer(peerId, msg))
+      .catch((err) => {
+        this.tooldb.logger("Failed to craft ping", err);
       });
+  }
 
-      server.on("connection", (socket: WebSocket) => {
-        let clientId: string | null = null;
+  private handlePeerLeave(peerId: string) {
+    this.tooldb.logger("Trystero peer left", peerId);
+    this.activePeerIds.delete(peerId);
 
-        socket.on("close", () => {
-          if (clientId) {
-            this.onClientDisconnect(clientId);
-          }
-        });
+    const clientId = this.peerIdToClientId[peerId];
+    if (clientId) {
+      this.onClientDisconnect(clientId);
+      delete this.peerIdToClientId[peerId];
+      delete this.clientIdToPeerId[clientId];
+      delete this.clientToSend[clientId];
+      delete this.isClientConnected[clientId];
+      this.tooldb.onPeerDisconnect(clientId);
+    }
 
-        socket.on("error", () => {
-          if (clientId) {
-            this.onClientDisconnect(clientId);
-          }
-        });
-
-        socket.on("message", (message: string) => {
-          this.onClientMessage(message, clientId || "", (id) => {
-            clientId = id;
-            this.isClientConnected[id] = () => {
-              return socket.readyState === socket.OPEN;
-            };
-            this.clientToSend[id] = (_msg: string) => {
-              socket.send(_msg);
-            };
-          });
-        });
-      });
+    if (this.activePeerIds.size === 0) {
+      this.tooldb.isConnected = false;
+      this.tooldb.onDisconnect();
     }
   }
 
-  public close(clientId: string): void {
-    //
+  private handleIncomingMessage(peerId: string, payload: unknown) {
+    if (!this.activePeerIds.has(peerId)) {
+      this.activePeerIds.add(peerId);
+    }
+
+    if (typeof payload !== "string") {
+      this.tooldb.logger(
+        "Ignoring non-string payload from peer",
+        peerId,
+        typeof payload
+      );
+      return;
+    }
+
+    const currentClientId = this.peerIdToClientId[peerId] || "";
+
+    this.onClientMessage(payload, currentClientId, (newClientId) => {
+      this.associatePeer(peerId, newClientId);
+    });
+  }
+
+  private associatePeer(peerId: string, clientId: string) {
+    const previousPeer = this.clientIdToPeerId[clientId];
+    if (previousPeer && previousPeer !== peerId) {
+      delete this.peerIdToClientId[previousPeer];
+    }
+
+    this.peerIdToClientId[peerId] = clientId;
+    this.clientIdToPeerId[clientId] = peerId;
+
+    this.isClientConnected[clientId] = () =>
+      this.activePeerIds.has(peerId) && !!this.room;
+
+    this.clientToSend[clientId] = (message: string) => {
+      this.sendToPeer(peerId, message);
+    };
+
+    if (!this.tooldb.isConnected) {
+      this.tooldb.isConnected = true;
+      this.tooldb.onConnect();
+    }
+  }
+
+  private sendToPeer(peerId: string, message: string) {
+    if (!this.sendMessageAction) {
+      this.tooldb.logger(
+        "sendMessageAction not ready, dropping message for peer",
+        peerId
+      );
+      return;
+    }
+
+    void this.sendMessageAction(message, peerId).catch((err: unknown) => {
+      this.tooldb.logger(`Failed to send message to ${peerId}`, err);
+    });
+  }
+
+  private setupServerSockets() {
+    const server = new WebSocket.Server({
+      port: this.tooldb.options.port,
+      server: this.tooldb.options.httpServer,
+    });
+
+    server.on("connection", (socket: WebSocket) => {
+      let clientId: string | null = null;
+
+      socket.on("close", () => {
+        if (clientId) {
+          this.onClientDisconnect(clientId);
+        }
+      });
+
+      socket.on("error", () => {
+        if (clientId) {
+          this.onClientDisconnect(clientId);
+        }
+      });
+
+      socket.on("message", (message: string) => {
+        this.onClientMessage(message, clientId || "", (id) => {
+          clientId = id;
+          this.isClientConnected[id] = () => {
+            return socket.readyState === socket.OPEN;
+          };
+          this.clientToSend[id] = (_msg: string) => {
+            socket.send(_msg);
+          };
+        });
+      });
+    });
+  }
+
+  public close(_clientId: string): void {
+    // Trystero rooms are shared per adapter; leaving here would
+    // disconnect all peers. Consumers can dispose the adapter via ToolDb.close().
+  }
+
+  public sendToAll(msg: ToolDbMessage, crossServerOnly = false) {
+    if (crossServerOnly) {
+      super.sendToAll(msg, crossServerOnly);
+      return;
+    }
+
+    const to = msg.to ?? [];
+    const connectedClientIds = Object.keys(this.clientToSend).filter((id) =>
+      this.isConnected(id)
+    );
+
+    connectedClientIds.forEach((clientId) => {
+      if (!to.includes(clientId)) {
+        this.clientToSend[clientId](JSON.stringify({ ...msg }));
+      }
+    });
   }
 }

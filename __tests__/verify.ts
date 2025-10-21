@@ -20,7 +20,7 @@ beforeAll((done) => {
   ClientA = new ToolDb({
     server: true,
     host: "127.0.0.1",
-    port: 8888,
+    port: 7777,
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
@@ -32,9 +32,14 @@ beforeAll((done) => {
 });
 
 afterAll(async () => {
-  await new Promise<void>((resolve) => {
-    ClientA.network.server.close(() => resolve());
-  });
+  if (ClientA.network && (ClientA.network as ToolDbWebsockets).server) {
+    await new Promise<void>((resolve) => {
+      (ClientA.network as ToolDbWebsockets).server!.close(() => {
+        // Add a small delay to ensure port is fully released
+        setTimeout(() => resolve(), 100);
+      });
+    });
+  }
 });
 
 const putOk: VerificationData<string> = {

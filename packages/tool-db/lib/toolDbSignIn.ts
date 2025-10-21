@@ -16,8 +16,8 @@ export default function toolDbSignIn(
       try {
         this.userAccount
           .decryptAccount(_user, sha256(password))
-          .then((newAccount) => {
-            this.userAccount.setUser(
+          .then(async (newAccount) => {
+            await this.userAccount.setUser(
               newAccount,
               user || `Anonymous ${randomAnimal()}`
             );

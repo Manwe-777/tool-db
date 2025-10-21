@@ -1,4 +1,4 @@
-export default function hexToArrayBuffer(hex: string): ArrayBuffer {
+export default function hexToArrayBuffer(hex: string): Uint8Array {
   const pairs = hex.toUpperCase().match(/[\dA-F]{2}/gi);
 
   if (!pairs) return new Uint8Array();
@@ -8,6 +8,5 @@ export default function hexToArrayBuffer(hex: string): ArrayBuffer {
     return parseInt(s, 16);
   });
 
-  const array = new Uint8Array(integers);
-  return array.buffer;
+  return new Uint8Array(integers);
 }

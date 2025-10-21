@@ -20,14 +20,20 @@ export default class ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     this._tooldb = db;
 
-    // Wait for peerAccount to be initialized before adding ourselves to serverPeers
-    this.tooldb.once("init", () => {
-      if (this.tooldb.options.server) {
-        this.getMeAsPeer().then((meAsPeer) => {
+    this.tooldb.ready
+      .then(() => {
+        this.tooldb.logger("networkAdapter ready");
+        return this.getMeAsPeer();
+      })
+      .then((meAsPeer) => {
+        this.tooldb.logger("networkAdapter getMeAsPeer", meAsPeer);
+        if (this.tooldb.options.server) {
           this.tooldb.serverPeers.push(meAsPeer);
-        });
-      }
-    });
+        }
+      })
+      .catch((err) => {
+        this.tooldb.logger("Failed to initialize network adapter", err);
+      });
   }
 
   get clientToSend() {
@@ -44,6 +50,11 @@ export default class ToolDbNetworkAdapter {
 
   public getMeAsPeer() {
     const timestamp = new Date().getTime();
+
+    if (!this.tooldb.peerAccount) {
+      return Promise.reject("Peer account not initialized");
+    }
+
     return getPeerSignature(
       this.tooldb.peerAccount,
       this.tooldb.options.topic,
@@ -110,7 +121,7 @@ export default class ToolDbNetworkAdapter {
     // This is not a good idea to use on all adapters, so it should be replaced
     // if its causing issues. The only reason we use the last 20 chars is to
     // muse the same peer address as the webrtc adapter.
-    return (this.tooldb.peerAccount.getAddress() || "").slice(-20);
+    return this.tooldb.peerAccount.getAddress() || "";
   }
 
   public onClientDisconnect(clientId: string) {

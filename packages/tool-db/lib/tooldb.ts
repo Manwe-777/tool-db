@@ -28,6 +28,7 @@ import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
 import toolDbQueryKeys from "./toolDbQueryKeys";
 import toolDbKeysSignIn from "./toolDbKeysSignIn";
 import toolDbSubscribe from "./toolDbSubscribe";
+import toolDbCheckSignupConflicts from "./toolDbCheckSignupConflicts";
 
 import handleGet from "./messageHandlers/handleGet";
 import handlePut from "./messageHandlers/handlePut";
@@ -56,8 +57,9 @@ interface Verificator<T> {
 }
 
 export default class ToolDb extends EventEmitter {
-  private _network;
+  private _network!: ToolDbNetworkAdapter;
   private _store: ToolDbStorageAdapter;
+  private _peerStore!: ToolDbStorageAdapter;
   private _serverPeers: Peer[] = [];
   private _peerAccount: ToolDbUserAdapter;
   private _userAccount: ToolDbUserAdapter;
@@ -133,6 +135,8 @@ export default class ToolDb extends EventEmitter {
   public signUp = toolDbSignUp;
 
   public verify = toolDbVerificationWrapper;
+
+  public _checkSignupConflicts = toolDbCheckSignupConflicts;
 
   // All message handlers go here
   public handlePing = handlePing;
@@ -297,6 +301,23 @@ export default class ToolDb extends EventEmitter {
     return this._peerAccount;
   }
 
+  private _initPromise: Promise<void>;
+  
+  get ready(): Promise<void> {
+    return this._initPromise;
+  }
+
+  public async close(): Promise<void> {
+    // Close the main store
+    if (this._store && typeof (this._store as any).close === 'function') {
+      await (this._store as any).close();
+    }
+    // Close the peer store (used for keys)
+    if (this._peerStore && typeof (this._peerStore as any).close === 'function') {
+      await (this._peerStore as any).close();
+    }
+  }
+
   constructor(options: Partial<ToolDbOptions> = {}) {
     super();
     this._options = { ...this.options, ...options };
@@ -305,39 +326,60 @@ export default class ToolDb extends EventEmitter {
     this._peerAccount = new this.options.userAdapter(this);
     this._userAccount = new this.options.userAdapter(this);
 
-    this._network = new this.options.networkAdapter(this);
-
     const DEFAULT_KEYS = "%default-peer%";
+    const DEFAULT_USER_KEYS = "%default-user%";
 
     // DO NOT USE THE DEFAULT STORE FOR KEYS
-    const tempStore = new this.options.storageAdapter(
+    this._peerStore = new this.options.storageAdapter(
       this,
       "_____peer_" + this.options.storageName
     );
 
-    tempStore
-      .get(DEFAULT_KEYS)
-      .then((val) => {
-        this.peerAccount
-          .decryptAccount(JSON.parse(val), DEFAULT_KEYS)
-          .then((a) => {
-            this.peerAccount.setUser(a, randomAnimal());
-          })
-          .finally(() => {
-            this.emit("init", this.userAccount.getAddress());
-          });
+    // Initialize peer account and user account before network
+    this._initPromise = this._initializeAccounts(this._peerStore, DEFAULT_KEYS, DEFAULT_USER_KEYS);
+
+    // Network initialization happens after user initialization
+    this._initPromise = this._initPromise
+      .then(() => {
+        this._network = new this.options.networkAdapter(this);
       })
-      .catch((_e) => {
-        this.peerAccount.encryptAccount(DEFAULT_KEYS).then((a) => {
-          tempStore
-            .put(DEFAULT_KEYS, JSON.stringify(a))
-            .catch(() => {
-              // nothing
-            })
-            .finally(() => {
-              this.emit("init", this.userAccount.getAddress());
-            });
-        });
+      .catch((err) => {
+        this.logger("Failed to initialize network", err);
+        throw err;
       });
+  }
+
+  private async _initializeAccounts(
+    tempStore: ToolDbStorageAdapter,
+    peerKey: string,
+    userKey: string
+  ): Promise<void> {
+    // Initialize peer account
+    try {
+      const val = await tempStore.get(peerKey);
+      const account = await this.peerAccount.decryptAccount(JSON.parse(val), peerKey);
+      await this.peerAccount.setUser(account, randomAnimal());
+    } catch (_e) {
+      await this.peerAccount.anonUser();
+      const encrypted = await this.peerAccount.encryptAccount(peerKey);
+      try {
+        await tempStore.put(peerKey, JSON.stringify(encrypted));
+      } catch (_putError) {
+        // Ignore storage errors
+      }
+    }
+
+    // Initialize user account - check if there's a saved user
+    try {
+      const userVal = await tempStore.get(userKey);
+      const userAccount = await this.userAccount.decryptAccount(JSON.parse(userVal), userKey);
+      await this.userAccount.setUser(userAccount, userAccount.name || randomAnimal());
+    } catch (_e) {
+      // No saved user, generate anonymous user
+      await this.userAccount.anonUser();
+    }
+
+    // Emit init event after both accounts are ready
+    this.emit("init", this.userAccount.getAddress());
   }
 }

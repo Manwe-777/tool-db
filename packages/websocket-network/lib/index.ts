@@ -42,49 +42,51 @@ export default class ToolDbWebsocket extends ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     super(db);
 
-    this.tooldb.options.peers.forEach((p) => {
-      this.connectTo(p.host, p.port);
-    });
-
-    if (this.tooldb.options.server) {
-      this.server = new WebSocket.Server({
-        port: this.tooldb.options.port,
-        server: this.tooldb.options.httpServer,
+    this.tooldb.ready.then(() => {
+      this.tooldb.options.peers.forEach((p) => {
+        this.connectTo(p.host, p.port);
       });
 
-      this.server.on("connection", (socket: WebSocket) => {
-        let clientId: string | null = null;
-
-        this.tooldb.logger("new connection");
-        socket.on("close", () => {
-          this.tooldb.logger("closed connection:", clientId);
-          if (clientId) {
-            this.onClientDisconnect(clientId);
-          }
+      if (this.tooldb.options.server) {
+        this.server = new WebSocket.Server({
+          port: this.tooldb.options.port,
+          server: this.tooldb.options.httpServer,
         });
 
-        socket.on("error", () => {
-          this.tooldb.logger("errored connection:", clientId);
-          if (clientId) {
-            this.onClientDisconnect(clientId);
-          }
-        });
+        this.server.on("connection", (socket: WebSocket) => {
+          let clientId: string | null = null;
 
-        socket.on("message", (message: string) => {
-          this.onClientMessage(message, clientId || "", (id) => {
-            clientId = id;
+          this.tooldb.logger("new connection");
+          socket.on("close", () => {
+            this.tooldb.logger("closed connection:", clientId);
+            if (clientId) {
+              this.onClientDisconnect(clientId);
+            }
+          });
 
-            // Set this socket's functions on the adapter
-            this.isClientConnected[id] = () => {
-              return socket.readyState === socket.OPEN;
-            };
-            this.clientToSend[id] = (_msg: string) => {
-              socket.send(_msg);
-            };
+          socket.on("error", () => {
+            this.tooldb.logger("errored connection:", clientId);
+            if (clientId) {
+              this.onClientDisconnect(clientId);
+            }
+          });
+
+          socket.on("message", (message: string) => {
+            this.onClientMessage(message, clientId || "", (id) => {
+              clientId = id;
+
+              // Set this socket's functions on the adapter
+              this.isClientConnected[id] = () => {
+                return socket.readyState === socket.OPEN;
+              };
+              this.clientToSend[id] = (_msg: string) => {
+                socket.send(_msg);
+              };
+            });
           });
         });
-      });
-    }
+      }
+    });
   }
 
   /**

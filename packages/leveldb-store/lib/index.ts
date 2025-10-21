@@ -1,20 +1,56 @@
 import { ToolDb, ToolDbStorageAdapter } from "tool-db";
 import level from "level";
+import { mkdirSync } from "fs";
+import path from "path";
 
 export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database;
   private readyPromise: Promise<void>;
+  private databasePath: string;
 
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
 
-    this.database = level(this.storageName);
+    const rawStorageName = forceStorageName || db.options.storageName;
+    const isSpecialNamespace = rawStorageName.startsWith(":");
+    const baseName = isSpecialNamespace
+      ? rawStorageName.replace(/[:.]/g, "_")
+      : rawStorageName;
+
+    this.databasePath = path.resolve(baseName);
+
+    try {
+      mkdirSync(this.databasePath, { recursive: true });
+    } catch (err) {
+      throw err;
+    }
+
+    this.database = level(this.databasePath);
+    
+    // Add error handler to prevent unhandled errors (cast to any for event types)
+    (this.database as any).on('error', (err: any) => {
+      // Silently handle database errors to prevent unhandled error crashes
+      if (err) {
+        console.error('LevelDB error for', this.databasePath, ':', err.message || err);
+      }
+    });
     
     // Create a promise that resolves when database is ready
     this.readyPromise = new Promise<void>((resolve, reject) => {
+      // Check if database is already open
+      if ((this.database as any).isOpen()) {
+        resolve();
+        return;
+      }
+      
       this.database.open((err: any) => {
         if (err) {
-          reject(err);
+          // Ignore "already open" errors
+          if (err.message && err.message.includes('already open')) {
+            resolve();
+          } else {
+            reject(err);
+          }
         } else {
           resolve();
         }
@@ -84,6 +120,20 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
       } catch (error) {
         reject(error);
       }
+    });
+  }
+
+  public async close() {
+    await this.waitForReady();
+    
+    return new Promise<void>((resolve, reject) => {
+      this.database.close((err: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
     });
   }
 }

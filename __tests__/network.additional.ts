@@ -141,8 +141,8 @@ beforeAll((done) => {
 
 afterAll(async () => {
   const closeServers = new Promise<void>((resolve) => {
-    const serverA = (nodeA.network as ToolDbWebsockets).server;
-    const serverB = (nodeB.network as ToolDbWebsockets).server;
+    const serverA = nodeA?.network ? (nodeA.network as ToolDbWebsockets).server : null;
+    const serverB = nodeB?.network ? (nodeB.network as ToolDbWebsockets).server : null;
     let closedCount = 0;
     const checkBothClosed = () => {
       closedCount++;

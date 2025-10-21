@@ -287,58 +287,66 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
   constructor(db: ToolDb) {
     super(db);
 
-    // Poll message queue periodically
-    setInterval(() => {
-      this.tryExecuteMessageQueue();
-    }, 500);
+    this.tooldb.ready.then(() => {
+      this.tooldb.logger("hybrid-network constructor");
 
-    // Wait for initialization before starting announcements
-    this.tooldb.once("init", () => {
-      if (this.tooldb.options.server) {
-        this.announceInterval = setInterval(
-          this.announceAll,
-          announceSecs * 1000
-        );
-        this.announceAll();
-      }
-    });
+      // Poll message queue periodically
+      setInterval(() => {
+        this.tryExecuteMessageQueue();
+      }, 500);
 
-    // Basically the same as the WS network adapter
-    // Only for Node!
-    if (this.tooldb.options.server && typeof window === "undefined") {
-      const server = new WebSocket.Server({
-        port: this.tooldb.options.port,
-        server: this.tooldb.options.httpServer,
+      // Wait for initialization before starting announcements
+      this.tooldb.once("init", () => {
+        if (this.tooldb.options.server) {
+          this.announceInterval = setInterval(
+            this.announceAll,
+            announceSecs * 1000
+          );
+          this.announceAll();
+        }
       });
 
-      server.on("connection", (socket: WebSocket) => {
-        let clientId: string | null = null;
-
-        socket.on("close", () => {
-          if (clientId) {
-            this.onClientDisconnect(clientId);
-          }
+      // Basically the same as the WS network adapter
+      // Only for Node!
+      if (this.tooldb.options.server && typeof window === "undefined") {
+        const server = new WebSocket.Server({
+          port: this.tooldb.options.port,
+          server: this.tooldb.options.httpServer,
         });
 
-        socket.on("error", () => {
-          if (clientId) {
-            this.onClientDisconnect(clientId);
-          }
-        });
+        server.on("connection", (socket: WebSocket) => {
+          let clientId: string | null = null;
 
-        socket.on("message", (message: string) => {
-          this.onClientMessage(message, clientId || "", (id) => {
-            clientId = id;
-            this.isClientConnected[id] = () => {
-              return socket.readyState === socket.OPEN;
-            };
-            this.clientToSend[id] = (_msg: string) => {
-              socket.send(_msg);
-            };
+          socket.on("close", () => {
+            if (clientId) {
+              this.onClientDisconnect(clientId);
+            }
+          });
+
+          socket.on("error", () => {
+            if (clientId) {
+              this.onClientDisconnect(clientId);
+            }
+          });
+
+          socket.on("message", (message: string) => {
+            this.onClientMessage(message, clientId || "", (id) => {
+              clientId = id;
+              this.isClientConnected[id] = () => {
+                return socket.readyState === socket.OPEN;
+              };
+              this.clientToSend[id] = (_msg: string) => {
+                try {
+                  socket.send(_msg);
+                } catch (err) {
+                  this.tooldb.logger("socket send failed", err);
+                }
+              };
+            });
           });
         });
-      });
-    }
+      }
+    });
   }
 
   /**
@@ -365,7 +373,11 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
       };
 
       this.clientToSend[serverPeer.name] = (_msg: string) => {
-        wss.send(_msg);
+        try {
+          wss.send(_msg);
+        } catch (err) {
+          this.tooldb.logger("wss send failed", err);
+        }
       };
 
       const previousConnection = this._awaitingConnections.filter(
@@ -402,9 +414,17 @@ export default class ToolDbHybrid extends ToolDbNetworkAdapter {
         );
 
         // hi peer
-        this.craftPingMessage().then((msg) => {
-          wss.send(msg);
-        });
+        this.craftPingMessage()
+          .then((msg) => {
+            try {
+              wss.send(msg);
+            } catch (err) {
+              this.tooldb.logger("wss send failed", err);
+            }
+          })
+          .catch((err) => {
+            this.tooldb.logger("Failed to craft ping", err);
+          });
 
         this.connectedServers[serverPeer.name] = wss;
       };

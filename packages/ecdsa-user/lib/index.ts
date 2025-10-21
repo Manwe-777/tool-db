@@ -34,6 +34,8 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
 
   private _keys!: globalThis.CryptoKeyPair;
 
+  private _initPromise: Promise<void> | null = null;
+
   constructor(db: ToolDb) {
     super(db);
 
@@ -45,36 +47,38 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
       global.crypto = require("crypto").webcrypto;
     }
 
-    this.anonUser();
+    // Don't auto-generate anon user - let the caller decide
+    // this.anonUser();
   }
 
-  public anonUser() {
-    generateKeysComb().then((keys) => {
-      pubkeyToBase64(keys.publicKey as CryptoKey).then((rawPublic) => {
-        this._keys = keys;
-        this._address = rawPublic;
-        this._username = randomAnimal();
+  public anonUser(): Promise<void> {
+    if (!this._initPromise) {
+      this._initPromise = generateKeysComb().then((keys) => {
+        return pubkeyToBase64(keys.publicKey as CryptoKey).then((rawPublic) => {
+          this._keys = keys;
+          this._address = rawPublic;
+          this._username = randomAnimal();
+        });
       });
-    });
+    }
+    return this._initPromise;
   }
 
-  public setUser(account: ECDSAUser, _name: string): void {
+  public async setUser(account: ECDSAUser, _name: string): Promise<void> {
     const pub = hexToArrayBuffer(account.pub);
     const priv = hexToArrayBuffer(account.priv);
 
-    importKey(pub, "spki", "ECDSA", ["verify"]).then((spub) =>
-      importKey(priv, "pkcs8", "ECDSA", ["sign"]).then((spriv) => {
-        this._keys = {
-          publicKey: spub,
-          privateKey: spriv,
-        };
+    const spub = await importKey(pub.buffer as ArrayBuffer, "spki", "ECDSA", ["verify"]);
+    const spriv = await importKey(priv.buffer as ArrayBuffer, "pkcs8", "ECDSA", ["sign"]);
+    
+    this._keys = {
+      publicKey: spub,
+      privateKey: spriv,
+    };
 
-        this._username = account.name;
-        pubkeyToBase64(spub).then((addr) => {
-          this._address = addr;
-        });
-      })
-    );
+    this._username = account.name;
+    this._address = await pubkeyToBase64(spub);
+    this._initPromise = Promise.resolve();
   }
 
   public signData(data: string): Promise<string> {
@@ -118,7 +122,7 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
     return base64ToPubkey(message.a).then((pubKey) => {
       if (!message.h || !message.a || !message.s) return false;
 
-      return verifyData(message.h, hexToArrayBuffer(message.s), pubKey).then(
+      return verifyData(message.h, hexToArrayBuffer(message.s).buffer as ArrayBuffer, pubKey).then(
         (result) => {
           return result;
         }
@@ -126,59 +130,55 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
     });
   }
 
-  public encryptAccount(password: string): Promise<EncryptedUserdata> {
-    return new Promise((resolve) => {
-      // Wait for keys if undefined
-      if (this._keys === undefined) {
-        setTimeout(() => {
-          resolve(this.encryptAccount(password));
-        }, 10);
-      } else {
-        resolve(
-          cryptoKeyPairToHexed(this._keys).then((hexed) => {
-            const iv = generateIv();
-            this.tooldb.logger("cryptoKeyPairToHexed", hexed);
-            return encryptWithPass(JSON.stringify(hexed), password, iv).then(
-              (keys) => {
-                this.tooldb.logger("encryptWithPass", keys);
-                return {
-                  name: this._username || randomAnimal(),
-                  keys: keys || "",
-                  iv: uint8ToBase64(iv),
-                };
-              }
-            );
-          })
-        );
-      }
-    });
+  public async encryptAccount(password: string): Promise<EncryptedUserdata> {
+    // Wait for initialization to complete if in progress
+    if (this._initPromise) {
+      await this._initPromise;
+    }
+    
+    if (!this._keys) {
+      throw new Error("Cannot encrypt account: keys are not initialized. Call anonUser() or setUser() first.");
+    }
+
+    const hexed = await cryptoKeyPairToHexed(this._keys);
+    const iv = generateIv();
+    
+    const keys = await encryptWithPass(JSON.stringify(hexed), password, iv);
+    
+    if (!keys) {
+      throw new Error("Failed to encrypt account: encryptWithPass returned undefined");
+    }
+    
+    return {
+      name: this._username || randomAnimal(),
+      keys: keys,
+      iv: uint8ToBase64(iv),
+    };
   }
 
-  public decryptAccount(
+  public async decryptAccount(
     acc: EncryptedUserdata,
     password: string
-  ): Promise<ECDSAUser> {
-    return new Promise((resolve) => {
-      // Wait for keys if undefined
-      if (this._keys === undefined) {
-        setTimeout(() => {
-          resolve(this.decryptAccount(acc, password));
-        }, 10);
-      } else {
-        const rawIv = base64ToUint8(acc.iv);
-        resolve(
-          decryptWithPass(acc.keys, password, rawIv).then((data) => {
-            const hexedKeys: HexedKeys = JSON.parse(data || "");
-
-            return {
-              name: acc.name,
-              pub: hexedKeys.pub,
-              priv: hexedKeys.priv,
-            };
-          })
-        );
-      }
-    });
+  ): Promise<ECDSAUser> {    
+    if (!acc.keys || acc.keys === "") {
+      throw new Error("Cannot decrypt account: encrypted keys are empty or missing");
+    }
+    
+    const rawIv = base64ToUint8(acc.iv);
+    
+    const data = await decryptWithPass(acc.keys, password, rawIv);
+    
+    if (!data) {
+      throw new Error("Failed to decrypt account: decryptWithPass returned undefined");
+    }
+    
+    const hexedKeys: HexedKeys = JSON.parse(data);
+    
+    return {
+      name: acc.name,
+      pub: hexedKeys.pub,
+      priv: hexedKeys.priv,
+    };
   }
 
   public getAddress(): string | undefined {
