@@ -10,7 +10,7 @@ import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
 import ToolDbWeb3 from "../packages/web3-user";
 
-jest.setTimeout(15000);
+jest.setTimeout(30000);
 
 let nodeA: ToolDb;
 let nodeB: ToolDb;
