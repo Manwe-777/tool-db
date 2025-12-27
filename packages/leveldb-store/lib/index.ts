@@ -13,7 +13,8 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     this.database = level(this.storageName);
 
     // Add error handler to prevent ERR_UNHANDLED_ERROR crashes
-    this.database.on("error", (err: any) => {
+    // Cast to EventEmitter since level's types don't expose the 'error' event
+    (this.database as any).on("error", (err: any) => {
       // Store the error for later reference but don't crash
       this.openError = err;
       console.error(`LevelDB error for ${this.storageName}:`, err?.message || err);

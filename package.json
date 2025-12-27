@@ -9,6 +9,7 @@
     "clean": "lerna run --parallel clean",
     "release": "lerna publish",
     "test": "jest --clearCache && jest ./ --detectOpenHandles",
+    "test:ci": "jest --clearCache && jest ./ --detectOpenHandles --runInBand",
     "test:watch": "jest --watch ./",
     "demo": "node scripts/run-demo.js",
     "demo:fresh": "node scripts/run-demo.js --clean"
