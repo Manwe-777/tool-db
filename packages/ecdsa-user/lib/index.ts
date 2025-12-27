@@ -45,36 +45,33 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
       global.crypto = require("crypto").webcrypto;
     }
 
+    // Initialize with temporary keys for peerAccount to function
+    // These will be replaced when anonUser() or setUser() is called explicitly
     this.anonUser();
   }
 
-  public anonUser() {
-    generateKeysComb().then((keys) => {
-      pubkeyToBase64(keys.publicKey as CryptoKey).then((rawPublic) => {
-        this._keys = keys;
-        this._address = rawPublic;
-        this._username = randomAnimal();
-      });
-    });
+  public async anonUser() {
+    const keys = await generateKeysComb();
+    const rawPublic = await pubkeyToBase64(keys.publicKey as CryptoKey);
+    this._keys = keys;
+    this._address = rawPublic;
+    this._username = randomAnimal();
   }
 
-  public setUser(account: ECDSAUser, _name: string): void {
+  public async setUser(account: ECDSAUser, _name: string): Promise<void> {
     const pub = hexToArrayBuffer(account.pub);
     const priv = hexToArrayBuffer(account.priv);
 
-    importKey(pub, "spki", "ECDSA", ["verify"]).then((spub) =>
-      importKey(priv, "pkcs8", "ECDSA", ["sign"]).then((spriv) => {
-        this._keys = {
-          publicKey: spub,
-          privateKey: spriv,
-        };
+    const spub = await importKey(pub, "spki", "ECDSA", ["verify"]);
+    const spriv = await importKey(priv, "pkcs8", "ECDSA", ["sign"]);
 
-        this._username = account.name;
-        pubkeyToBase64(spub).then((addr) => {
-          this._address = addr;
-        });
-      })
-    );
+    this._keys = {
+      publicKey: spub,
+      privateKey: spriv,
+    };
+
+    this._username = account.name;
+    this._address = await pubkeyToBase64(spub);
   }
 
   public signData(data: string): Promise<string> {

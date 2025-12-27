@@ -320,8 +320,8 @@ export default class ToolDb extends EventEmitter {
       .then((val) => {
         this.peerAccount
           .decryptAccount(JSON.parse(val), DEFAULT_KEYS)
-          .then((a) => {
-            this.peerAccount.setUser(a, randomAnimal());
+          .then(async (a) => {
+            await this.peerAccount.setUser(a, randomAnimal());
           })
           .finally(() => {
             this.emit("init", this.userAccount.getAddress());

@@ -18,15 +18,15 @@ export default class ToolDbWeb3User extends ToolDbUserAdapter {
     super(db);
     this.web3 = new w3(w3.givenProvider);
     this._user = this.web3.eth.accounts.create();
-    this._userName = randomAnimal();
+    this._userName = "";
   }
 
-  public anonUser() {
+  public async anonUser(): Promise<void> {
     this._user = this.web3.eth.accounts.create();
     this._userName = randomAnimal();
   }
 
-  public setUser(account: Account, name: string): void {
+  public async setUser(account: Account, name: string): Promise<void> {
     this._user = account;
     this._userName = name;
   }

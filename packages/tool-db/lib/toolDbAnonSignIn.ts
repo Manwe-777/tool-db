@@ -1,5 +1,5 @@
 import { ToolDb } from ".";
 
-export default function toolDbAnonSignIn(this: ToolDb): void {
-  this.userAccount.anonUser();
+export default async function toolDbAnonSignIn(this: ToolDb): Promise<void> {
+  await this.userAccount.anonUser();
 }

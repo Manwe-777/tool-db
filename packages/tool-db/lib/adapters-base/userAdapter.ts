@@ -11,11 +11,11 @@ export default class ToolDbUserAdapter {
     this._tooldb = db;
   }
 
-  public anonUser() {
+  public async anonUser(): Promise<void> {
     return;
   }
 
-  public setUser(account: unknown | undefined, name: string): void {}
+  public async setUser(account: unknown | undefined, name: string): Promise<void> { }
 
   public signData(data: string): Promise<string> {
     return Promise.resolve("");
