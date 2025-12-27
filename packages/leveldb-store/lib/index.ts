@@ -17,7 +17,11 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     (this.database as any).on("error", (err: any) => {
       // Store the error for later reference but don't crash
       this.openError = err;
-      console.error(`LevelDB error for ${this.storageName}:`, err?.message || err);
+      // Only log errors that aren't LOCK file issues during cleanup
+      const errMsg = err?.message || String(err);
+      if (!errMsg.includes("LOCK: No such file")) {
+        console.error(`LevelDB error for ${this.storageName}:`, errMsg);
+      }
     });
 
     // Create a promise that resolves when database is ready
