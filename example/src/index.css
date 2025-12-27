@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  text-align: center;
+}
+
+button {
+  width: 240px;
+  height: 24px;
+  margin: 4px auto;
+}
+
+#root {
+  text-align: center;
+  background-color: #282c34;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  height: 24px;
+}
+
+.online-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 16px;
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  font-family: monospace;
+}
+
+.debugger-list {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 40px;
+  left: 16px;
+  font-family: monospace;
+  text-align: left;
+  line-height: 16px;
+  font-size: 12px;
+}
+
+.on {
+  background-color: greenyellow;
+}
+
+.off {
+  background-color: tomato;
+}
