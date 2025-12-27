@@ -26,4 +26,4 @@ jobs:
       - name: "Build (npm)"
         run: "npm run build"
       - name: "Test"
-        run: "npm run test"
+        run: "jest --clearCache && jest ./ --detectOpenHandles --runInBand"
