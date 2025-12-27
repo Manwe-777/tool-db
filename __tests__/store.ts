@@ -19,8 +19,11 @@ beforeAll((done) => {
   done();
 });
 
-afterAll(() => {
-  // No cleanup needed - store operations are synchronous/promise-based
+afterAll(async () => {
+  // Close the LevelDB connection to prevent post-test async operations
+  if (Alice && Alice.store && typeof (Alice.store as any).close === "function") {
+    await (Alice.store as any).close();
+  }
 });
 
 it("Can write and read inmediately", async () => {
