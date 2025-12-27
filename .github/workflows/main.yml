@@ -2,9 +2,9 @@
 
 name: CI
 
-on: 
+on:
   push:
-    branches: '**'
+    branches: "**"
 
 jobs:
   build-job:
@@ -13,17 +13,17 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-      
+
     steps:
-    - name: "Setup node"
-      uses: actions/setup-node@v1
-      with:
-        node-version: '15'
-    - name: "Checkout source code"
-      uses: "actions/checkout@v2"
-    - name: "Install modules"
-      run: "npm install"
-    - name: "Build (npm)"
-      run: "npm run build"
-    - name: "Test"
-      run: "npm run test"
+      - name: "Setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: "Checkout source code"
+        uses: "actions/checkout@v4"
+      - name: "Install modules"
+        run: "npm install"
+      - name: "Build (npm)"
+        run: "npm run build"
+      - name: "Test"
+        run: "npm run test"
