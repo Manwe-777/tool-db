@@ -13,20 +13,33 @@ type IOffers = Record<
   }
 >;
 
-const offerPoolSize = 5;
+// Increased offer pool size for better peer discovery (was 5)
+const offerPoolSize = 10;
 const maxPeers = 4;
-const announceSecs = 30;
+const announceSecs = 33;
 const maxAnnounceSecs = 99999999;
 
+// ICE gathering timeout to prevent hangs
+const iceGatheringTimeout = 5000;
+
+// Reconnection settings
+const defaultRetryMs = 3333;
+const maxRetryMs = 120000;
+
+// Default ICE servers for better connectivity
+const defaultIceServers: RTCConfiguration["iceServers"] = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+  { urls: "stun:stun.cloudflare.com:3478" },
+];
+
+// Updated tracker list (removed dead heroku tracker)
 const defaultTrackerUrls = [
   "wss://tracker.webtorrent.dev",
   "wss://tracker.openwebtorrent.com",
+  "wss://tracker.btorrent.xyz",
   "wss://tracker.files.fm:7073/announce",
-  "wss://tooldb-tracker.herokuapp.com/",
-  //"wss://tracker.fastcast.nz/announce",
-  //"wss://tracker.btorrent.xyz/announce",
-  //"wss://tracker.webtorrent.io/announce",
-  //"wss://spacetradersapi-chatbox.herokuapp.com:443/announce",
 ];
 
 export default class toolDbWebrtc extends ToolDbNetworkAdapter {
@@ -45,6 +58,13 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
   private connectedPeers: Record<string, boolean> = {};
 
+  // Track socket retry periods for exponential backoff
+  private socketRetryPeriods: Record<string, number> = {};
+
+  // Track if reconnection is paused (e.g., when offline)
+  private reconnectionPaused = false;
+  private pendingReconnections: Array<() => void> = [];
+
   private onDisconnect = (id: string, err: any) => {
     this.tooldb.logger(id, err);
     if (this.connectedPeers[id]) delete this.connectedPeers[id];
@@ -57,13 +77,12 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
   private peersCheck() {
     Object.keys(this.clientToSend).forEach((id) => {
-      if (!this.isConnected(id)) {
+      const peer = this.peerMap[id];
+      // Use connection state instead of just checking isConnected
+      if (peer && this.isPeerDisconnected(peer)) {
         this.tooldb.logger("disconnected from " + id);
         this.onClientDisconnect(id);
-        const peer = this.peerMap[id];
-        if (peer) {
-          peer.destroy();
-        }
+        peer.destroy();
         if (this.connectedPeers[id]) delete this.connectedPeers[id];
         delete this.peerMap[id];
       }
@@ -75,22 +94,72 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     }
   }
 
-  private announceInterval;
+  // Check if a peer is in a disconnected state
+  private isPeerDisconnected(peer: Peer.Instance): boolean {
+    if (!peer.connected) return true;
+    // Access underlying RTCPeerConnection if available
+    const pc = (peer as any)._pc as RTCPeerConnection | undefined;
+    if (pc) {
+      const state = pc.connectionState;
+      return ["disconnected", "failed", "closed"].includes(state);
+    }
+    return !peer.connected;
+  }
+
+  private announceInterval: ReturnType<typeof setInterval> | undefined;
+  private peersCheckInterval: ReturnType<typeof setInterval> | undefined;
+
+  // Online/offline event handlers
+  private handleOnline = () => {
+    this.tooldb.logger("Network online - resuming reconnections");
+    this.reconnectionPaused = false;
+    // Process any pending reconnections
+    const pending = this.pendingReconnections.splice(0);
+    pending.forEach((fn) => fn());
+    // Re-announce to all trackers
+    this.announceAll();
+  };
+
+  private handleOffline = () => {
+    this.tooldb.logger("Network offline - pausing reconnections");
+    this.reconnectionPaused = true;
+  };
 
   /**
-   * Initialize webrtc peer
+   * Initialize webrtc peer with proper ICE configuration
    */
   private initPeer = (
     initiator: boolean,
     trickle: boolean,
-    rtcConfig: any // RTCConfiguration
+    rtcConfig: RTCConfiguration
   ) => {
     const peer: Peer.Instance = new Peer({
       wrtc: (this.tooldb.options as any).wrtc,
       initiator,
       trickle,
-      config: rtcConfig,
+      config: {
+        ...rtcConfig,
+        iceServers: [
+          ...(defaultIceServers || []),
+          ...(rtcConfig.iceServers || []),
+        ],
+      },
     });
+
+    // Add ICE gathering timeout to prevent hangs
+    if (initiator) {
+      const timeoutId = setTimeout(() => {
+        if (!peer.connected && !peer.destroyed) {
+          this.tooldb.logger("ICE gathering timeout, destroying peer");
+          peer.destroy();
+        }
+      }, iceGatheringTimeout);
+
+      peer.once("connect", () => clearTimeout(timeoutId));
+      peer.once("close", () => clearTimeout(timeoutId));
+      peer.once("error", () => clearTimeout(timeoutId));
+    }
+
     return peer;
   };
 
@@ -101,10 +170,11 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     {
       peer: Peer.Instance;
       offerP: Promise<Peer.Instance>;
+      created: number;
     }
   > = {};
 
-  private trackerUrls = defaultTrackerUrls; // .slice(0, 2);
+  private trackerUrls = [...defaultTrackerUrls];
 
   private infoHash = "";
 
@@ -112,7 +182,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
    * Make connection offers (sdp) to send to the tracker
    */
   private makeOffers = () => {
-    const offers: IOffers = {};
+    const offers: IOffers & { [key: string]: { created: number } } = {};
 
     new Array(offerPoolSize).fill(0).forEach(() => {
       try {
@@ -121,6 +191,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         offers[oid] = {
           peer,
           offerP: new Promise((res) => peer.once("signal", res)),
+          created: Date.now(),
         };
       } catch (e) {
         this.tooldb.logger(e);
@@ -130,7 +201,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   };
 
   /**
-   * When we sucessfully connect to a webrtc peer
+   * When we successfully connect to a webrtc peer
    */
   private onPeerConnect = (peer: Peer.Instance, id: string) => {
     if (this.peerMap[id]) {
@@ -140,8 +211,6 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     }
 
     let clientId: string | null = null;
-
-    // this.tooldb.logger("onPeerConnect", id);
 
     const onData = (data: Uint8Array) => {
       const str = new TextDecoder().decode(data);
@@ -154,7 +223,20 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         };
 
         this.clientToSend[id] = (_msg: string) => {
-          peer.send(_msg);
+          // Check buffer before sending to handle backpressure
+          const channel = (peer as any)._channel as RTCDataChannel | undefined;
+          if (channel && channel.bufferedAmount > 65535) {
+            // Wait for buffer to drain
+            const sendWhenReady = () => {
+              if (channel.bufferedAmount <= 65535) {
+                channel.removeEventListener("bufferedamountlow", sendWhenReady);
+                peer.send(_msg);
+              }
+            };
+            channel.addEventListener("bufferedamountlow", sendWhenReady);
+          } else {
+            peer.send(_msg);
+          }
         };
       });
     };
@@ -184,62 +266,129 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   };
 
   /**
-   * Clean the announce offers pool
+   * Clean the announce offers pool - also removes stale offers
    */
   private cleanPool = () => {
-    Object.entries(this.offerPool).forEach(([id, { peer }]) => {
-      if (!this.handledOffers[id] && !this.connectedPeers[id]) {
-        // this.tooldb.logger("closed peer " + id);
-        peer.end();
-        peer.destroy();
+    const now = Date.now();
+    const offerTtl = 57000; // 57 seconds TTL for offers
+
+    Object.entries(this.offerPool).forEach(([id, offer]) => {
+      const isStale = now - offer.created > offerTtl;
+      if (isStale || (!this.handledOffers[id] && !this.connectedPeers[id])) {
+        offer.peer.end();
+        offer.peer.destroy();
         delete this.peerMap[id];
-        if (Object.keys(this.peerMap).length === 0) {
-          this.tooldb.isConnected = false;
-          this.tooldb.onDisconnect();
-        }
+        delete this.offerPool[id];
       }
     });
+
+    if (Object.keys(this.peerMap).length === 0) {
+      this.tooldb.isConnected = false;
+      this.tooldb.onDisconnect();
+    }
 
     this.handledOffers = {} as Record<string, boolean>;
   };
 
   /**
-   * Makes a websocket connection to a tracker
+   * Makes a websocket connection to a tracker with exponential backoff reconnection
    */
   private makeSocket = (url: string, info_hash: string) => {
     return new Promise<WebSocket | null>((resolve) => {
       if (!this.sockets[url]) {
         this.socketListeners[url] = {
           ...this.socketListeners[url],
-          // eslint-disable-next-line no-use-before-define
           [info_hash]: this.onSocketMessage,
         };
 
-        try {
-          const socket = new this.wss(url);
-          // eslint-disable-next-line func-names
-          const socks = this.sockets;
-          socket.onopen = function () {
-            socks[url] = this;
-            resolve(this);
-          };
-          socket.onmessage = (e: any) =>
-            Object.values(this.socketListeners[url]).forEach((f) =>
-              f(socket, e)
-            );
-          // eslint-disable-next-line func-names
-          socket.onerror = () => {
-            const index = this.trackerUrls.indexOf(url);
-            this.trackerUrls.splice(index, 1);
+        const connect = () => {
+          if (this.reconnectionPaused) {
+            // Queue reconnection for when we're back online
+            this.pendingReconnections.push(() => connect());
             resolve(null);
-          };
-        } catch (e) {
-          resolve(null);
-        }
+            return;
+          }
+
+          try {
+            const socket = new this.wss(url);
+            const socks = this.sockets;
+
+            socket.onopen = () => {
+              socks[url] = socket;
+              // Reset retry period on successful connection
+              this.socketRetryPeriods[url] = defaultRetryMs;
+              resolve(socket);
+            };
+
+            socket.onmessage = (e: any) =>
+              Object.values(this.socketListeners[url]).forEach((f) =>
+                f(socket, e)
+              );
+
+            // Exponential backoff reconnection instead of removing tracker
+            socket.onerror = () => {
+              this.tooldb.logger(`Tracker error: ${url}, will retry...`);
+            };
+
+            socket.onclose = () => {
+              this.sockets[url] = null;
+
+              if (this.reconnectionPaused) {
+                this.pendingReconnections.push(() => this.reconnectSocket(url, info_hash));
+                return;
+              }
+
+              this.reconnectSocket(url, info_hash);
+            };
+          } catch (e) {
+            this.tooldb.logger(`Failed to connect to tracker: ${url}`, e);
+            // Schedule retry with backoff
+            this.scheduleReconnect(url, () => connect());
+            resolve(null);
+          }
+        };
+
+        connect();
       } else {
         resolve(this.sockets[url]);
       }
     });
+  };
+
+  /**
+   * Reconnect to a socket with exponential backoff
+   */
+  private reconnectSocket = (url: string, info_hash: string) => {
+    this.scheduleReconnect(url, () => {
+      this.makeSocket(url, info_hash).then((socket) => {
+        if (socket && socket.readyState === 1) {
+          this.announce(socket, this.infoHash);
+        }
+      });
+    });
+  };
+
+  /**
+   * Schedule a reconnection with exponential backoff
+   */
+  private scheduleReconnect = (url: string, callback: () => void) => {
+    if (!this.socketRetryPeriods[url]) {
+      this.socketRetryPeriods[url] = defaultRetryMs;
+    }
+
+    const retryMs = this.socketRetryPeriods[url];
+    this.tooldb.logger(`Scheduling reconnect to ${url} in ${retryMs}ms`);
+
+    setTimeout(() => {
+      if (!this.reconnectionPaused) {
+        callback();
+      } else {
+        this.pendingReconnections.push(callback);
+      }
+    }, retryMs);
+
+    // Increase backoff for next time, up to max
+    this.socketRetryPeriods[url] = Math.min(retryMs * 2, maxRetryMs);
   };
 
   /**
@@ -255,7 +404,6 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         offers: await Promise.all(
           Object.entries(this.offerPool).map(async ([id, { offerP }]) => {
             const offer = await offerP;
-            // this.tooldb.logger(`Created offer id ${id}`);
             return {
               offer_id: id,
               offer,
@@ -276,12 +424,8 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     this.offerPool = this.makeOffers();
 
     this.trackerUrls.forEach(async (url: string) => {
-      // this.tooldb.logger("begin tracker connection " + url);
       const socket = await this.makeSocket(url, this.infoHash);
-      // this.tooldb.logger(" ok tracker " + url);
-      // this.tooldb.logger("socket", url, socket);
       if (socket && socket.readyState === 1) {
-        // this.tooldb.logger("announce to " + url);
         this.announce(socket, this.infoHash);
       }
     });
@@ -298,6 +442,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       info_hash: string;
       peer_id: string;
       "failure reason"?: string;
+      "warning message"?: string;
       interval?: number;
       offer?: string;
       offer_id: string;
@@ -306,26 +451,32 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     try {
       val = JSON.parse(e.data);
-      // this.tooldb.logger("onSocketMessage", socket.url, val);
     } catch (_e: any) {
-      // this.tooldb.logger(`${libName}: received malformed SDP JSON`);
       return;
     }
 
     const failure = val["failure reason"];
+    const warning = val["warning message"];
 
     if (failure) {
-      this.tooldb.logger(`${e.origin}: torrent tracker failure (${failure})`);
+      this.tooldb.logger(`${(socket as any).url}: tracker failure (${failure})`);
       return;
     }
 
+    if (warning) {
+      this.tooldb.logger(`${(socket as any).url}: tracker warning (${warning})`);
+    }
+
+    // Respect tracker's interval recommendation
+    if (val.interval && val.interval * 1000 > announceSecs * 1000) {
+      // Could adjust announce interval here if needed
+    }
+
     if (val.info_hash !== this.infoHash) {
-      // this.tooldb.logger("Info hash mismatch");
       return;
     }
 
     if (val.peer_id && val.peer_id === this.getClientAddress()) {
-      // this.tooldb.logger("Peer ids mismatch", val.peer_id, selfId);
       return;
     }
 
@@ -400,19 +551,34 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
    * Leave the tracker
    */
   public onLeave = async () => {
+    // Remove online/offline listeners
+    if (typeof window !== "undefined") {
+      window.removeEventListener("online", this.handleOnline);
+      window.removeEventListener("offline", this.handleOffline);
+    }
+
     this.trackerUrls.forEach(
       (url) => delete this.socketListeners[url][this.infoHash]
     );
-    clearInterval(this.announceInterval);
+    if (this.announceInterval) clearInterval(this.announceInterval);
+    if (this.peersCheckInterval) clearInterval(this.peersCheckInterval);
     this.cleanPool();
   };
 
   constructor(db: ToolDb) {
     super(db);
 
+    // Set up online/offline event handlers for resilience
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", this.handleOnline);
+      window.addEventListener("offline", this.handleOffline);
+    }
+
     this.announceInterval = setInterval(this.announceAll, announceSecs * 1000);
 
-    setInterval(() => this.peersCheck(), 100);
+    // Reduced polling frequency - now 1 second instead of 100ms
+    // Connection state changes are also detected via peer events
+    this.peersCheckInterval = setInterval(() => this.peersCheck(), 1000);
 
     // Stop announcing after maxAnnounceSecs
     const intervalStart = new Date().getTime();
@@ -422,7 +588,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
         new Date().getTime() - intervalStart > maxAnnounceSecs * 1000
       ) {
         clearInterval(checkInterval);
-        clearInterval(this.announceInterval);
+        if (this.announceInterval) clearInterval(this.announceInterval);
       }
     }, 200);
 
@@ -476,6 +642,13 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   }
 
   public close(clientId: string): void {
-    //
+    const peer = Object.entries(this.peerMap).find(([_, p]) => {
+      // Find peer by clientId if possible
+      return this.clientToSend[clientId] !== undefined;
+    });
+    if (peer) {
+      peer[1].destroy();
+      delete this.peerMap[peer[0]];
+    }
   }
 }
