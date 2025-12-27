@@ -4,22 +4,44 @@ import level from "level";
 export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database;
   private readyPromise: Promise<void>;
+  private isOpen: boolean = false;
+  private openError: Error | null = null;
 
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
 
     this.database = level(this.storageName);
-    
+
+    // Add error handler to prevent ERR_UNHANDLED_ERROR crashes
+    this.database.on("error", (err: any) => {
+      // Store the error for later reference but don't crash
+      this.openError = err;
+      console.error(`LevelDB error for ${this.storageName}:`, err?.message || err);
+    });
+
     // Create a promise that resolves when database is ready
     this.readyPromise = new Promise<void>((resolve, reject) => {
       this.database.open((err: any) => {
         if (err) {
+          this.openError = err;
           reject(err);
         } else {
+          this.isOpen = true;
           resolve();
         }
       });
     });
+  }
+
+  public async close(): Promise<void> {
+    if (this.isOpen && this.database) {
+      return new Promise<void>((resolve) => {
+        this.database.close((err: any) => {
+          this.isOpen = false;
+          resolve();
+        });
+      });
+    }
   }
 
   private async waitForReady() {
@@ -28,7 +50,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
 
   public async put(key: string, data: string) {
     await this.waitForReady();
-    
+
     return new Promise((resolve, reject) => {
       // console.warn(this.storageName, "put", key);
 
@@ -45,7 +67,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
 
   public async get(key: string) {
     await this.waitForReady();
-    
+
     return new Promise<string>((resolve, reject) => {
       this.database.get(key, (err: any, value: any) => {
         // this.logger("get", key, err, err?.message);
@@ -60,7 +82,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
 
   public async query(key: string) {
     await this.waitForReady();
-    
+
     // console.warn(this.storageName, "QUERY", key);
     return new Promise<string[]>((resolve, reject) => {
       try {
