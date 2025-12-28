@@ -41,6 +41,40 @@ export default function Group(props: GroupProps) {
 
   const [_refresh, setRefresh] = useState(0);
   const [message, setMessage] = useState("");
+  const [showEmojis, setShowEmojis] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const emojis = [
+    "😀",
+    "😂",
+    "🥹",
+    "😊",
+    "😍",
+    "🥺",
+    "😎",
+    "🤔",
+    "👍",
+    "👎",
+    "👋",
+    "🙌",
+    "💪",
+    "🎉",
+    "❤️",
+    "🔥",
+    "✨",
+    "💯",
+    "✅",
+    "❌",
+    "⭐",
+    "💡",
+    "🚀",
+    "🎯",
+  ];
+
+  const insertEmoji = (emoji: string) => {
+    setMessage((prev) => prev + emoji);
+    inputRef.current?.focus();
+  };
 
   // Check if we asked this group to join already
   function checkIfWeJoined() {
@@ -244,19 +278,47 @@ export default function Group(props: GroupProps) {
             );
           })}
         </div>
-        <input
-          className="chat-input"
-          value={message}
-          onChange={(e) => {
-            setMessage(e.currentTarget.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              sendMessage(groupId, e.currentTarget.value);
-              setMessage("");
-            }
-          }}
-        />
+        <div className="chat-input-area">
+          <div className="emoji-picker-wrapper">
+            <button
+              type="button"
+              className="emoji-toggle"
+              onClick={() => setShowEmojis(!showEmojis)}
+              title="Toggle emoji picker"
+            >
+              😊
+            </button>
+            {showEmojis && (
+              <div className="emoji-picker">
+                {emojis.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    className="emoji-btn"
+                    onClick={() => insertEmoji(emoji)}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <input
+            ref={inputRef}
+            className="chat-input"
+            value={message}
+            placeholder="Type a message..."
+            onChange={(e) => {
+              setMessage(e.currentTarget.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage(groupId, e.currentTarget.value);
+                setMessage("");
+              }
+            }}
+          />
+        </div>
       </div>
       <div className="members-list">
         <p>Members: </p>
