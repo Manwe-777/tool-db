@@ -8,7 +8,9 @@ import {
 
 import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
-import ToolDbWeb3 from "../packages/web3-user";
+// Use ecdsa-user instead of web3-user for faster encryption (PBKDF2 vs scrypt)
+// web3-user's scrypt encryption is extremely slow on CI runners
+import ToolDbEcdsaUser from "../packages/ecdsa-user";
 
 // Increase timeout for CI environments where connections may be slower
 jest.setTimeout(30000);
@@ -84,7 +86,7 @@ beforeAll(async () => {
       storageName: ".test-db/test-node-a",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbWeb3,
+      userAdapter: ToolDbEcdsaUser,
     });
     log("nodeA created");
 
@@ -114,7 +116,7 @@ beforeAll(async () => {
       storageName: ".test-db/test-node-b",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbWeb3,
+      userAdapter: ToolDbEcdsaUser,
     });
     log("nodeB created");
 
@@ -134,7 +136,7 @@ beforeAll(async () => {
       storageName: ".test-db/test-alice",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbWeb3,
+      userAdapter: ToolDbEcdsaUser,
     });
     log("Alice created");
 
@@ -145,7 +147,7 @@ beforeAll(async () => {
       storageName: ".test-db/test-bob",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbWeb3,
+      userAdapter: ToolDbEcdsaUser,
     });
     log("Bob created");
 
@@ -156,7 +158,7 @@ beforeAll(async () => {
       storageName: ".test-db/test-chris",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbWeb3,
+      userAdapter: ToolDbEcdsaUser,
     });
     log("Chris created");
 

@@ -1,4 +1,4 @@
-# This is a basic workflow to help you get started with Actions
+# CI workflow with separate jobs for each test file
 
 name: CI
 
@@ -7,13 +7,9 @@ on:
     branches: "**"
 
 jobs:
-  build-job:
-    runs-on: ${{ matrix.os }}
-    name: "Build and test ${{ matrix.os }}"
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-
+  build:
+    runs-on: ubuntu-latest
+    name: "Build"
     steps:
       - name: "Setup node"
         uses: actions/setup-node@v4
@@ -25,5 +21,54 @@ jobs:
         run: "npm install"
       - name: "Build (npm)"
         run: "npm run build"
-      - name: "Test"
-        run: "npm run test:ci"
+      - name: "Cache build"
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+          key: build-${{ github.sha }}
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    name: "Test: ${{ matrix.test }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - counterCrdt.additional
+          - counterCrdt
+          - ecdh
+          - encoding
+          - groupKey
+          - hex
+          - listCrdt.additional
+          - listCrdt
+          - mapCrdt.additional
+          - mapCrdt
+          - network-base
+          - network.additional
+          - network
+          - pow
+          - sha1
+          - sha256
+          - store
+          - textRandom
+          - verify
+    steps:
+      - name: "Setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: "Checkout source code"
+        uses: "actions/checkout@v4"
+      - name: "Restore build cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+          key: build-${{ github.sha }}
+      - name: "Run test: ${{ matrix.test }}"
+        run: npx jest __tests__/${{ matrix.test }}.ts --detectOpenHandles --runInBand
