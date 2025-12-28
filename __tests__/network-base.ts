@@ -35,7 +35,7 @@ it("A can retry connection", async () => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  Alice.anonSignIn();
+  await Alice.anonSignIn();
 
   const connectionPromise = new Promise<void>((resolve) => {
     Alice.onConnect = () => {
@@ -59,7 +59,7 @@ it("A can retry connection", async () => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  nodeA.anonSignIn();
+  await nodeA.anonSignIn();
 
   // Wait for Alice to successfully connect
   await connectionPromise;

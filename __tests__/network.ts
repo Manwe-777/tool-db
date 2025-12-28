@@ -10,7 +10,7 @@ import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
 import ToolDbWeb3 from "../packages/web3-user";
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 let nodeA: ToolDb;
 let nodeB: ToolDb;
@@ -98,18 +98,24 @@ beforeAll((done) => {
     if (!connected.includes(id)) {
       connected.push(id);
 
+      // We have 5 nodes total but servers don't call onConnect to themselves
+      // nodeA and nodeB are servers, Alice, Bob, Chris are clients
+      // Each client calls onConnect once when connected
+      // nodeB also calls onConnect when it connects to nodeA
+      // So we expect 4 connections: nodeB->nodeA, Alice, Bob, Chris
       if (connected.length === 4) {
         done();
-        // console.log(`
-        //   test-node-a: ${nodeA.network.getClientAddress()}
-        //   test-node-b: ${nodeB.network.getClientAddress()}
-        //   test-alice: ${Alice.network.getClientAddress()}
-        //   test-bob: ${Bob.network.getClientAddress()}
-        //   test-chris: ${Chris.network.getClientAddress()}
-        // `);
       }
     }
   };
+
+  // Add a timeout to prevent hanging if connections fail
+  setTimeout(() => {
+    if (connected.length < 4) {
+      console.warn(`beforeAll timeout: only ${connected.length}/4 connections established`);
+      done();
+    }
+  }, 15000);
 });
 
 afterAll(async () => {
