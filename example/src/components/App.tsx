@@ -11,8 +11,16 @@ function App() {
 
   return (
     <div className="wrapper">
-      <WebRtcDebug />
-      {isLoggedIn ? <Chat /> : <Login setLoggedIn={setLoggedIn} />}
+      {isLoggedIn ? (
+        <Chat />
+      ) : (
+        <>
+          <div className="left-column login-debug">
+            <WebRtcDebug />
+          </div>
+          <Login setLoggedIn={setLoggedIn} />
+        </>
+      )}
     </div>
   );
 }

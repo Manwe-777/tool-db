@@ -7,6 +7,7 @@ import _ from "lodash";
 import { GlobalState, Message } from "../types";
 import UserGroupsList from "./UserGroupsList";
 import Group from "./Group";
+import WebRtcDebug from "./WebRtcDebug";
 
 import reducer from "../state/reducer";
 import getToolDb from "../utils/getToolDb";
@@ -69,9 +70,12 @@ export default function ChatApp() {
 
   return (
     <>
-      <UserGroupsList dispatch={dispatch} groupsList={state.groupsList} />
+      <div className="left-column">
+        <WebRtcDebug />
+        <UserGroupsList dispatch={dispatch} groupsList={state.groupsList} />
+      </div>
       <Routes>
-        <Route path="/" element={null} />
+        <Route path="/" element={<p>Select or create a group to start</p>} />
         <Route path="/group">
           <Route
             path=":groupRoute"
