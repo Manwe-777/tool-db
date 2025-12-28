@@ -12,7 +12,19 @@ import ToolDbWebsockets from "../packages/websocket-network";
 import ToolDbWeb3 from "../packages/web3-user";
 
 // Increase timeout for CI environments where connections may be slower
-jest.setTimeout(60000);
+jest.setTimeout(30000);
+
+// Debug helper - always log in CI to diagnose connection issues
+const log = (msg: string) => {
+  console.log(`[network.additional.ts ${new Date().toISOString()}] ${msg}`);
+};
+
+// Log environment info immediately
+console.log("=".repeat(60));
+console.log("[network.additional.ts] Test file loaded");
+console.log(`[network.additional.ts] CI=${process.env.CI}, Platform=${process.platform}, Node=${process.version}`);
+console.log(`[network.additional.ts] CWD=${process.cwd()}`);
+console.log("=".repeat(60));
 
 let nodeA: ToolDb;
 let nodeB: ToolDb;
@@ -30,162 +42,238 @@ let Chris: ToolDb;
 // Alice and Chris are connected to Node B
 // Bob is connected to Node A
 beforeAll(async () => {
+  log("=== beforeAll started ===");
+  log(`Platform: ${process.platform}, Node: ${process.version}`);
+
   // Helper to wait for a ToolDb instance to connect
   const waitForConnect = (db: ToolDb, name: string, timeoutMs = 30000): Promise<void> => {
     return new Promise((resolve, reject) => {
+      log(`${name}: waiting for connection (timeout: ${timeoutMs}ms)...`);
+      const startTime = Date.now();
+
       const timeoutId = setTimeout(() => {
-        reject(new Error(`${name} failed to connect within ${timeoutMs}ms`));
+        const elapsed = Date.now() - startTime;
+        log(`${name}: TIMEOUT after ${elapsed}ms, isConnected=${db.isConnected}`);
+        reject(new Error(`${name} failed to connect within ${timeoutMs}ms (isConnected=${db.isConnected})`));
       }, timeoutMs);
 
       const originalOnConnect = db.onConnect;
       db.onConnect = () => {
+        const elapsed = Date.now() - startTime;
+        log(`${name}: connected after ${elapsed}ms`);
         clearTimeout(timeoutId);
         originalOnConnect?.();
         resolve();
       };
+
+      // Also check if already connected
+      if (db.isConnected) {
+        log(`${name}: already connected`);
+        clearTimeout(timeoutId);
+        resolve();
+      }
     });
   };
 
-  // Create servers first
-  nodeA = new ToolDb({
-    server: true,
-    host: "127.0.0.1",
-    port: 9100,
-    storageName: ".test-db/test-additional-node-a",
-    storageAdapter: ToolDbLeveldb,
-    networkAdapter: ToolDbWebsockets,
-    userAdapter: ToolDbWeb3,
-  });
+  try {
+    // Create servers first
+    log("Creating nodeA (server on port 9100)...");
+    nodeA = new ToolDb({
+      server: true,
+      host: "127.0.0.1",
+      port: 9100,
+      storageName: ".test-db/test-additional-node-a",
+      storageAdapter: ToolDbLeveldb,
+      networkAdapter: ToolDbWebsockets,
+      userAdapter: ToolDbWeb3,
+    });
+    log("nodeA created");
 
-  nodeA.addServerFunction<number, number[]>("multiply", async (args) => {
-    const [a, b] = args;
-    if (typeof a !== "number" || typeof b !== "number") {
-      throw new Error("Invalid arguments");
-    }
-    return a * b;
-  });
-
-  nodeA.addServerFunction<{ result: string; length: number }, string[]>(
-    "processString",
-    async (args) => {
-      const [str] = args;
-      if (typeof str !== "string") {
-        throw new Error("Invalid argument type");
+    nodeA.addServerFunction<number, number[]>("multiply", async (args) => {
+      const [a, b] = args;
+      if (typeof a !== "number" || typeof b !== "number") {
+        throw new Error("Invalid arguments");
       }
-      return {
-        result: str.toUpperCase(),
-        length: str.length,
-      };
-    }
-  );
+      return a * b;
+    });
 
-  // Give server A time to start listening
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  nodeB = new ToolDb({
-    server: true,
-    peers: [{ host: "localhost", port: 9100 }],
-    host: "127.0.0.1",
-    port: 8100,
-    storageName: ".test-db/test-additional-node-b",
-    storageAdapter: ToolDbLeveldb,
-    networkAdapter: ToolDbWebsockets,
-    userAdapter: ToolDbWeb3,
-  });
-
-  // Add same functions to nodeB
-  nodeB.addServerFunction<number, number[]>("multiply", async (args) => {
-    const [a, b] = args;
-    if (typeof a !== "number" || typeof b !== "number") {
-      throw new Error("Invalid arguments");
-    }
-    return a * b;
-  });
-
-  nodeB.addServerFunction<{ result: string; length: number }, string[]>(
-    "processString",
-    async (args) => {
-      const [str] = args;
-      if (typeof str !== "string") {
-        throw new Error("Invalid argument type");
+    nodeA.addServerFunction<{ result: string; length: number }, string[]>(
+      "processString",
+      async (args) => {
+        const [str] = args;
+        if (typeof str !== "string") {
+          throw new Error("Invalid argument type");
+        }
+        return {
+          result: str.toUpperCase(),
+          length: str.length,
+        };
       }
-      return {
-        result: str.toUpperCase(),
-        length: str.length,
-      };
-    }
-  );
+    );
 
-  // Wait for nodeB to connect to nodeA
-  await waitForConnect(nodeB, "nodeB");
+    // Give server A time to start listening
+    log("Waiting 500ms for nodeA to start listening...");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    log("nodeA should be listening now");
 
-  // Give server B time to start listening
-  await new Promise((resolve) => setTimeout(resolve, 500));
+    log("Creating nodeB (server on port 8100, connecting to nodeA)...");
+    nodeB = new ToolDb({
+      server: true,
+      peers: [{ host: "localhost", port: 9100 }],
+      host: "127.0.0.1",
+      port: 8100,
+      storageName: ".test-db/test-additional-node-b",
+      storageAdapter: ToolDbLeveldb,
+      networkAdapter: ToolDbWebsockets,
+      userAdapter: ToolDbWeb3,
+    });
+    log("nodeB created");
 
-  // Create clients and wait for them to connect
-  Alice = new ToolDb({
-    server: false,
-    peers: [{ host: "localhost", port: 9100 }],
-    storageName: ".test-db/test-additional-alice",
-    storageAdapter: ToolDbLeveldb,
-    networkAdapter: ToolDbWebsockets,
-    userAdapter: ToolDbWeb3,
-  });
+    // Add same functions to nodeB
+    nodeB.addServerFunction<number, number[]>("multiply", async (args) => {
+      const [a, b] = args;
+      if (typeof a !== "number" || typeof b !== "number") {
+        throw new Error("Invalid arguments");
+      }
+      return a * b;
+    });
 
-  Bob = new ToolDb({
-    server: false,
-    peers: [{ host: "localhost", port: 8100 }],
-    storageName: ".test-db/test-additional-bob",
-    storageAdapter: ToolDbLeveldb,
-    networkAdapter: ToolDbWebsockets,
-    userAdapter: ToolDbWeb3,
-  });
+    nodeB.addServerFunction<{ result: string; length: number }, string[]>(
+      "processString",
+      async (args) => {
+        const [str] = args;
+        if (typeof str !== "string") {
+          throw new Error("Invalid argument type");
+        }
+        return {
+          result: str.toUpperCase(),
+          length: str.length,
+        };
+      }
+    );
 
-  Chris = new ToolDb({
-    server: false,
-    peers: [{ host: "localhost", port: 9100 }],
-    storageName: ".test-db/test-additional-chris",
-    storageAdapter: ToolDbLeveldb,
-    networkAdapter: ToolDbWebsockets,
-    userAdapter: ToolDbWeb3,
-  });
+    // Wait for nodeB to connect to nodeA
+    await waitForConnect(nodeB, "nodeB");
 
-  // Wait for all clients to connect (with longer timeout for CI)
-  await Promise.all([
-    waitForConnect(Alice, "Alice"),
-    waitForConnect(Bob, "Bob"),
-    waitForConnect(Chris, "Chris"),
-  ]);
+    // Give server B time to start listening
+    log("Waiting 500ms for nodeB to start listening...");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    log("nodeB should be listening now");
 
-  // Small delay to ensure all connections are stable
-  await new Promise((resolve) => setTimeout(resolve, 300));
-}, 60000); // beforeAll timeout
+    // Create clients and wait for them to connect
+    log("Creating Alice (client connecting to port 9100)...");
+    Alice = new ToolDb({
+      server: false,
+      peers: [{ host: "localhost", port: 9100 }],
+      storageName: ".test-db/test-additional-alice",
+      storageAdapter: ToolDbLeveldb,
+      networkAdapter: ToolDbWebsockets,
+      userAdapter: ToolDbWeb3,
+    });
+    log("Alice created");
+
+    log("Creating Bob (client connecting to port 8100)...");
+    Bob = new ToolDb({
+      server: false,
+      peers: [{ host: "localhost", port: 8100 }],
+      storageName: ".test-db/test-additional-bob",
+      storageAdapter: ToolDbLeveldb,
+      networkAdapter: ToolDbWebsockets,
+      userAdapter: ToolDbWeb3,
+    });
+    log("Bob created");
+
+    log("Creating Chris (client connecting to port 9100)...");
+    Chris = new ToolDb({
+      server: false,
+      peers: [{ host: "localhost", port: 9100 }],
+      storageName: ".test-db/test-additional-chris",
+      storageAdapter: ToolDbLeveldb,
+      networkAdapter: ToolDbWebsockets,
+      userAdapter: ToolDbWeb3,
+    });
+    log("Chris created");
+
+    // Wait for all clients to connect (with longer timeout for CI)
+    log("Waiting for all clients to connect...");
+    await Promise.all([
+      waitForConnect(Alice, "Alice"),
+      waitForConnect(Bob, "Bob"),
+      waitForConnect(Chris, "Chris"),
+    ]);
+
+    // Small delay to ensure all connections are stable
+    log("All clients connected, waiting 300ms for stability...");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    log("=== beforeAll completed successfully ===");
+    log(`Final state: nodeA.isConnected=${nodeA.isConnected}, nodeB.isConnected=${nodeB.isConnected}`);
+    log(`Final state: Alice.isConnected=${Alice.isConnected}, Bob.isConnected=${Bob.isConnected}, Chris.isConnected=${Chris.isConnected}`);
+  } catch (error) {
+    log(`=== beforeAll FAILED with error: ${error} ===`);
+    throw error;
+  }
+}, 30000); // beforeAll timeout
 
 afterAll(async () => {
+  log("=== afterAll started ===");
+
   const closeServers = new Promise<void>((resolve) => {
-    const serverA = (nodeA.network as ToolDbWebsockets).server;
-    const serverB = (nodeB.network as ToolDbWebsockets).server;
+    const serverA = (nodeA?.network as ToolDbWebsockets)?.server;
+    const serverB = (nodeB?.network as ToolDbWebsockets)?.server;
     let closedCount = 0;
     const checkBothClosed = () => {
       closedCount++;
+      log(`Server closed (${closedCount}/2)`);
       if (closedCount === 2) resolve();
     };
 
     if (serverA) {
+      log("Closing serverA...");
       serverA.close(() => checkBothClosed());
     } else {
+      log("serverA not found, skipping");
       checkBothClosed();
     }
 
     if (serverB) {
+      log("Closing serverB...");
       serverB.close(() => checkBothClosed());
     } else {
+      log("serverB not found, skipping");
       checkBothClosed();
     }
   });
 
   const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
   await Promise.race([closeServers, timeout]);
+  log("=== afterAll completed ===");
+});
+
+// First test to verify connectivity before running other tests
+describe("Connectivity Sanity Check", () => {
+  it("All nodes should be connected after beforeAll", () => {
+    log("=== Connectivity Sanity Check ===");
+    log(`nodeA defined: ${!!nodeA}, isConnected: ${nodeA?.isConnected}`);
+    log(`nodeB defined: ${!!nodeB}, isConnected: ${nodeB?.isConnected}`);
+    log(`Alice defined: ${!!Alice}, isConnected: ${Alice?.isConnected}`);
+    log(`Bob defined: ${!!Bob}, isConnected: ${Bob?.isConnected}`);
+    log(`Chris defined: ${!!Chris}, isConnected: ${Chris?.isConnected}`);
+
+    expect(nodeA).toBeDefined();
+    expect(nodeB).toBeDefined();
+    expect(Alice).toBeDefined();
+    expect(Bob).toBeDefined();
+    expect(Chris).toBeDefined();
+
+    // These should all be true if beforeAll succeeded
+    expect(nodeB.isConnected).toBe(true);
+    expect(Alice.isConnected).toBe(true);
+    expect(Bob.isConnected).toBe(true);
+    expect(Chris.isConnected).toBe(true);
+
+    log("=== All connectivity checks passed ===");
+  });
 });
 
 describe("Query Keys Functionality", () => {
@@ -255,22 +343,39 @@ describe("Query Keys Functionality", () => {
 
 describe("User Namespaced Operations", () => {
   it("Can put and get user-namespaced data", async () => {
+    log("=== Test: Can put and get user-namespaced data ===");
+    log(`Alice.isConnected=${Alice?.isConnected}, Bob.isConnected=${Bob?.isConnected}`);
+
+    if (!Alice?.isConnected) {
+      log("WARN: Alice is not connected at test start!");
+    }
+
     const username = "ns-user-" + textRandom(12);
     const password = "password123";
 
+    log(`Calling Alice.signUp(${username})...`);
+    const signUpStart = Date.now();
     await Alice.signUp(username, password);
+    log(`signUp completed in ${Date.now() - signUpStart}ms`);
 
     const key = "private-key-" + textRandom(8);
     const value = "private-value-" + textRandom(12);
 
+    log(`Calling Alice.putData(${key})...`);
+    const putStart = Date.now();
     await Alice.putData(key, value, true);
+    log(`putData completed in ${Date.now() - putStart}ms`);
 
     // Wait for propagation
     await new Promise((resolve) => setTimeout(resolve, 300));
 
+    log(`Calling Alice.getData(${key})...`);
+    const getStart = Date.now();
     const data = await Alice.getData(key, true);
+    log(`getData completed in ${Date.now() - getStart}ms, result=${data}`);
 
     expect(data).toBe(value);
+    log("=== Test completed successfully ===");
   });
 
   it("Cannot access user-namespaced data without proper user setup", async () => {
