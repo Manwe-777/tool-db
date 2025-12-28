@@ -8,9 +8,7 @@ import {
 
 import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
-// Use ecdsa-user instead of web3-user for faster encryption (PBKDF2 vs scrypt)
-// web3-user's scrypt encryption is extremely slow on CI runners
-import ToolDbEcdsaUser from "../packages/ecdsa-user";
+import ToolDbWeb3 from "../packages/web3-user";
 
 // Increase timeout for CI environments where connections may be slower
 jest.setTimeout(30000);
@@ -80,13 +78,14 @@ beforeAll(async () => {
     // Create servers first
     log("Creating nodeA (server on port 9000)...");
     nodeA = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: true,
       host: "127.0.0.1",
       port: 9000,
       storageName: ".test-db/test-node-a",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("nodeA created");
 
@@ -108,6 +107,7 @@ beforeAll(async () => {
 
     log("Creating nodeB (server on port 8000, connecting to nodeA)...");
     nodeB = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: true,
       // Node A is going to be our "bootstrap" node
       peers: [{ host: "localhost", port: 9000 }],
@@ -116,7 +116,7 @@ beforeAll(async () => {
       storageName: ".test-db/test-node-b",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("nodeB created");
 
@@ -131,34 +131,37 @@ beforeAll(async () => {
     // Create clients and wait for them to connect
     log("Creating Alice (client connecting to port 9000)...");
     Alice = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9000 }],
       storageName: ".test-db/test-alice",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("Alice created");
 
     log("Creating Bob (client connecting to port 8000)...");
     Bob = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 8000 }],
       storageName: ".test-db/test-bob",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("Bob created");
 
     log("Creating Chris (client connecting to port 9000)...");
     Chris = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9000 }],
       storageName: ".test-db/test-chris",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("Chris created");
 

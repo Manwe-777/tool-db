@@ -9,9 +9,7 @@ import {
 
 import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
-// Use ecdsa-user instead of web3-user for faster encryption (PBKDF2 vs scrypt)
-// web3-user's scrypt encryption is extremely slow on CI runners
-import ToolDbEcdsaUser from "../packages/ecdsa-user";
+import ToolDbWeb3 from "../packages/web3-user";
 
 // Increase timeout for CI environments where connections may be slower
 jest.setTimeout(30000);
@@ -81,13 +79,14 @@ beforeAll(async () => {
     // Create servers first
     log("Creating nodeA (server on port 9100)...");
     nodeA = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: true,
       host: "127.0.0.1",
       port: 9100,
       storageName: ".test-db/test-additional-node-a",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("nodeA created");
 
@@ -120,6 +119,7 @@ beforeAll(async () => {
 
     log("Creating nodeB (server on port 8100, connecting to nodeA)...");
     nodeB = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: true,
       peers: [{ host: "localhost", port: 9100 }],
       host: "127.0.0.1",
@@ -127,7 +127,7 @@ beforeAll(async () => {
       storageName: ".test-db/test-additional-node-b",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("nodeB created");
 
@@ -165,34 +165,37 @@ beforeAll(async () => {
     // Create clients and wait for them to connect
     log("Creating Alice (client connecting to port 9100)...");
     Alice = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-additional-alice",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("Alice created");
 
     log("Creating Bob (client connecting to port 8100)...");
     Bob = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 8100 }],
       storageName: ".test-db/test-additional-bob",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("Bob created");
 
     log("Creating Chris (client connecting to port 9100)...");
     Chris = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-additional-chris",
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
     log("Chris created");
 
@@ -774,12 +777,13 @@ describe("Peer Connection Events", () => {
     let peerConnectCalled = false;
 
     const tempClient = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-additional-temp-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
 
     tempClient.onPeerConnect = (peerId: string) => {
@@ -796,22 +800,20 @@ describe("Peer Connection Events", () => {
 });
 
 describe("Keys Sign In", () => {
-  // Skip: keysSignIn requires getAccountFromPrivate which is not implemented
-  // in ToolDbEcdsaUser (only available in ToolDbWeb3). The test uses web3's
-  // hex private key format which is incompatible with ecdsa-user's CryptoKeyPair.
-  it.skip("Can sign in with private key", async () => {
+  it("Can sign in with private key", async () => {
     // Get Alice's private key from the internal user object
     const privateKey = (Alice.userAccount as any)._user.privateKey;
     expect(privateKey).toBeDefined();
 
     // Create new client and sign in with the same private key
     const newClient = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-keys-signin-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
 
     await new Promise<void>((resolve) => {
@@ -831,12 +833,13 @@ describe("Keys Sign In", () => {
 describe("Anonymous Sign In", () => {
   it("Can perform anonymous sign in", async () => {
     const anonClient = new ToolDb({
+      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-anon-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
-      userAdapter: ToolDbEcdsaUser,
+      userAdapter: ToolDbWeb3,
     });
 
     await new Promise<void>((resolve) => {

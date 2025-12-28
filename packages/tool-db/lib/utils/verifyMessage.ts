@@ -9,7 +9,7 @@ import { ToolDb, VerifyResult, VerificationData, sha256 } from "..";
 export default async function verifyMessage<T>(
   this: ToolDb,
   msg: Partial<VerificationData<T>>,
-  pow = 0
+  pow: number | null = 0
 ): Promise<VerifyResult> {
   // this.logger("verify: ", msg);
   const strData = JSON.stringify(msg.v);
@@ -66,8 +66,8 @@ export default async function verifyMessage<T>(
   // Verify hash and nonce (adjust zeroes for difficulty of the network)
   // While this POW does not enforce security per-se, it does make it harder
   // for attackers to spam the network, and could be adjusted by peers.
-  // Disabled for now because it is painful on large requests
-  if (pow > 0) {
+  // When pow is null, skip POW verification entirely (useful for testing/CI)
+  if (pow !== null && pow > 0) {
     if (msg.h.slice(0, pow) !== new Array(pow).fill("0").join("")) {
       // this.logger("No valid hash (no pow)");
       return VerifyResult.NoProofOfWork;

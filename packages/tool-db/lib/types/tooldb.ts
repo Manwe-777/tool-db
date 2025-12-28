@@ -46,9 +46,10 @@ export interface ToolDbOptions {
    */
   wait: number;
   /**
-   * Port to listen incoming connections (server only)
+   * Proof of work difficulty (number of leading zeroes required).
+   * Set to null to bypass POW calculations entirely (useful for testing/CI).
    */
-  pow: number;
+  pow: number | null;
   /**
    * Whether we are a server or not
    */

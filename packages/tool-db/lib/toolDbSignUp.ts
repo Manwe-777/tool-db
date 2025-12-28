@@ -25,7 +25,7 @@ export default async function toolDbSignUp(
               userData
             )}${account.getAddress()}${timestamp}`;
 
-            proofOfWork(userDataString, 0)
+            proofOfWork(userDataString, this.options.pow)
               .then(({ hash, nonce }) => {
                 account.signData(hash).then((signature) => {
                   const signupMessage: VerificationData = {
