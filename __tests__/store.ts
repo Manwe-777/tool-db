@@ -6,7 +6,7 @@ import ToolDbWeb3 from "../packages/web3-user";
 
 let Alice: ToolDb;
 
-beforeAll((done) => {
+beforeAll(async () => {
   Alice = new ToolDb({
     server: false,
     peers: [],
@@ -15,8 +15,7 @@ beforeAll((done) => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  Alice.anonSignIn();
-  done();
+  await Alice.anonSignIn();
 });
 
 afterAll(async () => {
