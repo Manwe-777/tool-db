@@ -6,10 +6,12 @@ import {
   VerificationData,
 } from "tool-db";
 
-import arrayBufferToHex from "./utils/arrayBufferToHex";
-import hexToArrayBuffer from "./utils/hexToArrayBuffer";
-import base64ToUint8 from "./utils/base64ToUint8";
-import uint8ToBase64 from "./utils/uint8ToBase64";
+import {
+  arrayBufferToHex,
+  hexToArrayBuffer,
+  base64ToUint8,
+  uint8ToBase64,
+} from "tool-db";
 
 import cryptoKeyPairToHexed from "./crypto/cryptoKeyPairToHexed";
 import generateKeysComb from "./crypto/generateKeysComb";
@@ -186,3 +188,26 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
     return this._username;
   }
 }
+
+// ECDH encryption utilities
+export { default as generateECDHKeyPair } from "./crypto/generateECDHKeyPair";
+export type { ECDHKeyPair } from "./crypto/generateECDHKeyPair";
+export { default as importECDHPublicKey } from "./crypto/importECDHPublicKey";
+export { default as importECDHPrivateKey } from "./crypto/importECDHPrivateKey";
+export { default as deriveSharedKey } from "./crypto/deriveSharedKey";
+
+// AES-GCM encryption utilities
+export { default as encryptWithKey } from "./crypto/encryptWithKey";
+export { default as decryptWithKey } from "./crypto/decryptWithKey";
+export type { EncryptedData } from "./crypto/encryptWithKey";
+export { default as importAESKey } from "./crypto/importAESKey";
+
+// Group key wrapping utilities
+export { default as wrapGroupKey } from "./crypto/wrapGroupKey";
+export { default as unwrapGroupKey } from "./crypto/unwrapGroupKey";
+export type { WrappedGroupKey } from "./crypto/wrapGroupKey";
+
+// Re-export existing utilities for convenience
+export { default as generateIv } from "./crypto/generateIv";
+export { default as getCrypto } from "./crypto/getCrypto";
+export { default as generateKeyPair } from "./crypto/generateKeyPair";

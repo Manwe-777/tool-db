@@ -1,6 +1,8 @@
-import arrayBufferToString from "../utils/arrayBufferToString";
-import hexToArrayBuffer from "../utils/hexToArrayBuffer";
-import catchReturn from "../utils/catchReturn";
+import {
+  arrayBufferToString,
+  hexToArrayBuffer,
+  catchReturn,
+} from "tool-db";
 
 import generateKeyFromPassword from "./generateKeyFromPassword";
 import getCrypto from "./getCrypto";
@@ -11,13 +13,14 @@ export default function decryptWithPass(
   vector: Uint8Array
 ): Promise<string | undefined> {
   const crypto = getCrypto();
+  const dataBytes = new Uint8Array(hexToArrayBuffer(data));
   return generateKeyFromPassword(password)
     .then((keyObject) => {
       return crypto.subtle
         .decrypt(
-          { name: "AES-GCM", iv: vector },
+          { name: "AES-GCM", iv: vector as BufferSource },
           keyObject,
-          hexToArrayBuffer(data)
+          dataBytes
         )
         .then((result) => arrayBufferToString(result))
         .catch(catchReturn);

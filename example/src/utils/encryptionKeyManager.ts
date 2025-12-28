@@ -7,8 +7,8 @@
  */
 
 import { sha256 } from "tool-db";
+import { generateECDHKeyPair, ECDHKeyPair } from "@tool-db/ecdsa-user";
 
-import { generateECDHKeyPair, ECDHKeyPair } from "./groupCrypto";
 import getToolDb from "./getToolDb";
 
 // In-memory cache of the current user's keys

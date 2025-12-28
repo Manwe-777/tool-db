@@ -2,6 +2,7 @@ export { default as proofOfWork } from "./utils/proofOfWork";
 export { default as sha1 } from "./utils/sha1";
 export { default as sha256 } from "./utils/sha256";
 export { default as uniq } from "./utils/uniq";
+export { default as generateGroupKey } from "./utils/generateGroupKey";
 
 export { default as randomAnimal } from "./utils/randomAnimal";
 export { default as verifyMessage } from "./utils/verifyMessage";
@@ -18,6 +19,11 @@ export { default as arrayBufferToHex } from "./utils/encoding/arrayBufferToHex";
 export { default as hexToArrayBuffer } from "./utils/encoding/hexToArrayBuffer";
 export { default as hexToString } from "./utils/encoding/hexToString";
 export { default as hexToUint8 } from "./utils/encoding/hexToUint8";
+
+export { default as toBase64 } from "./utils/encoding/toBase64";
+export { default as fromBase64 } from "./utils/encoding/fromBase64";
+export { default as uint8ToBase64 } from "./utils/encoding/uint8ToBase64";
+export { default as base64ToUint8 } from "./utils/encoding/base64ToUint8";
 
 export { default as ToolDbNetworkAdapter } from "./adapters-base/networkAdapter";
 export { default as ToolDbStorageAdapter } from "./adapters-base/storageAdapter";

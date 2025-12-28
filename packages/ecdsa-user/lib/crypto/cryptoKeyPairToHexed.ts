@@ -1,4 +1,4 @@
-import arrayBufferToHex from "../utils/arrayBufferToHex";
+import { arrayBufferToHex } from "tool-db";
 
 import exportKey from "./exportKey";
 

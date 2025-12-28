@@ -1,8 +1,10 @@
-import generateKeyFromPassword from "./generateKeyFromPassword";
-import stringToArrayBuffer from "../utils/stringToArrayBuffer";
-import arrayBufferToHex from "../utils/arrayBufferToHex";
-import catchReturn from "../utils/catchReturn";
+import {
+  stringToArrayBuffer,
+  arrayBufferToHex,
+  catchReturn,
+} from "tool-db";
 
+import generateKeyFromPassword from "./generateKeyFromPassword";
 import getCrypto from "./getCrypto";
 
 export default function encryptWithPass(
@@ -11,14 +13,15 @@ export default function encryptWithPass(
   vector: Uint8Array
 ): Promise<string | undefined> {
   const crypto = getCrypto();
+  const messageBytes = new Uint8Array(stringToArrayBuffer(secretmessage));
   return generateKeyFromPassword(password)
     .then((keyObject) => {
       // encrypt promise
       return crypto.subtle
         .encrypt(
-          { name: "AES-GCM", iv: vector },
+          { name: "AES-GCM", iv: vector as BufferSource },
           keyObject,
-          stringToArrayBuffer(secretmessage)
+          messageBytes
         )
         .then((data) => arrayBufferToHex(data))
         .catch(catchReturn);
