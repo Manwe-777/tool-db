@@ -112,7 +112,6 @@
   border: 1px solid transparent;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 
@@ -123,14 +122,22 @@
 }
 
 .group-name.active {
-  background: var(--accent);
-  color: white;
+  background: rgba(0, 217, 255, 0.15);
+  color: var(--accent);
   border-color: var(--accent);
+  cursor: default;
+  pointer-events: none;
+}
+
+.group-name.active::before {
+  content: "●";
+  font-size: 8px;
+  margin-right: 4px;
 }
 
 .group-name.active:hover {
-  background: var(--accent);
-  color: white;
+  background: rgba(0, 217, 255, 0.15);
+  color: var(--accent);
 }
 
 .group-name.pending {
@@ -153,11 +160,12 @@
   border-radius: 4px;
   color: var(--text-muted);
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .group-name.active .pending-badge {
-  background: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 217, 255, 0.2);
+  color: var(--accent);
 }
 
 .group-member {

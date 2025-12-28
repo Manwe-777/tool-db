@@ -20,7 +20,9 @@ export default function WebRtcDebug() {
   return (
     <div className="debug-container">
       <div
-        title={`${connectedPeers} peer${connectedPeers > 1 ? "s" : ""} online. Click to ${expanded ? "collapse" : "expand"}`}
+        title={`${connectedPeers} peer${
+          connectedPeers > 1 ? "s" : ""
+        } online. Click to ${expanded ? "collapse" : "expand"}`}
         className={`online-indicator ${connectedPeers > 0 ? "on" : "off"}`}
         onClick={() => setExpanded(!expanded)}
       >

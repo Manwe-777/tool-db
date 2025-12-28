@@ -46,7 +46,10 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
 
     // Try to fetch our wrapped group key (if we're a member)
     const groupKeyId = `groupKey-${groupData.id}-${selfAddress}`;
-    if (!fetchedGroupKeys.includes(groupKeyId) && !getCachedGroupKey(groupData.id)) {
+    if (
+      !fetchedGroupKeys.includes(groupKeyId) &&
+      !getCachedGroupKey(groupData.id)
+    ) {
       fetchedGroupKeys.push(groupKeyId);
       toolDb.subscribeData(groupKeyId);
       toolDb.getData(groupKeyId);
@@ -108,7 +111,10 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
             } catch (error) {
               console.error("Failed to decrypt message:", error);
               // Return message as-is if decryption fails (might be malformed)
-              return { ...msg, decrypted: "[Encrypted message - decryption failed]" };
+              return {
+                ...msg,
+                decrypted: "[Encrypted message - decryption failed]",
+              };
             }
           }
           // If e=true but message is not encrypted format (already decrypted/plaintext)
@@ -169,21 +175,23 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
 
         if (ourKeys && wrappedKey && wrappedKey.from) {
           // We need the sender's encryption public key to unwrap
-          toolDb.getData<string>(`:${wrappedKey.from}.encPubKey`).then((senderKey) => {
-            if (senderKey) {
-              unwrapGroupKey(
-                { iv: wrappedKey.iv, key: wrappedKey.key },
-                ourKeys.privateKey,
-                senderKey
-              )
-                .then((groupKey) => {
-                  cacheGroupKey(groupId, groupKey);
-                })
-                .catch(() => {
-                  // Failed to unwrap group key - may be corrupted or wrong keys
-                });
-            }
-          });
+          toolDb
+            .getData<string>(`:${wrappedKey.from}.encPubKey`)
+            .then((senderKey) => {
+              if (senderKey) {
+                unwrapGroupKey(
+                  { iv: wrappedKey.iv, key: wrappedKey.key },
+                  ourKeys.privateKey,
+                  senderKey
+                )
+                  .then((groupKey) => {
+                    cacheGroupKey(groupId, groupKey);
+                  })
+                  .catch(() => {
+                    // Failed to unwrap group key - may be corrupted or wrong keys
+                  });
+              }
+            });
         }
       }
     }

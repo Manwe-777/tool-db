@@ -306,10 +306,21 @@ export default function Group(props: GroupProps) {
                 })}
             </>
           ) : null}
-          {areWeOwners() === false && checkIfWeJoined() === false ? (
+          {areWeOwners() === false &&
+          !state.groups[groupId].members.includes(
+            toolDb.userAccount.getAddress() || ""
+          ) &&
+          checkIfWeJoined() === false ? (
             <button type="button" onClick={sendRequest}>
               Request join
             </button>
+          ) : areWeOwners() === false &&
+            state.groups[groupId].members.includes(
+              toolDb.userAccount.getAddress() || ""
+            ) ? (
+            <p>
+              <i>Joined</i>
+            </p>
           ) : areWeOwners() === false ? (
             <p>
               <i>You already requested to join this group</i>

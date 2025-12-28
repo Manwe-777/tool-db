@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { sha1 } from "tool-db";
 import getToolDb from "../utils/getToolDb";
 import {
@@ -26,12 +26,16 @@ interface GroupsListProps {
 export default function UserGroupsList(props: GroupsListProps) {
   const { groupsList, groups, dispatch } = props;
   const navigate = useNavigate();
-  const { groupRoute } = useParams();
+  const location = useLocation();
 
   const [newGroupName, setNewGroupName] = useState("");
 
   const toolDb = getToolDb();
-  const currentGroupId = decodeURIComponent(groupRoute || "");
+
+  // Extract groupRoute from the URL path since we're outside Routes scope
+  const pathMatch = location.pathname.match(/^\/group\/(.+)$/);
+  const groupRoute = pathMatch ? pathMatch[1] : "";
+  const currentGroupId = decodeURIComponent(groupRoute);
   const userAddress = toolDb.userAccount.getAddress() || "";
 
   // Create a new group
@@ -119,7 +123,8 @@ export default function UserGroupsList(props: GroupsListProps) {
               isPending ? " pending" : ""
             }`}
             key={`group-name-${name}`}
-            onClick={() => changeGroup(groupId)}
+            onClick={isActive ? undefined : () => changeGroup(groupId)}
+            style={{ cursor: isActive ? "default" : "pointer" }}
           >
             {groupName}
             {isPending && <span className="pending-badge">pending</span>}
