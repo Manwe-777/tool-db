@@ -47,6 +47,15 @@ export default function reducer(
           },
         };
 
+      case "SET_USER_ENC_KEY":
+        return {
+          ...state,
+          encryptionKeys: {
+            ...state.encryptionKeys,
+            [action.userId]: action.encKey,
+          },
+        };
+
       case "SET_USER_GROUP_MESSAGES":
         return {
           ...state,

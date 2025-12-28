@@ -3,6 +3,7 @@ import { Message } from "../types";
 export type ACTION_TYPES =
   | "SET_USER_NAME"
   | "SET_USER_PUBKEY"
+  | "SET_USER_ENC_KEY"
   | "SET_GROUP_DATA"
   | "SET_USER_GROUP_MESSAGES"
   | "SET_ALL_GROUPS_LIST"
@@ -21,6 +22,12 @@ export interface ActionSetUserName extends ActionBase {
 export interface ActionSetUserPubkey extends ActionBase {
   type: "SET_USER_PUBKEY";
   pubKey: string;
+  userId: string;
+}
+
+export interface ActionSetUserEncKey extends ActionBase {
+  type: "SET_USER_ENC_KEY";
+  encKey: string;
   userId: string;
 }
 
@@ -53,6 +60,7 @@ export type AllActions =
   | ActionSetGroupData
   | ActionSetUserName
   | ActionSetUserPubkey
+  | ActionSetUserEncKey
   | ActionSetUserGroupMessages
   | ActionSetAllGroupsList
   | ActionClearMessages;

@@ -1,8 +1,16 @@
 import React from "react";
 
 import { AllActions } from "../state/actions";
-import { GroupData, GroupsList } from "../types";
+import { GroupData, GroupsList, Message, WrappedGroupKeyData } from "../types";
 import getToolDb from "../utils/getToolDb";
+import {
+  decryptGroupMessage,
+  isEncryptedMessage,
+  unwrapGroupKey,
+  cacheGroupKey,
+  getCachedGroupKey,
+} from "../utils/groupCrypto";
+import { getCurrentKeys } from "../utils/encryptionKeyManager";
 
 export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
   const toolDb = getToolDb();
@@ -10,6 +18,9 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
 
   // Maintain a little state here aside from the component
   const wrappedGroups: string[] = [];
+
+  // Track which group keys we've tried to fetch
+  const fetchedGroupKeys: string[] = [];
 
   function setGroupDataWrapper(groupData: GroupData) {
     dispatch({
@@ -25,12 +36,21 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
       console.warn(`Fetch ${memberAddress} group data (${groupData.id})`);
       toolDb.getData(`:${memberAddress}.name`);
       toolDb.getData(`:${memberAddress}.pubKey`);
+      toolDb.getData(`:${memberAddress}.encPubKey`);
 
       // Listen for messages of this member
       const userGroupKey = `:${memberAddress}.group-${groupData.id}`;
       toolDb.subscribeData(userGroupKey);
       toolDb.getData(userGroupKey);
     });
+
+    // Try to fetch our wrapped group key (if we're a member)
+    const groupKeyId = `groupKey-${groupData.id}-${selfAddress}`;
+    if (!fetchedGroupKeys.includes(groupKeyId) && !getCachedGroupKey(groupData.id)) {
+      fetchedGroupKeys.push(groupKeyId);
+      toolDb.subscribeData(groupKeyId);
+      toolDb.getData(groupKeyId);
+    }
   }
 
   toolDb.on("data", (data: any) => {
@@ -73,11 +93,39 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
     // :{address}.group-{groupid}
     // group messages
     if (key.startsWith("group-")) {
-      dispatch({
-        type: "SET_USER_GROUP_MESSAGES",
-        userId: owner,
-        groupId: key.slice(6),
-        messages: data.v,
+      const groupId = key.slice(6);
+      const messages: Message[] = data.v;
+
+      // Decrypt all encrypted messages - keep original 'm' intact, set 'decrypted' field
+      Promise.all(
+        messages.map(async (msg) => {
+          // Check if message is encrypted (has the e flag AND message content looks encrypted)
+          if (msg.e && isEncryptedMessage(msg.m)) {
+            try {
+              const decryptedText = await decryptGroupMessage(msg.m, groupId);
+              // Keep original m, add decrypted for display
+              return { ...msg, decrypted: decryptedText };
+            } catch (error) {
+              console.error("Failed to decrypt message:", error);
+              // Return message as-is if decryption fails (might be malformed)
+              return { ...msg, decrypted: "[Encrypted message - decryption failed]" };
+            }
+          }
+          // If e=true but message is not encrypted format (already decrypted/plaintext)
+          // This handles corrupted data from the bug - just use m as-is
+          if (msg.e && !isEncryptedMessage(msg.m)) {
+            return { ...msg, decrypted: msg.m };
+          }
+          // Return unencrypted message as-is (for backwards compatibility)
+          return msg;
+        })
+      ).then((decryptedMessages) => {
+        dispatch({
+          type: "SET_USER_GROUP_MESSAGES",
+          userId: owner,
+          groupId,
+          messages: decryptedMessages,
+        });
       });
     }
 
@@ -90,13 +138,54 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
       });
     }
 
-    // :{address}.name
+    // :{address}.pubKey (signing key)
     if (key === "pubKey") {
       dispatch({
         type: "SET_USER_PUBKEY",
         userId: owner,
         pubKey: data.v,
       });
+    }
+
+    // :{address}.encPubKey (encryption key)
+    if (key === "encPubKey") {
+      dispatch({
+        type: "SET_USER_ENC_KEY",
+        userId: owner,
+        encKey: data.v,
+      });
+    }
+
+    // groupKey-{groupId}-{memberAddress} (wrapped group key)
+    if (data.k.startsWith("groupKey-")) {
+      const parts = data.k.split("-");
+      const groupId = parts[1];
+      const targetMember = parts.slice(2).join("-"); // Handle addresses with dashes
+
+      // Only process keys wrapped for us
+      if (targetMember === selfAddress) {
+        const wrappedKey: WrappedGroupKeyData = data.v;
+        const ourKeys = getCurrentKeys();
+
+        if (ourKeys && wrappedKey && wrappedKey.from) {
+          // We need the sender's encryption public key to unwrap
+          toolDb.getData<string>(`:${wrappedKey.from}.encPubKey`).then((senderKey) => {
+            if (senderKey) {
+              unwrapGroupKey(
+                { iv: wrappedKey.iv, key: wrappedKey.key },
+                ourKeys.privateKey,
+                senderKey
+              )
+                .then((groupKey) => {
+                  cacheGroupKey(groupId, groupKey);
+                })
+                .catch(() => {
+                  // Failed to unwrap group key - may be corrupted or wrong keys
+                });
+            }
+          });
+        }
+      }
     }
   });
 

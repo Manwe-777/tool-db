@@ -18,7 +18,12 @@ export default function ChatMessage(props: ChatMessageProps) {
         </div>
       ) : null}
       <div className="chat-message" key={`message-${message.t}`}>
-        {message.m}
+        {message.e && (
+          <span className="encrypted-indicator" title="End-to-end encrypted">
+            🔒
+          </span>
+        )}
+        {message.decrypted ?? message.m}
       </div>
     </>
   );

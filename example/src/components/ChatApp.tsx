@@ -11,12 +11,14 @@ import WebRtcDebug from "./WebRtcDebug";
 
 import reducer from "../state/reducer";
 import getToolDb from "../utils/getToolDb";
+import { encryptGroupMessage, getCachedGroupKey } from "../utils/groupCrypto";
 
 import setupTooldb from "./setupTooldb";
 
 const initialState: GlobalState = {
   names: {},
   publicKeys: {},
+  encryptionKeys: {},
   groups: {},
   groupsList: [],
 };
@@ -45,25 +47,53 @@ export default function ChatApp() {
       if (!state.groups[groupId]) return;
       if (!state.groups[groupId].members.includes(address)) return;
 
+      // Check if we have the group key for encryption
+      const hasGroupKey = !!getCachedGroupKey(groupId);
+
+      // Encrypt the message if we have the key
+      const messageContent = hasGroupKey
+        ? await encryptGroupMessage(msg, groupId)
+        : msg;
+
       const newMessage: Message = {
-        m: msg,
+        m: messageContent,
         t: new Date().getTime(),
+        e: hasGroupKey, // Only mark as encrypted if we actually encrypted
       };
 
-      // Dont push to the state directly!
-      const newMessagesArray: Message[] = [
-        ...(state.groups[groupId].messages[address] || []),
+      // Build network array from existing messages, stripping 'decrypted' field
+      // to avoid sending decrypted content to the network
+      const existingMessages = state.groups[groupId].messages[address] || [];
+      const networkMessagesArray: Message[] = [
+        ...existingMessages.map(
+          ({ decrypted: _decrypted, u: _u, ...rest }) => rest
+        ),
         newMessage,
       ];
 
-      // Push to state
+      // For local display, show the decrypted message
+      const displayMessage: Message = {
+        m: messageContent, // Keep encrypted content in m
+        t: newMessage.t,
+        e: hasGroupKey,
+        decrypted: msg, // Decrypted text for display
+      };
+
+      const displayMessagesArray: Message[] = [
+        ...existingMessages,
+        displayMessage,
+      ];
+
+      // Push to local state for immediate display
       dispatch({
         type: "SET_USER_GROUP_MESSAGES",
         userId: address,
         groupId: groupId,
-        messages: newMessagesArray,
+        messages: displayMessagesArray,
       });
-      toolDb.putData<Message[]>(`group-${groupId}`, newMessagesArray, true);
+
+      // Send to network (without decrypted field)
+      toolDb.putData<Message[]>(`group-${groupId}`, networkMessagesArray, true);
     },
     [state]
   );
@@ -72,7 +102,11 @@ export default function ChatApp() {
     <>
       <div className="left-column">
         <WebRtcDebug />
-        <UserGroupsList dispatch={dispatch} groupsList={state.groupsList} />
+        <UserGroupsList
+          dispatch={dispatch}
+          groupsList={state.groupsList}
+          groups={state.groups}
+        />
       </div>
       <Routes>
         <Route path="/" element={<p>Select or create a group to start</p>} />

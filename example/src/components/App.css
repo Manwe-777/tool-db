@@ -110,12 +110,54 @@
   border-radius: 10px;
   transition: all 0.2s ease;
   border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .group-name:hover {
   background: var(--bg-hover);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.group-name.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.group-name.active:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.group-name.pending {
+  opacity: 0.7;
+  border-style: dashed;
+  border-color: var(--text-muted);
+}
+
+.group-name.pending:not(.active):hover {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+
+.pending-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.group-name.active .pending-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .group-member {
@@ -211,6 +253,16 @@
   font-size: 14px;
   word-break: break-word;
   padding: 4px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.encrypted-indicator {
+  font-size: 11px;
+  opacity: 0.7;
+  flex-shrink: 0;
+  cursor: help;
 }
 
 .chat-input {
@@ -229,7 +281,7 @@
 }
 
 /* Members List specific */
-.members-list button {
+.members-list > div > button {
   width: 100%;
   margin: 12px 0 0 0;
 }
@@ -241,6 +293,71 @@
 .members-list i {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* Join Request Styles */
+.join-request {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin: 3px 0;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  gap: 8px;
+}
+
+.join-request-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.join-request-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btn-accept,
+.btn-deny {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-accept {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-accept:hover {
+  background: #16a34a;
+}
+
+.btn-deny {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-deny:hover {
+  background: #dc2626;
 }
 
 /* Empty State */

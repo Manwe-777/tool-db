@@ -9,8 +9,16 @@ import { MapCrdt, MapChanges } from "tool-db";
 
 import ChatMessage from "./ChatMessage";
 import getToolDb from "../utils/getToolDb";
-import { GroupData, GlobalState, GroupsList, Message } from "../types";
+import {
+  GroupData,
+  GlobalState,
+  GroupsList,
+  Message,
+  WrappedGroupKeyData,
+} from "../types";
 import { AllActions } from "../state/actions";
+import { getCachedGroupKey, wrapGroupKeyForMember } from "../utils/groupCrypto";
+import { getCurrentKeys } from "../utils/encryptionKeyManager";
 
 interface GroupProps {
   state: GlobalState;
@@ -62,6 +70,13 @@ export default function Group(props: GroupProps) {
         `requests-${groupId}`,
         (msg) => {
           joinRequests.current.mergeChanges(msg.v);
+          // Fetch encryption keys for all join requesters so we can wrap group keys for them
+          Object.keys(joinRequests.current.value).forEach((requesterId) => {
+            if (!state.encryptionKeys[requesterId]) {
+              toolDb.getData(`:${requesterId}.encPubKey`);
+              toolDb.getData(`:${requesterId}.name`);
+            }
+          });
           setRefresh(new Date().getTime());
         }
       );
@@ -79,12 +94,67 @@ export default function Group(props: GroupProps) {
   }, [groupRoute]);
 
   const addMember = useCallback(
-    (id: string) => {
+    async (id: string) => {
       if (
         state.groups[groupId] &&
         groupRoute &&
         !state.groups[groupId].members.includes(id)
       ) {
+        const selfAddress = toolDb.userAccount.getAddress() || "";
+
+        // Get the group encryption key and wrap it for the new member
+        const groupEncKey = getCachedGroupKey(groupId);
+        const ourKeys = getCurrentKeys();
+
+        // Try to get encryption key from state, or fetch directly if missing
+        let newMemberEncPubKey: string | undefined = state.encryptionKeys[id];
+        if (!newMemberEncPubKey) {
+          console.log(`Fetching encryption key for new member ${id}...`);
+          const fetchedKey = await toolDb.getData<string>(`:${id}.encPubKey`);
+          newMemberEncPubKey = fetchedKey || undefined;
+        }
+
+        console.log(`Adding member ${id} to group ${groupId}:`, {
+          hasGroupKey: !!groupEncKey,
+          hasOurKeys: !!ourKeys,
+          hasTheirKey: !!newMemberEncPubKey,
+        });
+
+        if (groupEncKey && ourKeys && newMemberEncPubKey) {
+          // Wrap the group key for the new member
+          const wrappedKey = await wrapGroupKeyForMember(
+            groupEncKey,
+            ourKeys.privateKey,
+            newMemberEncPubKey
+          );
+
+          const wrappedKeyData: WrappedGroupKeyData = {
+            ...wrappedKey,
+            from: selfAddress, // We wrapped it, they need our encPubKey to unwrap
+          };
+
+          console.log(
+            `Storing wrapped group key for ${id}:`,
+            `groupKey-${groupId}-${id}`
+          );
+          // Store the wrapped group key for the new member
+          await toolDb.putData<WrappedGroupKeyData>(
+            `groupKey-${groupId}-${id}`,
+            wrappedKeyData
+          );
+          console.log(`Successfully wrapped and stored group key for ${id}`);
+        } else {
+          console.warn(`Cannot wrap group key for ${id}: missing keys`, {
+            hasGroupKey: !!groupEncKey,
+            hasOurKeys: !!ourKeys,
+            hasTheirKey: !!newMemberEncPubKey,
+          });
+        }
+
+        // Remove from join requests after accepting
+        joinRequests.current.DEL(id);
+        toolDb.putCrdt(`requests-${groupId}`, joinRequests.current, false);
+
         const groupToAdd: GroupData = {
           id: groupId,
           name: state.groups[groupId].name,
@@ -99,7 +169,18 @@ export default function Group(props: GroupProps) {
           name: groupToAdd.name,
           owners: groupToAdd.owners,
         });
+        setRefresh(new Date().getTime());
       }
+    },
+    [groupRoute, state.encryptionKeys]
+  );
+
+  const denyRequest = useCallback(
+    (id: string) => {
+      // Remove the join request from the CRDT
+      joinRequests.current.DEL(id);
+      toolDb.putCrdt(`requests-${groupId}`, joinRequests.current, false);
+      setRefresh(new Date().getTime());
     },
     [groupRoute]
   );
@@ -200,12 +281,26 @@ export default function Group(props: GroupProps) {
                 .map((id) => {
                   const name = joinRequests.current.value[id];
                   return (
-                    <div
-                      className="group-member"
-                      key={`join-request-${id}`}
-                      onClick={() => addMember(id)}
-                    >
-                      {name}
+                    <div className="join-request" key={`join-request-${id}`}>
+                      <span className="join-request-name">{name}</span>
+                      <div className="join-request-actions">
+                        <button
+                          type="button"
+                          className="btn-accept"
+                          onClick={() => addMember(id)}
+                          title="Accept request"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-deny"
+                          onClick={() => denyRequest(id)}
+                          title="Deny request"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
