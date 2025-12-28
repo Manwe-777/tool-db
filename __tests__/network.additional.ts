@@ -11,6 +11,7 @@ import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
 import ToolDbWeb3 from "../packages/web3-user";
 
+// Increase timeout for CI environments where connections may be slower
 jest.setTimeout(60000);
 
 let nodeA: ToolDb;
@@ -28,7 +29,24 @@ let Chris: ToolDb;
 // Chris is a client
 // Alice and Chris are connected to Node B
 // Bob is connected to Node A
-beforeAll((done) => {
+beforeAll(async () => {
+  // Helper to wait for a ToolDb instance to connect
+  const waitForConnect = (db: ToolDb, name: string, timeoutMs = 30000): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`${name} failed to connect within ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      const originalOnConnect = db.onConnect;
+      db.onConnect = () => {
+        clearTimeout(timeoutId);
+        originalOnConnect?.();
+        resolve();
+      };
+    });
+  };
+
+  // Create servers first
   nodeA = new ToolDb({
     server: true,
     host: "127.0.0.1",
@@ -38,7 +56,6 @@ beforeAll((done) => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  nodeA.onConnect = () => checkIfOk(nodeA.peerAccount.getAddress() || "");
 
   nodeA.addServerFunction<number, number[]>("multiply", async (args) => {
     const [a, b] = args;
@@ -62,6 +79,9 @@ beforeAll((done) => {
     }
   );
 
+  // Give server A time to start listening
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
   nodeB = new ToolDb({
     server: true,
     peers: [{ host: "localhost", port: 9100 }],
@@ -72,7 +92,6 @@ beforeAll((done) => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  nodeB.onConnect = () => checkIfOk(nodeB.peerAccount.getAddress() || "");
 
   // Add same functions to nodeB
   nodeB.addServerFunction<number, number[]>("multiply", async (args) => {
@@ -97,6 +116,13 @@ beforeAll((done) => {
     }
   );
 
+  // Wait for nodeB to connect to nodeA
+  await waitForConnect(nodeB, "nodeB");
+
+  // Give server B time to start listening
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  // Create clients and wait for them to connect
   Alice = new ToolDb({
     server: false,
     peers: [{ host: "localhost", port: 9100 }],
@@ -105,7 +131,6 @@ beforeAll((done) => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  Alice.onConnect = () => checkIfOk(Alice.peerAccount.getAddress() || "");
 
   Bob = new ToolDb({
     server: false,
@@ -115,7 +140,6 @@ beforeAll((done) => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  Bob.onConnect = () => checkIfOk(Bob.peerAccount.getAddress() || "");
 
   Chris = new ToolDb({
     server: false,
@@ -125,32 +149,17 @@ beforeAll((done) => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
-  Chris.onConnect = () => checkIfOk(Chris.peerAccount.getAddress() || "");
 
-  const connected: string[] = [];
-  const checkIfOk = (id: string) => {
-    if (!connected.includes(id)) {
-      connected.push(id);
+  // Wait for all clients to connect (with longer timeout for CI)
+  await Promise.all([
+    waitForConnect(Alice, "Alice"),
+    waitForConnect(Bob, "Bob"),
+    waitForConnect(Chris, "Chris"),
+  ]);
 
-      // We have 5 nodes total but servers don't call onConnect to themselves
-      // nodeA and nodeB are servers, Alice, Bob, Chris are clients
-      // Each client calls onConnect once when connected
-      // nodeB also calls onConnect when it connects to nodeA
-      // So we expect 4 connections: nodeB->nodeA, Alice, Bob, Chris
-      if (connected.length === 4) {
-        done();
-      }
-    }
-  };
-
-  // Add a timeout to prevent hanging if connections fail
-  setTimeout(() => {
-    if (connected.length < 4) {
-      console.warn(`beforeAll timeout: only ${connected.length}/4 connections established`);
-      done();
-    }
-  }, 15000);
-});
+  // Small delay to ensure all connections are stable
+  await new Promise((resolve) => setTimeout(resolve, 300));
+}, 60000); // beforeAll timeout
 
 afterAll(async () => {
   const closeServers = new Promise<void>((resolve) => {
