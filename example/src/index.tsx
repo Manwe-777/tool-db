@@ -23,6 +23,12 @@ const db = new ToolDb({
   topic: "testnetwork",
 });
 
+// Wait for database to be ready before setting up verificators
+// This ensures all accounts are initialized
+db.ready.catch((err) => {
+  console.error("Failed to initialize ToolDb:", err);
+});
+
 // A simple verificator to only allow insertions and not deletions
 function requestsVerificator(
   msg: VerificationData<MapChanges<string>[]>

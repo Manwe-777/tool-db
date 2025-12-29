@@ -29,15 +29,22 @@ export default function ChatApp() {
   const toolDb = getToolDb();
 
   useEffect(() => {
-    const addr = toolDb.userAccount.getAddress();
-    if (addr) {
-      dispatch({
-        type: "SET_USER_NAME",
-        userId: addr,
-        username: toolDb.userAccount.getUsername() || "",
+    // Wait for database to be ready before accessing user account
+    toolDb.ready
+      .then(() => {
+        const addr = toolDb.userAccount.getAddress();
+        if (addr) {
+          dispatch({
+            type: "SET_USER_NAME",
+            userId: addr,
+            username: toolDb.userAccount.getUsername() || "",
+          });
+        }
+        setupTooldb(dispatch);
+      })
+      .catch((err) => {
+        console.error("Failed to initialize ToolDb in ChatApp:", err);
       });
-    }
-    setupTooldb(dispatch);
   }, []);
 
   const sendMessage = useCallback(

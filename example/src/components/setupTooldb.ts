@@ -12,10 +12,11 @@ import {
 } from "../utils/groupCrypto";
 import { getCurrentKeys } from "../utils/encryptionKeyManager";
 
-export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
-  const toolDb = getToolDb();
-  const selfAddress = toolDb.userAccount.getAddress() || "";
-
+function setupTooldbInternal(
+  dispatch: React.Dispatch<AllActions>,
+  toolDb: ReturnType<typeof getToolDb>,
+  selfAddress: string
+) {
   // Maintain a little state here aside from the component
   const wrappedGroups: string[] = [];
 
@@ -199,4 +200,17 @@ export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
 
   toolDb.subscribeData("groups", true);
   toolDb.getData<GroupsList>("groups", true);
+}
+
+export default function setupTooldb(dispatch: React.Dispatch<AllActions>) {
+  const toolDb = getToolDb();
+  // Ensure database is ready before accessing user account
+  toolDb.ready
+    .then(() => {
+      const selfAddress = toolDb.userAccount.getAddress() || "";
+      setupTooldbInternal(dispatch, toolDb, selfAddress);
+    })
+    .catch((err) => {
+      console.error("Failed to initialize ToolDb in setupTooldb:", err);
+    });
 }

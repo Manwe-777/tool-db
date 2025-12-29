@@ -43,6 +43,7 @@ jobs:
           - encoding
           - groupKey
           - hex
+          - lifecycle-api
           - listCrdt.additional
           - listCrdt
           - mapCrdt.additional

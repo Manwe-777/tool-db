@@ -23,12 +23,12 @@ describe("Local-First Signup", () => {
       userAdapter: ToolDbWeb3,
       pow: null, // Bypass POW for faster tests
     });
-    await db.store.ready;
+    await db.ready;
   });
 
   afterEach(async () => {
-    if (db && db.store && typeof (db.store as any).close === "function") {
-      await (db.store as any).close();
+    if (db) {
+      await db.close();
     }
   });
 
@@ -213,11 +213,11 @@ describe("Signup with Network", () => {
   let client: ToolDb;
 
   beforeAll(async () => {
-    // Create a server
+    // Create a server (using unique port to avoid conflicts with other tests)
     server = new ToolDb({
       server: true,
       host: "127.0.0.1",
-      port: 9500,
+      port: 9750,
       storageName: ".test-db/test-signup-server-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
@@ -225,8 +225,8 @@ describe("Signup with Network", () => {
       pow: null,
     });
 
-    // Wait for server to be ready
-    await server.store.ready;
+    // Wait for server to be ready using the new lifecycle API
+    await server.ready;
     await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
@@ -234,14 +234,14 @@ describe("Signup with Network", () => {
     // Create a new client for each test
     client = new ToolDb({
       server: false,
-      peers: [{ host: "127.0.0.1", port: 9500 }],
+      peers: [{ host: "127.0.0.1", port: 9750 }],
       storageName: ".test-db/test-signup-client-" + textRandom(8),
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
       pow: null,
     });
-    await client.store.ready;
+    await client.ready;
 
     // Wait for connection
     await new Promise<void>((resolve) => {
@@ -258,26 +258,35 @@ describe("Signup with Network", () => {
   });
 
   afterEach(async () => {
-    if (client && client.store && typeof (client.store as any).close === "function") {
-      await (client.store as any).close();
+    if (client) {
+      // Close server websocket first with timeout
+      const ws = (client?.network as ToolDbWebsockets)?.server;
+      if (ws) {
+        const closePromise = new Promise<void>((resolve) => {
+          ws.close(() => resolve());
+        });
+        const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1000));
+        await Promise.race([closePromise, timeout]);
+      }
+      // Use the new close() method
+      await client.close();
     }
   });
 
   afterAll(async () => {
-    // Close server websocket first with timeout
-    const ws = (server?.network as ToolDbWebsockets)?.server;
-    if (ws) {
-      const closePromise = new Promise<void>((resolve) => {
-        ws.close(() => resolve());
-      });
-      const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
-      await Promise.race([closePromise, timeout]);
-    }
-
-    // Then close the store
-    if (server && server.store && typeof (server.store as any).close === "function") {
+    if (server) {
+      // Close server websocket first with timeout
+      const ws = (server?.network as ToolDbWebsockets)?.server;
+      if (ws) {
+        const closePromise = new Promise<void>((resolve) => {
+          ws.close(() => resolve());
+        });
+        const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
+        await Promise.race([closePromise, timeout]);
+      }
+      // Use the new close() method
       try {
-        await (server.store as any).close();
+        await server.close();
       } catch (e) {
         // Ignore close errors
       }
