@@ -2,8 +2,8 @@
 
 ToolDb is a peer-to-peer model for a decentralized database, inspired by GundB
 
-
 It is the mix of a lot of cool concepts into one;
+
 - Cryptographically secure.
 - Offline first.
 - Fully decentralized.
@@ -71,7 +71,6 @@ const db = new ToolDb({
 ```
 
 Notice we imported the required adapter modules; All three adapters are required and they are not included in this module by default; You should import each of them separately.
-
 
 From there you can put and get data using the api;
 
