@@ -53,6 +53,7 @@ jobs:
           - pow
           - sha1
           - sha256
+          - signup-local-first
           - store
           - textRandom
           - verify
