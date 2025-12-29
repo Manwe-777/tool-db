@@ -24,6 +24,7 @@ import toolDbFunction from "./toolDbFunction";
 import toolDbAnonSignIn from "./toolDbAnonSignIn";
 import toolDbClientOnMessage from "./toolDbClientOnMessage";
 import toolDbVerificationWrapper from "./toolDbVerificationWrapper";
+import toolDbCheckSignupConflicts from "./toolDbCheckSignupConflicts";
 
 import toolDbQueryKeys from "./toolDbQueryKeys";
 import toolDbKeysSignIn from "./toolDbKeysSignIn";
@@ -133,6 +134,8 @@ export default class ToolDb extends EventEmitter {
   public signUp = toolDbSignUp;
 
   public verify = toolDbVerificationWrapper;
+
+  public _checkSignupConflicts = toolDbCheckSignupConflicts;
 
   // All message handlers go here
   public handlePing = handlePing;
