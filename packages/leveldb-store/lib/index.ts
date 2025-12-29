@@ -7,6 +7,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database: ReturnType<typeof level> | null = null;
   private isOpen: boolean = false;
   private openError: Error | null = null;
+  private closingPromise: Promise<void> | null = null;
 
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
@@ -64,14 +65,42 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   }
 
   public async close(): Promise<void> {
-    if (this.isOpen && this.database) {
-      return new Promise<void>((resolve) => {
-        this.database!.close((err: any) => {
-          this.isOpen = false;
-          resolve();
-        });
-      });
+    // If a close is already in progress, return that promise
+    if (this.closingPromise) {
+      return this.closingPromise;
     }
+
+    // Wait for initialization to complete before attempting to close
+    // If initialization failed, we still want to try closing if database exists
+    try {
+      await this.waitForReady();
+    } catch (err) {
+      // If initialization failed, database might still exist and need closing
+      // Continue to attempt close if database exists
+    }
+
+    // If database is not open or doesn't exist, resolve immediately
+    if (!this.isOpen || !this.database) {
+      return Promise.resolve();
+    }
+
+    // Create the closing promise and store it to prevent concurrent closes
+    this.closingPromise = new Promise<void>((resolve, reject) => {
+      this.database!.close((err: any) => {
+        // Update state regardless of error
+        this.isOpen = false;
+        this.database = null;
+        this.closingPromise = null; // Clear the promise so close can be called again
+
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    return this.closingPromise;
   }
 
   public async put(key: string, data: string) {
