@@ -5,6 +5,9 @@
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
   "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
@@ -25,5 +28,5 @@
     "crypto": "^1.0.1",
     "tool-db": "^2.6.2"
   },
-  "gitHead": "ee604249ee54ecc40ec8743bcee769a37b52ad4c"
+  "gitHead": "d1ce553320888c1c5f0b99d6e7c06580cb4dadfd"
 }
