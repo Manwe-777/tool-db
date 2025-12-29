@@ -35,6 +35,7 @@ it("A can retry connection", async () => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
+  await Alice.store.ready;
   await Alice.anonSignIn();
 
   const connectionPromise = new Promise<void>((resolve) => {
