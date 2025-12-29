@@ -211,41 +211,17 @@ beforeAll(async () => {
     log("All clients connected, waiting 300ms for stability...");
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // Verify stores are ready by doing a simple get operation on each client
-    // This ensures LevelDB databases are fully opened before tests run
-    log("Verifying stores are ready...");
-    const storeReadyTimeout = 10000; // 10 second timeout for store operations
-
-    const verifyStoreReady = async (db: ToolDb, name: string) => {
-      const testKey = `__store_ready_check_${Date.now()}`;
-      const startTime = Date.now();
-      try {
-        // Use getData with a short timeout - if store isn't ready, this will help identify it
-        await Promise.race([
-          db.getData(testKey, false, 100),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`${name} store readiness check timed out after ${storeReadyTimeout}ms`)), storeReadyTimeout)
-          )
-        ]);
-        log(`${name}: store ready (${Date.now() - startTime}ms)`);
-      } catch (e: any) {
-        // getData returns null for non-existent keys, which is expected
-        // Only log actual errors, not timeout errors from getData itself
-        if (e.message?.includes('store readiness check timed out')) {
-          throw e;
-        }
-        log(`${name}: store ready (${Date.now() - startTime}ms, key not found as expected)`);
-      }
-    };
-
+    // Wait for all stores to be ready using the public ready promise
+    log("Waiting for stores to be ready...");
+    const storeReadyStart = Date.now();
     await Promise.all([
-      verifyStoreReady(nodeA, "nodeA"),
-      verifyStoreReady(nodeB, "nodeB"),
-      verifyStoreReady(Alice, "Alice"),
-      verifyStoreReady(Bob, "Bob"),
-      verifyStoreReady(Chris, "Chris"),
+      nodeA.store.ready,
+      nodeB.store.ready,
+      Alice.store.ready,
+      Bob.store.ready,
+      Chris.store.ready,
     ]);
-    log("All stores verified ready");
+    log(`All stores ready (${Date.now() - storeReadyStart}ms)`);
 
     log("=== beforeAll completed successfully ===");
     log(`Final state: nodeA.isConnected=${nodeA.isConnected}, nodeB.isConnected=${nodeB.isConnected}`);

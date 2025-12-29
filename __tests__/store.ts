@@ -18,6 +18,8 @@ beforeAll(async () => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
+  // Wait for store to be ready before proceeding
+  await Alice.store.ready;
   await Alice.anonSignIn();
 }, 20000); // beforeAll timeout
 

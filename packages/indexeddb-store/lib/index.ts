@@ -2,7 +2,6 @@ import { ToolDb, ToolDbStorageAdapter } from "tool-db";
 
 export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   private database: IDBDatabase | undefined;
-  private readyPromise: Promise<void>;
   private resetInterval: NodeJS.Timeout;
 
   private dbStart() {
@@ -25,7 +24,8 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   constructor(db: ToolDb, forceStorageName?: string) {
     super(db, forceStorageName);
 
-    this.readyPromise = this.dbStart();
+    // Use the base class's protected _readyPromise
+    this._readyPromise = this.dbStart();
 
     // reset webkit bug? - Periodically reset database connection
     // Use event-based promise update instead of just calling dbStart
@@ -33,18 +33,14 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
       if (this.database) {
         this.database.close();
       }
-      this.readyPromise = this.dbStart();
-      await this.readyPromise;
+      this._readyPromise = this.dbStart();
+      await this._readyPromise;
     }, 1000 * 15);
-  }
-
-  private async waitForReady() {
-    await this.readyPromise;
   }
 
   public async put(key: string, data: string) {
     await this.waitForReady();
-    
+
     return new Promise((resolve, reject) => {
       if (!this.database) {
         reject(new Error("Database not ready"));
@@ -76,7 +72,7 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
 
   public async get(key: string) {
     await this.waitForReady();
-    
+
     return new Promise<string>((resolve, reject) => {
       if (!this.database) {
         reject(new Error("Database not ready"));
@@ -99,7 +95,7 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
 
   public async query(key: string) {
     await this.waitForReady();
-    
+
     return new Promise<string[]>((resolve, reject) => {
       if (!this.database) {
         reject(new Error("Database not ready"));

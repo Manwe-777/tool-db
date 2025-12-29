@@ -59,6 +59,7 @@ it("A can retry connection", async () => {
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
   });
+  await nodeA.store.ready;
   await nodeA.anonSignIn();
 
   // Wait for Alice to successfully connect

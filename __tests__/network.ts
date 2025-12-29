@@ -177,6 +177,18 @@ beforeAll(async () => {
     log("All clients connected, waiting 300ms for stability...");
     await new Promise((resolve) => setTimeout(resolve, 300));
 
+    // Wait for all stores to be ready using the public ready promise
+    log("Waiting for stores to be ready...");
+    const storeReadyStart = Date.now();
+    await Promise.all([
+      nodeA.store.ready,
+      nodeB.store.ready,
+      Alice.store.ready,
+      Bob.store.ready,
+      Chris.store.ready,
+    ]);
+    log(`All stores ready (${Date.now() - storeReadyStart}ms)`);
+
     log("=== beforeAll completed successfully ===");
     log(`Final state: nodeA.isConnected=${nodeA.isConnected}, nodeB.isConnected=${nodeB.isConnected}`);
     log(`Final state: Alice.isConnected=${Alice.isConnected}, Bob.isConnected=${Bob.isConnected}, Chris.isConnected=${Chris.isConnected}`);

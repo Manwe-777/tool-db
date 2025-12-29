@@ -3,7 +3,6 @@ import level from "level";
 
 export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private database;
-  private readyPromise: Promise<void>;
   private isOpen: boolean = false;
   private openError: Error | null = null;
 
@@ -25,7 +24,8 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     });
 
     // Create a promise that resolves when database is ready
-    this.readyPromise = new Promise<void>((resolve, reject) => {
+    // Use the base class's protected _readyPromise
+    this._readyPromise = new Promise<void>((resolve, reject) => {
       this.database.open((err: any) => {
         if (err) {
           this.openError = err;
@@ -47,10 +47,6 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
         });
       });
     }
-  }
-
-  private async waitForReady() {
-    await this.readyPromise;
   }
 
   public async put(key: string, data: string) {
