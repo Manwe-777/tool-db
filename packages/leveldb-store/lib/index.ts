@@ -19,7 +19,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
       // Only log errors that aren't LOCK file issues during cleanup
       const errMsg = err?.message || String(err);
       if (!errMsg.includes("LOCK: No such file")) {
-        console.error(`LevelDB error for ${this.storageName}:`, errMsg);
+        this.tooldb.logger(`LevelDB error for ${this.storageName}:`, errMsg);
       }
     });
 
@@ -29,9 +29,11 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
       this.database.open((err: any) => {
         if (err) {
           this.openError = err;
+          this.tooldb.logger(`LevelDB error for ${this.storageName}:`, err.message || err);
           reject(err);
         } else {
           this.isOpen = true;
+          this.tooldb.logger(`LevelDB opened for ${this.storageName}`);
           resolve();
         }
       });
