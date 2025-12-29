@@ -4,6 +4,9 @@ import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
 import ToolDbWeb3 from "../packages/web3-user";
 
+// Increase timeout for CI environments where LevelDB initialization can be slower
+jest.setTimeout(10000);
+
 let Alice: ToolDb;
 
 beforeAll(async () => {
@@ -16,7 +19,7 @@ beforeAll(async () => {
     userAdapter: ToolDbWeb3,
   });
   await Alice.anonSignIn();
-});
+}, 10000); // beforeAll timeout
 
 afterAll(async () => {
   // Close the LevelDB connection to prevent post-test async operations
