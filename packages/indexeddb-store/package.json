@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/indexeddb-store",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "IndexedDb store adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -22,7 +22,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "tool-db": "^2.6.0"
+    "tool-db": "^2.6.1"
   },
   "gitHead": "dd61e164db2b5d8416663c7b3d11d40a38f94c80"
 }
