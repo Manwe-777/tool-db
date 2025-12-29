@@ -199,8 +199,6 @@ beforeAll(async () => {
 }, 30000); // beforeAll timeout
 
 afterAll(async () => {
-  log("=== afterAll started ===");
-
   // as any, since we dont have the type for the server yet.
   const closeServers = new Promise<void>((resolve) => {
     const serverA = (nodeA?.network as ToolDbWebsockets)?.server;
@@ -208,23 +206,18 @@ afterAll(async () => {
     let closedCount = 0;
     const checkBothClosed = () => {
       closedCount++;
-      log(`Server closed (${closedCount}/2)`);
       if (closedCount === 2) resolve();
     };
 
     if (serverA) {
-      log("Closing serverA...");
       serverA.close(() => checkBothClosed());
     } else {
-      log("serverA not found, skipping");
       checkBothClosed();
     }
 
     if (serverB) {
-      log("Closing serverB...");
       serverB.close(() => checkBothClosed());
     } else {
-      log("serverB not found, skipping");
       checkBothClosed();
     }
   });
@@ -232,7 +225,6 @@ afterAll(async () => {
   // Add timeout to prevent hanging
   const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
   await Promise.race([closeServers, timeout]);
-  log("=== afterAll completed ===");
 });
 
 it("All peers have correct servers data", async () => {
