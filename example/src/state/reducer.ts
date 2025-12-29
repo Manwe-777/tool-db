@@ -5,7 +5,6 @@ export default function reducer(
   state: GlobalState,
   action: AllActions
 ): GlobalState {
-  // console.log("DISPACTH", action);
   try {
     switch (action.type) {
       case "SET_ALL_GROUPS_LIST":
