@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { sha256 } from "tool-db";
 
 import getToolDb from "../utils/getToolDb";
@@ -14,15 +14,72 @@ interface LoginProps {
   setLoggedIn: (isLoggedIn: boolean) => void;
 }
 
+type StatusType = "idle" | "loading" | "error" | "warning" | "success";
+
+interface StatusState {
+  type: StatusType;
+  message: string;
+}
+
 export default function Login(props: LoginProps) {
   const { setLoggedIn } = props;
 
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
+  const [status, setStatus] = useState<StatusState>({ type: "idle", message: "" });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const doLogin = useCallback(() => {
+  // Listen for username conflict events
+  useEffect(() => {
     const toolDb = getToolDb();
-    toolDb.signIn(user, pass).then(async (u) => {
+    if (!toolDb) return;
+
+    const handleSignupConflict = (data: {
+      username: string;
+      localTimestamp: number;
+      error: string;
+    }) => {
+      setStatus({
+        type: "warning",
+        message: `Username conflict detected: ${data.error}`,
+      });
+    };
+
+    const handleLostUsername = (data: {
+      username: string;
+      timestamp: number;
+      winnerTimestamp: number;
+      winnerAddress: string;
+    }) => {
+      setStatus({
+        type: "error",
+        message: `Username "${data.username}" was already taken by another user. Please try a different username.`,
+      });
+      setIsLoading(false);
+    };
+
+    toolDb.on("signup-conflict-detected", handleSignupConflict);
+    toolDb.on("current-user-lost-username", handleLostUsername);
+
+    return () => {
+      toolDb.off("signup-conflict-detected", handleSignupConflict);
+      toolDb.off("current-user-lost-username", handleLostUsername);
+    };
+  }, []);
+
+  const doLogin = useCallback(async () => {
+    if (!user.trim() || !pass.trim()) {
+      setStatus({ type: "error", message: "Please enter both username and password" });
+      return;
+    }
+
+    setIsLoading(true);
+    setStatus({ type: "loading", message: "Signing in..." });
+
+    try {
+      const toolDb = getToolDb();
+      const u = await toolDb.signIn(user, pass);
+
       if (u) {
         // Load ECDH encryption keys (tries local cache first, then network)
         const keys = await loadEncryptedKeys(pass);
@@ -41,54 +98,125 @@ export default function Login(props: LoginProps) {
         // Initialize group crypto with password hash to load/save group keys
         await initGroupCrypto(toolDb, sha256(pass));
 
+        setStatus({ type: "success", message: "Signed in successfully!" });
         setTimeout(() => {
           toolDb.putData("name", user, true);
           setLoggedIn(true);
         }, 500);
+      } else {
+        setStatus({ type: "error", message: "Sign in failed. Please check your credentials." });
+        setIsLoading(false);
       }
-    });
-  }, [user, pass]);
+    } catch (error: any) {
+      const errorMessage = error?.message || "Sign in failed";
+      setStatus({ type: "error", message: errorMessage });
+      setIsLoading(false);
+    }
+  }, [user, pass, setLoggedIn]);
 
-  const doSignup = useCallback(() => {
-    const toolDb = getToolDb();
-    toolDb.signUp(user, pass).then(async (u) => {
+  const doSignup = useCallback(async () => {
+    if (!user.trim() || !pass.trim()) {
+      setStatus({ type: "error", message: "Please enter both username and password" });
+      return;
+    }
+
+    if (user.length < 3) {
+      setStatus({ type: "error", message: "Username must be at least 3 characters" });
+      return;
+    }
+
+    if (pass.length < 6) {
+      setStatus({ type: "error", message: "Password must be at least 6 characters" });
+      return;
+    }
+
+    setIsLoading(true);
+    setStatus({ type: "loading", message: "Creating account..." });
+
+    try {
+      const toolDb = getToolDb();
+      const u = await toolDb.signUp(user, pass);
       console.log(u);
+
       if (u) {
+        setStatus({ type: "loading", message: "Account created! Signing in..." });
+
         // Generate ECDH encryption keys for new user
         const encKeys = await generateUserEncryptionKeys();
         await storeEncryptedKeys(encKeys, pass);
 
-        toolDb.signIn(user, pass).then(async (acc) => {
-          if (acc) {
-            // Initialize group crypto with password hash
-            await initGroupCrypto(toolDb, sha256(pass));
+        const acc = await toolDb.signIn(user, pass);
+        if (acc) {
+          // Initialize group crypto with password hash
+          await initGroupCrypto(toolDb, sha256(pass));
 
-            setTimeout(() => {
-              toolDb.putData("name", user, true);
-              // Publish our encryption public key to the network
-              toolDb.putData("encPubKey", encKeys.publicKey, true);
-              setLoggedIn(true);
-            }, 500);
-          }
-        });
+          setStatus({ type: "success", message: "Welcome! Your account is ready." });
+          setTimeout(() => {
+            toolDb.putData("name", user, true);
+            // Publish our encryption public key to the network
+            toolDb.putData("encPubKey", encKeys.publicKey, true);
+            setLoggedIn(true);
+          }, 500);
+        } else {
+          setStatus({ type: "error", message: "Account created but sign in failed. Please try logging in." });
+          setIsLoading(false);
+        }
+      } else {
+        setStatus({ type: "error", message: "Signup failed. Please try again." });
+        setIsLoading(false);
       }
-    });
-  }, [user, pass]);
+    } catch (error: any) {
+      const errorMessage = error?.message || "Signup failed";
+
+      // Provide user-friendly error messages
+      if (errorMessage.includes("User already exists")) {
+        setStatus({ type: "error", message: "This username is already taken. Please choose a different one." });
+      } else if (errorMessage.includes("conflict")) {
+        setStatus({ type: "warning", message: "Username conflict detected. Please try a different username." });
+      } else {
+        setStatus({ type: "error", message: errorMessage });
+      }
+      setIsLoading(false);
+    }
+  }, [user, pass, setLoggedIn]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isLoading) {
+      doLogin();
+    }
+  };
 
   return (
     <div className="login">
       <label>User:</label>
-      <input onChange={(e) => setUser(e.currentTarget.value)} value={user} />
+      <input
+        onChange={(e) => setUser(e.currentTarget.value)}
+        value={user}
+        disabled={isLoading}
+        onKeyDown={handleKeyDown}
+        placeholder="Enter username"
+      />
       <label>Password:</label>
       <input
         onChange={(e) => setPass(e.currentTarget.value)}
         value={pass}
         type="password"
+        disabled={isLoading}
+        onKeyDown={handleKeyDown}
+        placeholder="Enter password"
       />
-      <button type="button" onClick={doLogin}>
-        Login
+
+      {status.message && (
+        <div className={`login-status login-status--${status.type}`}>
+          {status.type === "loading" && <span className="loading-spinner" />}
+          {status.message}
+        </div>
+      )}
+
+      <button type="button" onClick={doLogin} disabled={isLoading}>
+        {isLoading ? "Please wait..." : "Login"}
       </button>
-      <button type="button" onClick={doSignup}>
+      <button type="button" onClick={doSignup} disabled={isLoading}>
         Signup
       </button>
     </div>
