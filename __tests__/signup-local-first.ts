@@ -264,8 +264,23 @@ describe("Signup with Network", () => {
   });
 
   afterAll(async () => {
+    // Close server websocket first with timeout
+    const ws = (server?.network as ToolDbWebsockets)?.server;
+    if (ws) {
+      const closePromise = new Promise<void>((resolve) => {
+        ws.close(() => resolve());
+      });
+      const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
+      await Promise.race([closePromise, timeout]);
+    }
+
+    // Then close the store
     if (server && server.store && typeof (server.store as any).close === "function") {
-      await (server.store as any).close();
+      try {
+        await (server.store as any).close();
+      } catch (e) {
+        // Ignore close errors
+      }
     }
   });
 
