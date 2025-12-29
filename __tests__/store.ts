@@ -17,7 +17,6 @@ beforeAll(async () => {
     storageAdapter: ToolDbLeveldb,
     networkAdapter: ToolDbWebsockets,
     userAdapter: ToolDbWeb3,
-    debug: true,
   });
   // Wait for store to be ready before proceeding
   await Alice.store.ready;
