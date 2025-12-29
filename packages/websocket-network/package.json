@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/websocket-network",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "WebSockets network adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -19,7 +19,7 @@
     "url": "https://github.com/Manwe-777/tool-db/issues"
   },
   "dependencies": {
-    "tool-db": "^2.6.1",
+    "tool-db": "^2.6.2",
     "ws": "^8.8.0"
   },
   "devDependencies": {
