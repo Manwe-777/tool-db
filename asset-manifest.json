@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/Manwe-777/tool-db-chat/static/css/main.3ebf099f.css",
-    "main.js": "/Manwe-777/tool-db-chat/static/js/main.c97a95c8.js",
-    "static/js/453.190af9ee.chunk.js": "/Manwe-777/tool-db-chat/static/js/453.190af9ee.chunk.js",
-    "index.html": "/Manwe-777/tool-db-chat/index.html",
-    "main.3ebf099f.css.map": "/Manwe-777/tool-db-chat/static/css/main.3ebf099f.css.map",
-    "main.c97a95c8.js.map": "/Manwe-777/tool-db-chat/static/js/main.c97a95c8.js.map",
-    "453.190af9ee.chunk.js.map": "/Manwe-777/tool-db-chat/static/js/453.190af9ee.chunk.js.map"
+    "main.css": "/tool-db-chat-example/static/css/main.3ebf099f.css",
+    "main.js": "/tool-db-chat-example/static/js/main.a8f478b1.js",
+    "static/js/453.37295128.chunk.js": "/tool-db-chat-example/static/js/453.37295128.chunk.js",
+    "index.html": "/tool-db-chat-example/index.html",
+    "main.3ebf099f.css.map": "/tool-db-chat-example/static/css/main.3ebf099f.css.map",
+    "main.a8f478b1.js.map": "/tool-db-chat-example/static/js/main.a8f478b1.js.map",
+    "453.37295128.chunk.js.map": "/tool-db-chat-example/static/js/453.37295128.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.3ebf099f.css",
-    "static/js/main.c97a95c8.js"
+    "static/js/main.a8f478b1.js"
   ]
 }
