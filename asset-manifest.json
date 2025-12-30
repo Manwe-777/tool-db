@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Manwe-777/tool-db-chat/static/css/main.3ebf099f.css",
+    "main.js": "/Manwe-777/tool-db-chat/static/js/main.c97a95c8.js",
+    "static/js/453.190af9ee.chunk.js": "/Manwe-777/tool-db-chat/static/js/453.190af9ee.chunk.js",
+    "index.html": "/Manwe-777/tool-db-chat/index.html",
+    "main.3ebf099f.css.map": "/Manwe-777/tool-db-chat/static/css/main.3ebf099f.css.map",
+    "main.c97a95c8.js.map": "/Manwe-777/tool-db-chat/static/js/main.c97a95c8.js.map",
+    "453.190af9ee.chunk.js.map": "/Manwe-777/tool-db-chat/static/js/453.190af9ee.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3ebf099f.css",
+    "static/js/main.c97a95c8.js"
+  ]
+}
