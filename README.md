@@ -1,37 +1,81 @@
-# Tool Db
+<div align="center">
 
-ToolDb is a peer-to-peer model for a decentralized database, inspired by GunDB.
+# 🛠️ Tool Db
 
-It is the mix of a lot of cool concepts into one:
+### A Peer-to-Peer Decentralized Database
 
-- 🔐 Cryptographically secure
-- 📴 Offline first
-- 🌐 Fully decentralized
-- ⚡ Capable of providing realtime updates
-- 📦 Key-value/document storage
-- 🔄 Built-in CRDT support for conflict-free data types
-- 🖥️ Works in the Browser and Node.js seamlessly
+[![CI](https://github.com/Manwe-777/tool-db/actions/workflows/main.yml/badge.svg)](https://github.com/Manwe-777/tool-db/actions/workflows/main.yml)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org)
 
-For more detailed documentation head here:
+**[📖 Documentation](https://github.com/Manwe-777/tool-db-docs)** · **[🚀 Live Demo](https://manwe-777.github.io/tool-db-chat-example/)** · **[💬 Report Bug](https://github.com/Manwe-777/tool-db/issues)**
 
-[https://github.com/Manwe-777/tool-db-docs](https://github.com/Manwe-777/tool-db-docs)
+---
 
-_(No live version just yet!, until the protocol is more finalized)_
+</div>
 
-## Architecture
+## ✨ What is Tool Db?
 
-We push towards the concept of federated servers, where we set up a p2p mesh network between any servers who want to join the swarm, and have those servers manage the connection and data sharing between them, while allowing client peers to connect to them to push updates to the database.
+Tool Db is a peer-to-peer database inspired by GunDB, combining powerful concepts into one cohesive solution:
 
-This setup IS NOT a requirement! It is just what we think is the best and most reliable way of creating a p2p network for dApps using both desktop and web compatible technologies. Any peer has the capability of connecting to any other peer through websockets, and modifying the code to allow WebRTC connections between web peers is absolutely possible.
+<table>
+<tr>
+<td width="50%">
 
-Since anyone can join a federated server swarm to help grow the network, we use cryptography (basic public and private key authentication and signature validation) to ensure all messages are coming from the real authors of the data that they intend to modify. By joining a swarm, all peers in it can help validate without even having full data; even a new server peer can help, because all information is stored on each message and we don't rely on any centralized database to fetch users data.
+🔐 **Cryptographically Secure**
+<br/>Public/private key authentication
 
-Please check the [chain-swarm](https://github.com/Manwe-777/chain-swarm) repository to see how a federated server swarm would look like. Tool Db only handles the connection and messaging between peers, but it does not have any logic for peer discovery.
-We do that using [discovery-channel](https://www.npmjs.com/package/discovery-channel), but you can use any DHT/networking solution you want! Even WebRTC between browsers works using the `toolDbWebrtc` transport.
+🌐 **Fully Decentralized**
+<br/>No central point of failure
 
-## Packages
+⚡ **Real-time Updates**
+<br/>Subscribe to live data changes
 
-Tool Db is organized as a monorepo with the following packages:
+</td>
+<td width="50%">
+
+📴 **Offline First**
+<br/>Works without connectivity
+
+📦 **Key-Value Storage**
+<br/>Document-based data model
+
+🔄 **Built-in CRDTs**
+<br/>Conflict-free data types
+
+</td>
+</tr>
+</table>
+
+<div align="center">
+
+### 🎮 Try it now!
+
+**[Launch the Live Chat Demo →](https://manwe-777.github.io/tool-db-chat-example/)**
+
+_Experience real-time P2P messaging in your browser_
+
+</div>
+
+---
+
+## 🏗️ Architecture
+
+We embrace **federated servers** — a P2P mesh network where servers join a swarm and manage connections and data sharing, while clients connect to push updates.
+
+> **This is not a requirement!** Any peer can connect to any other peer through WebSockets, and WebRTC connections between web peers are fully supported.
+
+Since anyone can join a federated server swarm, we use **cryptographic validation** (public/private key authentication and signature verification) to ensure all messages come from their real authors. All information is stored on each message — no centralized database needed!
+
+📦 Check out [chain-swarm](https://github.com/Manwe-777/chain-swarm) for a federated server implementation.
+<br/>
+🔍 We use [discovery-channel](https://www.npmjs.com/package/discovery-channel) for peer discovery, but any DHT/networking solution works!
+
+---
+
+## 📦 Packages
+
+Tool Db is organized as a monorepo:
 
 | Package             | Description                                                  |
 | ------------------- | ------------------------------------------------------------ |
@@ -45,65 +89,56 @@ Tool Db is organized as a monorepo with the following packages:
 | `webrtc-network`    | WebRTC network adapter for browser-to-browser connections    |
 | `hybrid-network`    | Hybrid network adapter combining multiple transports         |
 
-## CRDT Support
+---
 
-Tool Db includes built-in support for Conflict-free Replicated Data Types (CRDTs), which allow for automatic conflict resolution in distributed systems:
+## 🔄 CRDT Support
 
-| CRDT Type       | Operations   | Use Case                                          |
+Built-in **Conflict-free Replicated Data Types** for automatic conflict resolution:
+
+| Type            | Operations   | Use Case                                          |
 | --------------- | ------------ | ------------------------------------------------- |
 | **MapCRDT**     | `SET`, `DEL` | Key-value stores with per-key conflict resolution |
 | **ListCRDT**    | `INS`, `DEL` | Ordered lists with concurrent insert support      |
 | **CounterCRDT** | `ADD`, `SUB` | Distributed counters that merge correctly         |
 
-CRDTs ensure that all peers eventually converge to the same state, regardless of the order in which updates are received.
+CRDTs ensure all peers **eventually converge** to the same state, regardless of update order.
 
-## Install
+---
 
-You can install ToolDb via npm or yarn:
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
 npm install tool-db
 ```
 
-or use it via script in your html:
+Or use via CDN:
 
 ```html
 <script src="https://unpkg.com/tool-db/bundle.js"></script>
 ```
 
-That will include all of ToolDb exports in `tooldb`, then you can use it like:
-
 ```javascript
 const { ToolDb, sha256 } = tooldb;
 ```
 
-## Requirements
-
-- Node.js >= 16.0.0
-
-## Base Usage
-
-Creating a WebRTC peers network is as easy as:
+### Basic Usage
 
 ```javascript
 import { ToolDb, ToolDbWebrtc } from "tool-db";
 
+// Create a WebRTC peers network
 const db = new ToolDb({
   networkAdapter: ToolDbWebrtc,
   debug: true,
 });
-```
 
-From there you can put and get data using the API:
-
-```javascript
-// Simple key-value storage
-db.putData("foo-key", "bar").then(console.log);
-
-// Get data
+// Put and get data
+await db.putData("foo-key", "bar");
 const value = await db.getData("foo-key");
 
-// Subscribe to updates
+// Subscribe to real-time updates
 db.subscribeData("foo-key", (data) => {
   console.log("Data updated:", data);
 });
@@ -127,7 +162,7 @@ console.log(map.value); // { name: "Alice", age: 30 }
 // List CRDT
 const list = await db.getCrdt("my-list", "LIST");
 list.PUSH("item1");
-list.INS(0, "item0"); // Insert at position
+list.INS(0, "item0");
 console.log(list.value); // ["item0", "item1"]
 ```
 
@@ -147,74 +182,92 @@ await db.signIn("username", "password");
 await db.keysSignIn(privateKey);
 ```
 
-## Running the Demo
+---
+
+## 🧪 Development
+
+### Requirements
+
+- Node.js >= 16.0.0
+
+### Running the Demo
 
 ```bash
-# Run the demo
-npm run demo
-
-# Run demo with fresh database
-npm run demo:fresh
+npm run demo           # Run the demo
+npm run demo:fresh     # Run demo with fresh database
 ```
 
-## Testing
+### Testing
 
 ```bash
-# Run all tests
-npm test
-
-# Run a single test file
-npx jest __tests__/filename.ts
-
-# Run tests in watch mode
-npm run test:watch
+npm test                           # Run all tests
+npx jest __tests__/filename.ts     # Run a single test file
+npm run test:watch                 # Run tests in watch mode
 ```
 
-## Future Work
+---
 
-While the database is currently functioning as expected, there are many things that could be added or improved:
+## 🗺️ Roadmap
 
-- Allow data encryption (probably built in), add methods for ECC encryption, shared keys, etc.
-- Allow adding Noise/encryption to connections (probably based on the peer identity, requires initial keys exchange on connection)
-- Property-based testing for CRDTs using libraries like `fast-check`
-- Performance benchmarks with larger datasets
-- Metrics for tracking CRDT change arrays growth
+- [ ] Built-in data encryption with ECC methods and shared keys
+- [ ] Noise/encryption for connections based on peer identity
+- [ ] Property-based testing for CRDTs using `fast-check`
+- [ ] Performance benchmarks with larger datasets
+- [ ] Metrics for tracking CRDT change arrays growth
 
-## Recent Improvements
+---
 
-### CRDT Bug Fixes & Test Coverage
+## 📝 Recent Improvements
+
+<details>
+<summary><strong>🔧 CRDT Bug Fixes & Test Coverage</strong></summary>
 
 - Fixed 5 critical bugs in CRDT implementations (MapCRDT, ListCRDT, CounterCRDT)
 - Added 48+ comprehensive tests for edge cases and concurrent operations
 - See [CRDT_TEST_ANALYSIS.md](./CRDT_TEST_ANALYSIS.md) for details
 
-### Network Reliability
+</details>
+
+<details>
+<summary><strong>🌐 Network Reliability</strong></summary>
 
 - Fixed WebSocket adapter bug where connections were never removed from awaiting array
 - Fixed queryKeys implementation bug preventing proper timeout handling
 - Added 126+ network tests covering events, subscriptions, and edge cases
 - See [NETWORK_TEST_ANALYSIS.md](./NETWORK_TEST_ANALYSIS.md) for details
 
-### Async/Await Improvements
+</details>
+
+<details>
+<summary><strong>⚡ Async/Await Improvements</strong></summary>
 
 - Converted callback-based user methods to async/await
 - Fixed race conditions in anonymous user generation
 - See [RACE_CONDITION_FIX.md](./RACE_CONDITION_FIX.md) for details
 
-### Performance Optimizations
+</details>
+
+<details>
+<summary><strong>🚀 Performance Optimizations</strong></summary>
 
 - Replaced time-based polling with event-driven initialization in storage adapters
 - Tests run ~50% faster due to event-based waiting instead of arbitrary timeouts
 - See [TIMEOUT_REFACTORING_SUMMARY.md](./TIMEOUT_REFACTORING_SUMMARY.md) for details
 
-## License
-
-ISC
-
-## Author
-
-Manwe <manuel.etchegaray7@gmail.com>
+</details>
 
 ---
 
-There is a lot more you can do, like subscribe for updates, built-in user credentials validation based on ECC, create federated networks, run servers on Node.js, auto-replicate data through them, etc. Make sure you read through the [documentation](https://github.com/Manwe-777/tool-db-docs)!
+## 📄 License
+
+ISC © [Manwe](mailto:manuel.etchegaray7@gmail.com)
+
+---
+
+<div align="center">
+
+**[📖 Read the full documentation →](https://github.com/Manwe-777/tool-db-docs)**
+
+_Federated networks • Node.js servers • Auto-replication • And much more!_
+
+</div>
