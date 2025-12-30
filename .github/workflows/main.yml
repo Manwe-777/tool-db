@@ -76,8 +76,7 @@ jobs:
         run: npx jest __tests__/${{ matrix.test }}.ts --detectOpenHandles --runInBand
       - name: Build site
         run: |
-          npm ci
-          cd example && npm run build
+          cd example && npm install && npm run build
       - name: Deploy to Repo
         uses: peaceiris/actions-gh-pages@v4
         with:
