@@ -8,7 +8,7 @@
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org)
 
-**[📖 Documentation](https://github.com/Manwe-777/tool-db-docs)** · **[🚀 Live Demo](https://manwe-777.github.io/tool-db-chat-example/)** · **[💬 Report Bug](https://github.com/Manwe-777/tool-db/issues)**
+**[📖 Documentation](https://manwe-777.github.io/tool-db-docs/)** · **[🚀 Live Demo](https://manwe-777.github.io/tool-db-chat-example/)** · **[💬 Report Bug](https://github.com/Manwe-777/tool-db/issues)**
 
 ---
 
