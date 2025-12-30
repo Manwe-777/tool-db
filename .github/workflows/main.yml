@@ -74,3 +74,14 @@ jobs:
           key: build-${{ github.sha }}
       - name: "Run test: ${{ matrix.test }}"
         run: npx jest __tests__/${{ matrix.test }}.ts --detectOpenHandles --runInBand
+      - name: Build site
+        run: |
+          npm ci
+          cd example && npm run build
+      - name: Deploy to Repo
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          external_repository: Manwe-777/tool-db-chat-example
+          publish_branch: gh-pages
+          publish_dir: ./example/build
