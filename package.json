@@ -15,7 +15,7 @@
     "demo:fresh": "node scripts/run-demo.js --clean"
   },
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "optionalDependencies": {
     "level": "^7.0.0",
     "simple-peer": "^9.11.1",

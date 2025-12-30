@@ -4,7 +4,7 @@
   "description": "ECDSA user adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"
   },
