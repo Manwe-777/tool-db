@@ -5,7 +5,7 @@
 ### A Peer-to-Peer Decentralized Database
 
 [![CI](https://github.com/Manwe-777/tool-db/actions/workflows/main.yml/badge.svg)](https://github.com/Manwe-777/tool-db/actions/workflows/main.yml)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org)
 
 **[📖 Documentation](https://manwe-777.github.io/tool-db-docs/)** · **[🚀 Live Demo](https://manwe-777.github.io/tool-db-chat-example/)** · **[💬 Report Bug](https://github.com/Manwe-777/tool-db/issues)**
@@ -14,9 +14,17 @@
 
 </div>
 
-## ✨ What is Tool Db?
+## 💡 Philosophy
 
-Tool Db is a peer-to-peer database inspired by GunDB, combining powerful concepts into one cohesive solution:
+ToolDb is designed as **open, permissionless infrastructure**.
+
+It enables peer-to-peer data exchange without centralized custody, accounts, or trust anchors. Identity is cryptographic, data ownership is local-first, and connectivity emerges from the network itself.
+
+This project is intentionally permissive. Commercial use, private deployments, and derivative systems are welcome. ontributions, attribution, and community participation are very appreciated but not required.
+
+**ToolDb favors adoption, interoperability, and resilience**
+
+---
 
 <table>
 <tr>
@@ -113,7 +121,7 @@ npm test               # Run all tests
 
 ## 📄 License
 
-ISC © [Manwe](mailto:manuel.etchegaray7@gmail.com)
+Apache-2.0 © [Manuel Etchegaray](mailto:manuel.etchegaray7@gmail.com)
 
 ---
 
