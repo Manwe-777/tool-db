@@ -1,7 +1,7 @@
 {
-  "name": "tool-db-chat",
+  "name": "tool-db-chat-example",
   "version": "0.1.0",
-  "homepage": "https://github.com/Manwe-777/tool-db-chat",
+  "homepage": "https://github.io/Manwe-777/tool-db-chat-example",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
