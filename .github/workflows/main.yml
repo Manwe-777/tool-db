@@ -87,7 +87,7 @@ jobs:
       - name: "Checkout source code"
         uses: "actions/checkout@v4"
       - name: "Install example modules"
-        run: cd example && npm install
+        run: npm install && npm run build && cd example && npm install
       - name: "Build example"
         run: cd example && npm run build
       - name: "Deploy"
