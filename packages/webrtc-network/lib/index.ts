@@ -1,9 +1,30 @@
 import Peer from "simple-peer";
 import WebSocket from "ws";
+import { schnorr } from "@noble/curves/secp256k1";
+import { sha256 } from "@noble/hashes/sha256";
+import { bytesToHex, randomBytes } from "@noble/hashes/utils";
 
 import { ToolDb, sha1, textRandom, ToolDbNetworkAdapter } from "tool-db";
 
 type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
+
+// Nostr types
+interface NostrEvent {
+  id: string;
+  pubkey: string;
+  created_at: number;
+  kind: number;
+  tags: string[][];
+  content: string;
+  sig: string;
+}
+
+interface NostrMessage {
+  peerId: string;
+  offer?: RTCSessionDescriptionInit;
+  answer?: RTCSessionDescriptionInit;
+  offer_id?: string;
+}
 
 type IOffers = Record<
   string,
@@ -42,6 +63,26 @@ const defaultTrackerUrls = [
   "wss://tracker.files.fm:7073/announce",
 ];
 
+// Default Nostr relays for peer discovery
+const defaultNostrRelayUrls = [
+  "wss://nos.lol",
+  "wss://relay.damus.io",
+  "wss://nostr.data.haus",
+  "wss://relay.nostromo.social",
+  "wss://relay.fountain.fm",
+];
+
+// Nostr event kind for ephemeral peer discovery (20000-30000 range)
+const NOSTR_KIND_BASE = 20000;
+
+// Helper to convert hex to bytes
+const fromHex = (hex: string): Uint8Array =>
+  new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []);
+
+// Helper to hash string to number for kind derivation
+const strToNum = (str: string, limit = Number.MAX_SAFE_INTEGER): number =>
+  str.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % limit;
+
 export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   private wnd =
     typeof window === "undefined" ? undefined : (window as any | undefined);
@@ -64,6 +105,17 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   // Track if reconnection is paused (e.g., when offline)
   private reconnectionPaused = false;
   private pendingReconnections: Array<() => void> = [];
+
+  // Nostr-specific properties
+  private nostrSecretKey!: Uint8Array;
+  private nostrPublicKey!: Uint8Array;
+  private nostrPubkeyHex!: string;
+  private nostrRelays: Record<string, WebSocket | null> = {};
+  private nostrRelayUrls = [...defaultNostrRelayUrls];
+  private nostrSubscriptionIds: Record<string, string> = {};
+  private nostrKind: number = NOSTR_KIND_BASE;
+  private nostrTopic: string = "";
+  private nostrPendingOffers: Record<string, { peer: Peer.Instance; offer_id: string }> = {};
 
   private onDisconnect = (id: string, err: any) => {
     this.tooldb.logger(id, err);
@@ -124,6 +176,351 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     this.tooldb.logger("Network offline - pausing reconnections");
     this.reconnectionPaused = true;
   };
+
+  // ============================================
+  // NOSTR PEER DISCOVERY METHODS
+  // ============================================
+
+  /**
+   * Initialize Nostr keypair for signing events
+   */
+  private initNostrKeys = () => {
+    // Generate random 32-byte secret key
+    this.nostrSecretKey = randomBytes(32);
+    this.nostrPublicKey = schnorr.getPublicKey(this.nostrSecretKey);
+    this.nostrPubkeyHex = bytesToHex(this.nostrPublicKey);
+  };
+
+  /**
+   * Get the Nostr event kind based on topic
+   */
+  private getNostrKind = (topic: string): number => {
+    return strToNum(topic, 10000) + NOSTR_KIND_BASE;
+  };
+
+  /**
+   * Create and sign a Nostr event
+   */
+  private createNostrEvent = async (
+    content: string
+  ): Promise<string> => {
+    const now = Math.floor(Date.now() / 1000);
+    
+    const payload = {
+      kind: this.nostrKind,
+      tags: [["x", this.nostrTopic]],
+      created_at: now,
+      content,
+      pubkey: this.nostrPubkeyHex,
+    };
+
+    // Create event ID by hashing serialized event data
+    const eventData = JSON.stringify([
+      0,
+      payload.pubkey,
+      payload.created_at,
+      payload.kind,
+      payload.tags,
+      payload.content,
+    ]);
+    
+    // Hash using @noble/hashes (works in both browser and Node.js)
+    const encoder = new TextEncoder();
+    const eventHash = sha256(encoder.encode(eventData));
+    const eventId = bytesToHex(eventHash);
+    
+    // Sign the event using schnorr
+    const signature = schnorr.sign(eventHash, this.nostrSecretKey);
+    
+    return JSON.stringify([
+      "EVENT",
+      {
+        ...payload,
+        id: eventId,
+        sig: bytesToHex(signature),
+      },
+    ]);
+  };
+
+  /**
+   * Create a Nostr subscription request
+   */
+  private createNostrSubscription = (subId: string): string => {
+    return JSON.stringify([
+      "REQ",
+      subId,
+      {
+        kinds: [this.nostrKind],
+        since: Math.floor(Date.now() / 1000) - 60, // Last 60 seconds
+        "#x": [this.nostrTopic],
+      },
+    ]);
+  };
+
+  /**
+   * Create a Nostr unsubscribe request
+   */
+  private createNostrUnsubscribe = (subId: string): string => {
+    return JSON.stringify(["CLOSE", subId]);
+  };
+
+  /**
+   * Connect to a Nostr relay
+   */
+  private connectNostrRelay = (url: string): Promise<WebSocket | null> => {
+    return new Promise((resolve) => {
+      if (this.nostrRelays[url] && this.nostrRelays[url]?.readyState === 1) {
+        resolve(this.nostrRelays[url]);
+        return;
+      }
+
+      try {
+        const socket = new this.wss(url);
+
+        socket.onopen = () => {
+          this.nostrRelays[url] = socket;
+          this.socketRetryPeriods[url] = defaultRetryMs;
+          this.tooldb.logger(`Connected to Nostr relay: ${url}`);
+          
+          // Subscribe to our topic
+          const subId = textRandom(16);
+          this.nostrSubscriptionIds[url] = subId;
+          socket.send(this.createNostrSubscription(subId));
+          
+          resolve(socket);
+        };
+
+        socket.onmessage = (e: any) => {
+          this.onNostrMessage(socket, e.data);
+        };
+
+        socket.onerror = () => {
+          this.tooldb.logger(`Nostr relay error: ${url}`);
+        };
+
+        socket.onclose = () => {
+          this.nostrRelays[url] = null;
+          if (!this.reconnectionPaused) {
+            this.scheduleReconnect(url, () => this.connectNostrRelay(url));
+          }
+        };
+      } catch (e) {
+        this.tooldb.logger(`Failed to connect to Nostr relay: ${url}`, e);
+        resolve(null);
+      }
+    });
+  };
+
+  /**
+   * Handle incoming Nostr messages
+   */
+  private onNostrMessage = async (socket: WebSocket, data: string) => {
+    try {
+      const msg = JSON.parse(data);
+      const [msgType, subIdOrPayload, payload] = msg;
+
+      if (msgType !== "EVENT") {
+        // Handle NOTICE, OK, EOSE messages
+        if (msgType === "NOTICE") {
+          this.tooldb.logger(`Nostr relay notice: ${subIdOrPayload}`);
+        }
+        return;
+      }
+
+      const event = payload as NostrEvent;
+      
+      // Ignore our own events
+      if (event.pubkey === this.nostrPubkeyHex) {
+        return;
+      }
+
+      // Verify the event tag matches our topic
+      const topicTag = event.tags.find((t) => t[0] === "x");
+      if (!topicTag || topicTag[1] !== this.nostrTopic) {
+        return;
+      }
+
+      // Parse the content
+      let content: NostrMessage;
+      try {
+        content = JSON.parse(event.content);
+      } catch {
+        return;
+      }
+
+      const { peerId, offer, answer, offer_id } = content;
+
+      // Skip if we're already connected to this peer
+      if (this.connectedPeers[peerId]) {
+        return;
+      }
+
+      // Handle peer announcement (no offer/answer = initial announcement)
+      if (peerId && !offer && !answer) {
+        // Someone announced themselves, send them an offer
+        await this.sendNostrOffer(socket, peerId);
+        return;
+      }
+
+      // Handle incoming offer
+      if (offer && offer_id) {
+        await this.handleNostrOffer(socket, peerId, offer, offer_id);
+        return;
+      }
+
+      // Handle incoming answer
+      if (answer && offer_id) {
+        await this.handleNostrAnswer(peerId, answer, offer_id);
+        return;
+      }
+    } catch (e) {
+      this.tooldb.logger("Nostr message parse error:", e);
+    }
+  };
+
+  /**
+   * Send an offer to a specific peer via Nostr
+   */
+  private sendNostrOffer = async (socket: WebSocket, targetPeerId: string) => {
+    if (Object.keys(this.peerMap).length >= maxPeers) {
+      return;
+    }
+
+    const peer = this.initPeer(true, false, {});
+    const offer_id = textRandom(20);
+
+    this.nostrPendingOffers[offer_id] = { peer, offer_id };
+
+    peer.once("signal", async (offer: any) => {
+      const content = JSON.stringify({
+        peerId: this.getClientAddress(),
+        offer,
+        offer_id,
+        targetPeerId, // Include target so only they respond
+      });
+      
+      const event = await this.createNostrEvent(content);
+      if (socket.readyState === 1) {
+        socket.send(event);
+      }
+    });
+
+    // Clean up offer after timeout
+    setTimeout(() => {
+      if (this.nostrPendingOffers[offer_id] && !peer.connected) {
+        peer.destroy();
+        delete this.nostrPendingOffers[offer_id];
+      }
+    }, iceGatheringTimeout * 2);
+  };
+
+  /**
+   * Handle an incoming Nostr offer
+   */
+  private handleNostrOffer = async (
+    socket: WebSocket,
+    peerId: string,
+    offer: RTCSessionDescriptionInit,
+    offer_id: string
+  ) => {
+    if (Object.keys(this.peerMap).length >= maxPeers) {
+      return;
+    }
+
+    if (this.handledOffers[offer_id]) {
+      return;
+    }
+
+    this.handledOffers[offer_id] = true;
+
+    const peer = this.initPeer(false, false, {});
+
+    peer.once("signal", async (answer: any) => {
+      const content = JSON.stringify({
+        peerId: this.getClientAddress(),
+        answer,
+        offer_id,
+      });
+      
+      const event = await this.createNostrEvent(content);
+      if (socket.readyState === 1) {
+        socket.send(event);
+      }
+    });
+
+    peer.on("connect", () => this.onConnect(peer, peerId, offer_id));
+    peer.on("close", (err: any) => this.onDisconnect(peerId, err));
+    peer.on("error", (err: any) => this.onDisconnect(peerId, err));
+
+    peer.signal(offer);
+  };
+
+  /**
+   * Handle an incoming Nostr answer
+   */
+  private handleNostrAnswer = async (
+    peerId: string,
+    answer: RTCSessionDescriptionInit,
+    offer_id: string
+  ) => {
+    const pendingOffer = this.nostrPendingOffers[offer_id];
+    
+    if (!pendingOffer) {
+      return;
+    }
+
+    if (this.handledOffers[offer_id]) {
+      return;
+    }
+
+    this.handledOffers[offer_id] = true;
+
+    const { peer } = pendingOffer;
+
+    if (peer.destroyed) {
+      delete this.nostrPendingOffers[offer_id];
+      return;
+    }
+
+    peer.on("connect", () => {
+      this.onConnect(peer, peerId, offer_id);
+      delete this.nostrPendingOffers[offer_id];
+    });
+    peer.on("close", (err: any) => this.onDisconnect(peerId, err));
+    peer.on("error", (err: any) => this.onDisconnect(peerId, err));
+
+    peer.signal(answer);
+  };
+
+  /**
+   * Announce ourselves to a Nostr relay
+   */
+  private announceToNostr = async (socket: WebSocket) => {
+    const content = JSON.stringify({
+      peerId: this.getClientAddress(),
+    });
+    
+    const event = await this.createNostrEvent(content);
+    if (socket.readyState === 1) {
+      socket.send(event);
+    }
+  };
+
+  /**
+   * Announce to all Nostr relays
+   */
+  private announceToAllNostrRelays = async () => {
+    for (const url of this.nostrRelayUrls) {
+      const socket = await this.connectNostrRelay(url);
+      if (socket && socket.readyState === 1) {
+        await this.announceToNostr(socket);
+      }
+    }
+  };
+
+  // ============================================
+  // END NOSTR METHODS
+  // ============================================
 
   /**
    * Initialize webrtc peer with proper ICE configuration
@@ -414,7 +811,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     );
 
   /**
-   * Announce ourselves to all trackers
+   * Announce ourselves to all trackers and Nostr relays
    */
   private announceAll = async () => {
     if (this.offerPool) {
@@ -423,12 +820,16 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     this.offerPool = this.makeOffers();
 
+    // Announce to WebTorrent trackers
     this.trackerUrls.forEach(async (url: string) => {
       const socket = await this.makeSocket(url, this.infoHash);
       if (socket && socket.readyState === 1) {
         this.announce(socket, this.infoHash);
       }
     });
+
+    // Also announce to Nostr relays
+    this.announceToAllNostrRelays();
   };
 
   /**
@@ -548,7 +949,7 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
   };
 
   /**
-   * Leave the tracker
+   * Leave the tracker and Nostr relays
    */
   public onLeave = async () => {
     // Remove online/offline listeners
@@ -557,9 +958,26 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
       window.removeEventListener("offline", this.handleOffline);
     }
 
+    // Clean up WebTorrent tracker subscriptions
     this.trackerUrls.forEach(
       (url) => delete this.socketListeners[url][this.infoHash]
     );
+
+    // Clean up Nostr relay subscriptions
+    Object.entries(this.nostrSubscriptionIds).forEach(([url, subId]) => {
+      const relay = this.nostrRelays[url];
+      if (relay && relay.readyState === 1) {
+        relay.send(this.createNostrUnsubscribe(subId));
+      }
+    });
+    this.nostrSubscriptionIds = {};
+
+    // Close Nostr relay connections
+    Object.values(this.nostrRelays).forEach((relay) => {
+      if (relay) relay.close();
+    });
+    this.nostrRelays = {};
+
     if (this.announceInterval) clearInterval(this.announceInterval);
     if (this.peersCheckInterval) clearInterval(this.peersCheckInterval);
     this.cleanPool();
@@ -567,6 +985,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
   constructor(db: ToolDb) {
     super(db);
+
+    // Initialize Nostr keys for peer discovery
+    this.initNostrKeys();
 
     // Set up online/offline event handlers for resilience
     if (typeof window !== "undefined") {
@@ -594,14 +1015,40 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
 
     this.infoHash = sha1(`tooldb:${this.tooldb.options.topic}`).slice(20);
 
-    // Do not announce if we hit our max peers cap
-    if (Object.keys(this.peerMap).length < maxPeers) {
-      this.announceAll();
+    // Initialize Nostr topic and kind based on app topic
+    this.nostrTopic = `tooldb:${this.tooldb.options.topic}`;
+    this.nostrKind = this.getNostrKind(this.nostrTopic);
+
+    // Check for custom Nostr configuration in modules
+    const nostrConfig = this.tooldb.options.modules?.nostr as {
+      enabled?: boolean;
+      relayUrls?: string[];
+    } | undefined;
+
+    // Allow disabling Nostr if needed (enabled by default)
+    if (nostrConfig?.enabled === false) {
+      this.nostrRelayUrls = [];
+      this.tooldb.logger("Nostr peer discovery disabled via config");
     } else {
-      if (this.offerPool) {
-        this.cleanPool();
+      // Use custom relay URLs if provided
+      if (nostrConfig?.relayUrls && nostrConfig.relayUrls.length > 0) {
+        this.nostrRelayUrls = nostrConfig.relayUrls;
       }
+      this.tooldb.logger(`Nostr peer discovery enabled - topic: ${this.nostrTopic}, kind: ${this.nostrKind}, relays: ${this.nostrRelayUrls.length}`);
     }
+
+    // Wait for ToolDb to initialize before announcing
+    // This ensures the peer account and keys are ready before we try to sign messages
+    this.tooldb.once("init", () => {
+      // Do not announce if we hit our max peers cap
+      if (Object.keys(this.peerMap).length < maxPeers) {
+        this.announceAll();
+      } else {
+        if (this.offerPool) {
+          this.cleanPool();
+        }
+      }
+    });
 
     // Basically the same as the WS network adapter
     // Only for Node!
