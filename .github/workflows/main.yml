@@ -58,6 +58,22 @@ jobs:
           - store
           - textRandom
           - verify
+    steps:
+      - name: "Setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: "Checkout source code"
+        uses: "actions/checkout@v4"
+      - name: "Restore build cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+          key: build-${{ github.sha }}
+      - name: "Run test"
+        run: npx jest __tests__/${{ matrix.test }}.ts
 
   deploy:
     runs-on: ubuntu-latest
