@@ -365,7 +365,7 @@
 
 .emoji-toggle {
   position: absolute;
-  left: 12px;
+  right: 12px;
   bottom: 100%;
   transform: translateY(-8px);
   width: 32px;
@@ -394,7 +394,7 @@
 .emoji-picker {
   position: absolute;
   bottom: 100%;
-  left: 12px;
+  right: 12px;
   transform: translateY(-48px);
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -537,4 +537,43 @@
   color: var(--text-muted);
   font-size: 15px;
   margin: 0;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) var(--bg-secondary);
+}
+
+/* Chromium, Safari, Edge */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--bg-tertiary),
+    var(--bg-tertiary)
+  );
+  border-radius: 10px;
+  border: 2px solid var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    var(--bg-tertiary),
+    var(--bg-tertiary)
+  );
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-secondary);
 }

@@ -38,6 +38,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^26.5.3",
+    "gh-pages": "^6.3.0",
     "jest": "^28.1.2",
     "jest-environment-jsdom": "^28.1.2",
     "jest-environment-jsdom-global": "^3.1.2",

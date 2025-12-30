@@ -26,7 +26,10 @@ export default function Login(props: LoginProps) {
 
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
-  const [status, setStatus] = useState<StatusState>({ type: "idle", message: "" });
+  const [status, setStatus] = useState<StatusState>({
+    type: "idle",
+    message: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   // Listen for username conflict events
@@ -60,16 +63,14 @@ export default function Login(props: LoginProps) {
 
     toolDb.on("signup-conflict-detected", handleSignupConflict);
     toolDb.on("current-user-lost-username", handleLostUsername);
-
-    return () => {
-      toolDb.off("signup-conflict-detected", handleSignupConflict);
-      toolDb.off("current-user-lost-username", handleLostUsername);
-    };
   }, []);
 
   const doLogin = useCallback(async () => {
     if (!user.trim() || !pass.trim()) {
-      setStatus({ type: "error", message: "Please enter both username and password" });
+      setStatus({
+        type: "error",
+        message: "Please enter both username and password",
+      });
       return;
     }
 
@@ -104,7 +105,10 @@ export default function Login(props: LoginProps) {
           setLoggedIn(true);
         }, 500);
       } else {
-        setStatus({ type: "error", message: "Sign in failed. Please check your credentials." });
+        setStatus({
+          type: "error",
+          message: "Sign in failed. Please check your credentials.",
+        });
         setIsLoading(false);
       }
     } catch (error: any) {
@@ -116,17 +120,26 @@ export default function Login(props: LoginProps) {
 
   const doSignup = useCallback(async () => {
     if (!user.trim() || !pass.trim()) {
-      setStatus({ type: "error", message: "Please enter both username and password" });
+      setStatus({
+        type: "error",
+        message: "Please enter both username and password",
+      });
       return;
     }
 
     if (user.length < 3) {
-      setStatus({ type: "error", message: "Username must be at least 3 characters" });
+      setStatus({
+        type: "error",
+        message: "Username must be at least 3 characters",
+      });
       return;
     }
 
     if (pass.length < 6) {
-      setStatus({ type: "error", message: "Password must be at least 6 characters" });
+      setStatus({
+        type: "error",
+        message: "Password must be at least 6 characters",
+      });
       return;
     }
 
@@ -139,7 +152,10 @@ export default function Login(props: LoginProps) {
       console.log(u);
 
       if (u) {
-        setStatus({ type: "loading", message: "Account created! Signing in..." });
+        setStatus({
+          type: "loading",
+          message: "Account created! Signing in...",
+        });
 
         // Generate ECDH encryption keys for new user
         const encKeys = await generateUserEncryptionKeys();
@@ -150,7 +166,10 @@ export default function Login(props: LoginProps) {
           // Initialize group crypto with password hash
           await initGroupCrypto(toolDb, sha256(pass));
 
-          setStatus({ type: "success", message: "Welcome! Your account is ready." });
+          setStatus({
+            type: "success",
+            message: "Welcome! Your account is ready.",
+          });
           setTimeout(() => {
             toolDb.putData("name", user, true);
             // Publish our encryption public key to the network
@@ -158,11 +177,18 @@ export default function Login(props: LoginProps) {
             setLoggedIn(true);
           }, 500);
         } else {
-          setStatus({ type: "error", message: "Account created but sign in failed. Please try logging in." });
+          setStatus({
+            type: "error",
+            message:
+              "Account created but sign in failed. Please try logging in.",
+          });
           setIsLoading(false);
         }
       } else {
-        setStatus({ type: "error", message: "Signup failed. Please try again." });
+        setStatus({
+          type: "error",
+          message: "Signup failed. Please try again.",
+        });
         setIsLoading(false);
       }
     } catch (error: any) {
@@ -170,9 +196,17 @@ export default function Login(props: LoginProps) {
 
       // Provide user-friendly error messages
       if (errorMessage.includes("User already exists")) {
-        setStatus({ type: "error", message: "This username is already taken. Please choose a different one." });
+        setStatus({
+          type: "error",
+          message:
+            "This username is already taken. Please choose a different one.",
+        });
       } else if (errorMessage.includes("conflict")) {
-        setStatus({ type: "warning", message: "Username conflict detected. Please try a different username." });
+        setStatus({
+          type: "warning",
+          message:
+            "Username conflict detected. Please try a different username.",
+        });
       } else {
         setStatus({ type: "error", message: errorMessage });
       }

@@ -1,7 +1,7 @@
 {
   "name": "tool-db-chat",
   "version": "0.1.0",
-  "private": true,
+  "homepage": "https://github.com/Manwe-777/tool-db-chat",
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
@@ -45,7 +45,9 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
-    "eject": "react-app-rewired eject"
+    "eject": "react-app-rewired eject",
+    "proddeploy": "npm run build && gh-pages -d build",
+    "deploy": "npm run build && gh-pages -d build -b master"
   },
   "eslintConfig": {
     "extends": [

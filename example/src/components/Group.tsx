@@ -43,6 +43,7 @@ export default function Group(props: GroupProps) {
   const [message, setMessage] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const emojis = [
     "😀",
@@ -263,10 +264,45 @@ export default function Group(props: GroupProps) {
   // Sort!
   newChats.sort((a, b) => a.t - b.t);
 
+  // Track previous message count to detect new messages
+  const prevMessageCountRef = useRef(0);
+
+  // Auto-scroll to bottom when new messages arrive, but only if user is already at bottom
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const hasNewMessages = newChats.length > prevMessageCountRef.current;
+    const isInitialLoad =
+      prevMessageCountRef.current === 0 && newChats.length > 0;
+
+    // Check scroll position BEFORE updating ref (captures state before new message)
+    let shouldScroll = false;
+    if (hasNewMessages || isInitialLoad) {
+      const isAtBottom =
+        container.scrollHeight - container.scrollTop <=
+        container.clientHeight + 75; // 75px threshold for "near bottom"
+      shouldScroll = isInitialLoad || isAtBottom;
+    }
+
+    // Update ref for next comparison
+    prevMessageCountRef.current = newChats.length;
+
+    // Scroll after DOM updates if needed
+    if (shouldScroll) {
+      // Use requestAnimationFrame to ensure DOM is fully updated before scrolling
+      requestAnimationFrame(() => {
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      });
+    }
+  }, [newChats.length]);
+
   return groupRoute && state.groups[groupId] ? (
     <>
       <div className="chat">
-        <div className="chat-messages">
+        <div className="chat-messages" ref={messagesContainerRef}>
           {newChats.map((msg, i) => {
             return (
               <ChatMessage
