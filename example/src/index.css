@@ -238,3 +238,121 @@ input::placeholder {
   border-radius: 4px;
   margin: 3px 0;
 }
+
+/* Topic Row with Edit Button */
+.debugger-list .topic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-weight: 500;
+  padding: 3px 0;
+}
+
+.debugger-list .topic-row > span {
+  flex: 1;
+}
+
+.topic-edit-btn {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  box-shadow: none;
+}
+
+.topic-edit-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Topic Edit Mode */
+.topic-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.topic-input {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.topic-input:focus {
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.topic-btn {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  box-shadow: none;
+}
+
+.topic-btn-save {
+  background: var(--success);
+  color: var(--bg-primary);
+}
+
+.topic-btn-save:hover {
+  background: #2cb587;
+  transform: none;
+  box-shadow: none;
+}
+
+.topic-btn-cancel {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.topic-btn-cancel:hover {
+  background: var(--bg-hover);
+  color: var(--danger);
+  border-color: var(--danger);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Topic Hint Text */
+.debugger-list .topic-hint {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0 0 4px 0;
+  margin-top: -2px;
+}

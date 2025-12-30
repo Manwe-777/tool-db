@@ -3,7 +3,7 @@
 import _ from "lodash";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 import { MapCrdt, MapChanges } from "tool-db";
 
@@ -29,6 +29,7 @@ interface GroupProps {
 export default function Group(props: GroupProps) {
   const { state, sendMessage, dispatch } = props;
   const { groupRoute } = useParams();
+  const location = useLocation();
   const toolDb = getToolDb();
 
   const groupKey = `==${decodeURIComponent(groupRoute || "")}`;
@@ -42,8 +43,37 @@ export default function Group(props: GroupProps) {
   const [_refresh, setRefresh] = useState(0);
   const [message, setMessage] = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Generate the shareable link for this group
+  const getShareableLink = useCallback(() => {
+    const baseUrl =
+      window.location.origin +
+      window.location.pathname.replace(location.pathname, "");
+    return `${baseUrl}/group/${encodeURIComponent(groupId)}`;
+  }, [groupId, location.pathname]);
+
+  // Copy group link to clipboard
+  const copyGroupLink = useCallback(async () => {
+    const link = getShareableLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = link;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+    }
+  }, [getShareableLink]);
 
   const emojis = [
     "😀",
@@ -357,6 +387,30 @@ export default function Group(props: GroupProps) {
         </div>
       </div>
       <div className="members-list">
+        <div className="share-group-section">
+          <p className="share-title">Invite friends to chat</p>
+          <p className="share-description">
+            Share this link with people you want to invite to this group
+          </p>
+          <button
+            type="button"
+            className={`share-link-btn${linkCopied ? " copied" : ""}`}
+            onClick={copyGroupLink}
+            title="Copy invite link to clipboard"
+          >
+            {linkCopied ? (
+              <>
+                <span className="share-icon">✓</span>
+                Link copied!
+              </>
+            ) : (
+              <>
+                <span className="share-icon">🔗</span>
+                Copy invite link
+              </>
+            )}
+          </button>
+        </div>
         <p>Members: </p>
         <div>
           {_.uniq(state.groups[groupId].members).map((id) => {

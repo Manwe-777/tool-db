@@ -12,6 +12,11 @@ import ToolDbIndexedb from "@tool-db/indexeddb-store";
 import reportWebVitals from "./reportWebVitals";
 import App from "./components/App";
 
+// Read topic from localStorage, default to "testnetwork"
+const TOPIC_STORAGE_KEY = "tooldb-network-topic";
+const savedTopic = localStorage.getItem(TOPIC_STORAGE_KEY);
+const networkTopic = savedTopic || "testnetwork";
+
 // Initialize tooldb outside of react to avoid unpleasant side effects
 // Especially with hot module reloading while testing
 const db = new ToolDb({
@@ -20,7 +25,7 @@ const db = new ToolDb({
   networkAdapter: ToolDbWebrtc as any,
   storageAdapter: ToolDbIndexedb as any,
   debug: true, //
-  topic: "testnetwork",
+  topic: networkTopic,
 });
 
 // Wait for database to be ready before setting up verificators

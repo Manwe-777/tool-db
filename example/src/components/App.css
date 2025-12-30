@@ -448,6 +448,85 @@
   border-color: var(--accent);
 }
 
+/* Share Group Link Section */
+.share-group-section {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.08), rgba(0, 168, 204, 0.05));
+  border: 1px dashed rgba(0, 217, 255, 0.3);
+  border-radius: 12px;
+}
+
+.share-group-section .share-title {
+  margin: 0 0 6px 0;
+  padding: 0;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.share-group-section .share-description {
+  margin: 0 0 12px 0;
+  padding: 0;
+  border: none;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.4;
+}
+
+.share-link-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: auto;
+  padding: 10px 16px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.share-link-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: none;
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.2);
+}
+
+.share-link-btn.copied {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.share-link-btn.copied:hover {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: var(--success);
+  color: var(--success);
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.2);
+}
+
+.share-link-btn .share-icon {
+  font-size: 14px;
+}
+
 /* Members List specific */
 .members-list > div > button {
   width: 100%;
