@@ -211,3 +211,8 @@ export type { WrappedGroupKey } from "./crypto/wrapGroupKey";
 export { default as generateIv } from "./crypto/generateIv";
 export { default as getCrypto } from "./crypto/getCrypto";
 export { default as generateKeyPair } from "./crypto/generateKeyPair";
+
+// Password-based encryption utilities
+export { default as encryptWithPass } from "./crypto/encryptWithPass";
+export { default as decryptWithPass } from "./crypto/decryptWithPass";
+export { default as generateKeyFromPassword } from "./crypto/generateKeyFromPassword";
