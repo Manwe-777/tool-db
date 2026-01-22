@@ -1,10 +1,25 @@
 import Peer from "simple-peer";
-import WebSocket from "ws";
 import { schnorr } from "@noble/curves/secp256k1";
 import { sha256 } from "@noble/hashes/sha256";
 import { bytesToHex, randomBytes } from "@noble/hashes/utils";
 
 import { ToolDb, sha1, textRandom, ToolDbNetworkAdapter } from "tool-db";
+
+// Import ws for type checking but use conditionally at runtime
+import type * as WS from "ws";
+
+// Get WebSocket implementation based on environment
+function getWebSocket(): typeof WS | typeof globalThis.WebSocket {
+  if (typeof window !== "undefined" || typeof self !== "undefined") {
+    // Browser or Web Worker environment - use native WebSocket
+    return globalThis.WebSocket as any;
+  }
+  // Node.js environment - use ws package
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+  return require("ws");
+}
+
+const WebSocket = getWebSocket();
 
 type SocketMessageFn = (socket: WebSocket, e: { data: any }) => void;
 
@@ -1053,12 +1068,14 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
     // Basically the same as the WS network adapter
     // Only for Node!
     if (this.tooldb.options.server && typeof window === "undefined") {
-      const server = new WebSocket.Server({
+      // In Node.js, WebSocket is the 'ws' package with Server support
+      const WSModule = WebSocket as typeof WS;
+      const server = new WSModule.Server({
         port: this.tooldb.options.port,
         server: this.tooldb.options.httpServer,
       });
 
-      server.on("connection", (socket: WebSocket) => {
+      server.on("connection", (socket: WS.WebSocket) => {
         let clientId: string | null = null;
 
         socket.on("close", () => {
@@ -1073,8 +1090,9 @@ export default class toolDbWebrtc extends ToolDbNetworkAdapter {
           }
         });
 
-        socket.on("message", (message: string) => {
-          this.onClientMessage(message, clientId || "", (id) => {
+        socket.on("message", (message: WS.RawData) => {
+          const messageStr = message.toString();
+          this.onClientMessage(messageStr, clientId || "", (id) => {
             clientId = id;
             this.isClientConnected[id] = () => {
               return socket.readyState === socket.OPEN;
