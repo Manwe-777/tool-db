@@ -42,7 +42,9 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
     // eslint-disable-next-line global-require
     global.Buffer = global.Buffer || require("buffer").Buffer;
 
-    if (typeof window === "undefined") {
+    // Only polyfill crypto if it's not already available
+    // In Web Workers, crypto is available on self and is read-only
+    if (typeof window === "undefined" && typeof crypto === "undefined") {
       // eslint-disable-next-line global-require
       global.crypto = require("crypto").webcrypto;
     }
