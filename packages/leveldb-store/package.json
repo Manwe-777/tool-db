@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/leveldb-store",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "LevelDb store adapter for tool-db",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "level": "^7.0.0",
-    "tool-db": "^2.6.2"
+    "tool-db": "^2.6.3"
   },
   "devDependencies": {
     "typescript": "^4.7.4"
