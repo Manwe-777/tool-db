@@ -41,13 +41,7 @@ export default class ToolDbEcdsaUser extends ToolDbUserAdapter {
 
     // eslint-disable-next-line global-require
     global.Buffer = global.Buffer || require("buffer").Buffer;
-
-    // Only polyfill crypto if it's not already available
-    // In Web Workers, crypto is available on self and is read-only
-    if (typeof window === "undefined" && typeof crypto === "undefined") {
-      // eslint-disable-next-line global-require
-      global.crypto = require("crypto").webcrypto;
-    }
+    // Note: crypto is handled by getCrypto() which supports browser, web worker, and Node.js
 
     // Initialize with temporary keys for peerAccount to function
     // These will be replaced when anonUser() or setUser() is called explicitly
