@@ -38,8 +38,8 @@ export default async function verifyMessage<T>(
     addressNamespace = msg.k.split(".")[0].slice(1);
   }
 
-  // This namespace can only be written if data does not exist previously
-  // This violates the offline first principle..?
+  // Frozen namespace (==) - first writer owns the key forever
+  // But we need to compare timestamps to determine who was actually first
   if (msg.k.slice(0, 2) == "==") {
     const key = msg.k;
     const data = await this.store
@@ -55,7 +55,17 @@ export default async function verifyMessage<T>(
       .catch(() => {
         return null;
       });
-    if (data && data.a !== msg.a) return VerifyResult.CantOverwrite;
+    
+    // If data exists with a different author, compare timestamps
+    // The OLDER timestamp wins (first writer owns forever)
+    if (data && data.a !== msg.a) {
+      if (data.t <= msg.t) {
+        // Local data is older or same age - reject incoming
+        return VerifyResult.CantOverwrite;
+      }
+      // Incoming data is older - let it through to handlePut
+      // where it will replace our local data
+    }
   }
 
   if (addressNamespace && addressNamespace !== msg.a) {
