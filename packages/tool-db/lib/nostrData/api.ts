@@ -12,6 +12,13 @@ import {
   storeIfNewer,
   verifyValueEvent,
 } from "./values";
+import {
+  CRDT_EVENT_KIND,
+  getCrdtFilters,
+  getStoredCrdt,
+  onCrdtEvent,
+  toNostrCrdtView,
+} from "./crdts";
 
 /**
  * Puts a value on a key, signed with our identity.
@@ -117,9 +124,14 @@ export async function nostrSubscribeData(
   this.logger("SUBSCRIBE", finalKey);
 
   if (!this._nostrSubscriptions[finalKey]) {
+    // A key can hold a value or a CRDT document, we listen for both
     this._nostrSubscriptions[finalKey] = getNostrNetwork(this).subscribe(
-      getValueFilters(this, finalKey),
+      [...getValueFilters(this, finalKey), ...getCrdtFilters(this, finalKey)],
       (event) => {
+        if (event.kind === CRDT_EVENT_KIND) {
+          onCrdtEvent(this, event, finalKey);
+          return;
+        }
         verifyValueEvent(this, event, finalKey).then((result) => {
           if (result === VerifyResult.Verified) {
             storeIfNewer(this, event, finalKey);
@@ -129,10 +141,16 @@ export async function nostrSubscribeData(
     );
   }
 
-  // Like before, listeners get our local value right away
+  // Like before, listeners get our local data right away
   const stored = await getStoredEvent(this, finalKey);
-  if (stored)
+  if (stored) {
     this.triggerKeyListener(finalKey, eventToRecord(stored, finalKey));
+    return;
+  }
+  const storedCrdt = await getStoredCrdt(this, finalKey);
+  if (storedCrdt) {
+    this.triggerKeyListener(finalKey, toNostrCrdtView(storedCrdt) as any);
+  }
 }
 
 /**

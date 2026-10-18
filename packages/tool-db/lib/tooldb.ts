@@ -44,6 +44,7 @@ import handleSubscribe from "./messageHandlers/handleSubscribe";
 import logger from "./logger";
 
 import { isNostrNetwork } from "./nostrData/values";
+import { nostrGetCrdt, nostrPutCrdt } from "./nostrData/crdts";
 import {
   nostrGetData,
   nostrPutData,
@@ -379,6 +380,8 @@ export default class ToolDb extends EventEmitter {
       this.putData = nostrPutData as any;
       this.getData = nostrGetData as any;
       this.subscribeData = nostrSubscribeData as any;
+      this.putCrdt = nostrPutCrdt as any;
+      this.getCrdt = nostrGetCrdt as any;
     }
 
     const DEFAULT_KEYS = "%default-peer%";

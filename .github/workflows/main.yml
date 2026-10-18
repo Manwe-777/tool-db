@@ -54,6 +54,7 @@ jobs:
           - network-base
           - network.additional
           - network
+          - nostr-crdt
           - nostr-data
           - nostr-event
           - nostr-network

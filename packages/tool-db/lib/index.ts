@@ -14,6 +14,7 @@ export { default as textRandom } from "./utils/textRandom";
 export * from "./nostr/event";
 export * from "./nostr/filter";
 export * from "./nostrData/values";
+export * from "./nostrData/crdts";
 
 export { default as catchReturn } from "./utils/catchReturn";
 
