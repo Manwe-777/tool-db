@@ -12,6 +12,7 @@ export { default as verifyPeer } from "./utils/verifyPeer";
 export * from "./utils/crdtChangeSets";
 export { default as textRandom } from "./utils/textRandom";
 export * from "./nostr/event";
+export * from "./nostr/filter";
 
 export { default as catchReturn } from "./utils/catchReturn";
 
