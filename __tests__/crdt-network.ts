@@ -82,3 +82,54 @@ it("Merges counters from several authors", async () => {
   await Chris.getCrdt(key, chrisCounter);
   expect(chrisCounter.value).toBe(10);
 });
+
+// Known issues, see CRDT_SIGNING.md. Remove `.failing` once fixed.
+describe("CRDT authentication", () => {
+  it.failing(
+    "Stores CRDT documents merged from several authors in a verifiable way",
+    async () => {
+      const key = "crdt-merged-" + textRandom(12);
+
+      const aliceMap = new MapCrdt<string>(
+        Alice.userAccount.getAddress() || ""
+      );
+      aliceMap.SET("alice", "a");
+      await Alice.putCrdt(key, aliceMap);
+      await wait(500);
+
+      const bobMap = new MapCrdt<string>(Bob.userAccount.getAddress() || "");
+      bobMap.SET("bob", "b");
+      await Bob.putCrdt(key, bobMap);
+      await wait(500);
+
+      // The server stored the merge of both changes under Bob's signature
+      const stored = JSON.parse(await server.store.get(key));
+      expect(await server.verifyMessage(stored)).toEqual(VerifyResult.Verified);
+    }
+  );
+
+  it.failing(
+    "Does not merge forged changes from a CRDT GET reply",
+    async () => {
+      const key = "crdt-forged-" + textRandom(12);
+
+      const aliceMap = new MapCrdt<string>(
+        Alice.userAccount.getAddress() || ""
+      );
+      aliceMap.SET("alice", "a");
+      await Alice.putCrdt(key, aliceMap);
+      await wait(500);
+
+      // A malicious server adds a change "by" Alice that she never made
+      const stored = JSON.parse(await server.store.get(key));
+      stored.v.push({ t: "SET", k: "alice", a: stored.a, v: "forged", i: 2 });
+      await server.store.put(key, JSON.stringify(stored));
+
+      const chrisMap = new MapCrdt<string>(
+        Chris.userAccount.getAddress() || ""
+      );
+      await Chris.getCrdt(key, chrisMap);
+      expect(chrisMap.value.alice).toBe("a");
+    }
+  );
+});
