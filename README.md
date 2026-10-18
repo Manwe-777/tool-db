@@ -14,11 +14,9 @@
 
 </div>
 
-> **Status:** this branch is a rewrite of ToolDB on top of Nostr, see
-> [NOSTR_FIRST.md](NOSTR_FIRST.md) for the design and progress. The
-> [documentation site](https://manwe-777.github.io/tool-db-docs/) and the
-> [chat demo](https://manwe-777.github.io/tool-db-chat-example/) still
-> describe the previous peer to peer protocol.
+> **Version 3** is a rewrite of ToolDB on top of Nostr, not compatible with
+> version 2. See the [documentation](https://manwe-777.github.io/tool-db-docs/)
+> and [NOSTR_FIRST.md](NOSTR_FIRST.md) for the design.
 
 ## 💡 Philosophy
 
@@ -66,8 +64,10 @@ This project is intentionally permissive. Commercial use, private deployments, a
 ## 🚀 Quick Start
 
 ```bash
-npm install tool-db
+npm install tool-db@next
 ```
+
+Version 3 is published under the `next` tag while it is tested; `npm install tool-db` still installs version 2.
 
 ```javascript
 import { ToolDb, MapCrdt } from "tool-db";

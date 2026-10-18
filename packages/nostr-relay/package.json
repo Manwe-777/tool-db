@@ -1,6 +1,6 @@
 {
   "name": "@tool-db/nostr-relay",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Nostr relay (NIP-01) for tool-db, runs on Node",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -26,7 +26,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "tool-db": "^2.6.4",
+    "tool-db": "^3.0.0",
     "ws": "^8.8.0"
   }
 }

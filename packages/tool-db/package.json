@@ -1,6 +1,6 @@
 {
   "name": "tool-db",
-  "version": "2.6.4",
+  "version": "3.0.0",
   "description": "A database on top of Nostr: signed data, CRDTs and relays, for Node and browsers.",
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "homepage": "https://github.com/Manwe-777/tool-db#readme",
@@ -28,7 +28,6 @@
     "typescript": "^4.7.4",
     "uglify-js": "^3.16.2"
   },
-  "gitHead": "4f705c44c8e4e48e43724774f9fee6250587a9b2",
   "dependencies": {
     "@noble/ciphers": "^1.2.1",
     "@noble/curves": "^1.9.7",
