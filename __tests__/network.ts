@@ -361,10 +361,10 @@ it("CRDTs", async () => {
   const crdtKey = "crdt-test-" + textRandom(16);
   const crdtValue = textRandom(24);
 
-  const AliceDoc = new MapCrdt("Alice");
+  const AliceDoc = new MapCrdt(Alice.userAccount.getAddress() || "");
   AliceDoc.SET("key", crdtValue);
 
-  const BobDoc = new MapCrdt("Bob");
+  const BobDoc = new MapCrdt(Bob.userAccount.getAddress() || "");
   BobDoc.SET("test", "foo");
 
   await Alice.putCrdt(crdtKey, AliceDoc);

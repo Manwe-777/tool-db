@@ -1,4 +1,4 @@
-import { ToolDb, CrdtGetMessage, CrdtPutMessage } from "..";
+import { ToolDb, CrdtGetMessage, CrdtPutMessage, isCrdtData } from "..";
 
 export default function handleCrdtGet(
   this: ToolDb,
@@ -8,19 +8,18 @@ export default function handleCrdtGet(
   this.store
     .get(message.key)
     .then((data) => {
-      try {
-        // Use the id of the get so the other client knows we are replying
-        const oldData = {
-          type: "crdtPut",
-          data: JSON.parse(data),
-          to: [],
-          id: message.id,
-        } as CrdtPutMessage;
-        this.network.sendToClientId(remotePeerId, oldData, false);
-      } catch (e) {
-        // socket.send(data);
-        // do nothing
-      }
+      const parsed = JSON.parse(data);
+      // Legacy (unsigned) CRDT documents are treated as not found
+      if (!isCrdtData(parsed)) throw new Error("Not a CRDT document");
+
+      // Use the id of the get so the other client knows we are replying
+      const oldData: CrdtPutMessage = {
+        type: "crdtPut",
+        data: parsed,
+        to: [],
+        id: message.id,
+      };
+      this.network.sendToClientId(remotePeerId, oldData, false);
     })
     .catch((e) => {
       const finalMessage: CrdtGetMessage = {

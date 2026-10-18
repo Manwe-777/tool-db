@@ -1,4 +1,31 @@
-import { ToolDb, PutMessage, SubscribeMessage } from "..";
+import {
+  ToolDb,
+  PutMessage,
+  CrdtPutMessage,
+  SubscribeMessage,
+  createCrdtData,
+  isCrdtData,
+} from "..";
+
+/**
+ * Crafts the message to send stored or updated data to a subscriber.
+ * CRDT documents are sent as CRDT puts with their signed change sets.
+ */
+function subscriptionMessage(
+  data: any,
+  id: string
+): PutMessage | CrdtPutMessage {
+  if (isCrdtData(data)) {
+    return {
+      type: "crdtPut",
+      id,
+      to: [],
+      data: createCrdtData(data.k, data.c, data.sets),
+    };
+  }
+
+  return { type: "put", id, to: [], data };
+}
 
 export default function handleSubscribe(
   this: ToolDb,
@@ -13,13 +40,10 @@ export default function handleSubscribe(
       if (remotePeerId) {
         // We do not reply to the socket directly
         // instead we use the client id, in case the socket reconnects
-        const newMsg: PutMessage = {
-          data: msg,
-          id: message.id,
-          type: "put",
-          to: [],
-        };
-        this.network.sendToClientId(remotePeerId, newMsg);
+        this.network.sendToClientId(
+          remotePeerId,
+          subscriptionMessage(msg, message.id)
+        );
       }
     });
   }
@@ -29,13 +53,11 @@ export default function handleSubscribe(
     .get(message.key)
     .then((data) => {
       try {
-        const oldData: PutMessage = {
-          data: JSON.parse(data),
-          id: message.id,
-          type: "put",
-          to: [],
-        };
-        this.network.sendToClientId(remotePeerId, oldData, false);
+        this.network.sendToClientId(
+          remotePeerId,
+          subscriptionMessage(JSON.parse(data), message.id),
+          false
+        );
       } catch (e) {
         // do nothing
       }

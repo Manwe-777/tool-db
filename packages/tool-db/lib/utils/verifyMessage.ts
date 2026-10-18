@@ -25,6 +25,12 @@ export default async function verifyMessage<T>(
     return VerifyResult.InvalidData;
   }
 
+  // CRDT documents are verified by their signed change sets instead
+  // (see verifyCrdtData), this also drops legacy CRDT messages.
+  if (msg.c !== null) {
+    return VerifyResult.InvalidData;
+  }
+
   // Max clock shift allowed is 30 seconds.
   // Ten seconds was my original threshold but it failed some times.
   if (msg.t > new Date().getTime() + 30000) {

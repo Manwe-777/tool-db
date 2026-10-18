@@ -2,80 +2,114 @@ import {
   ToolDb,
   CrdtPutMessage,
   textRandom,
-  VerificationData,
-  getMessageHash,
   BaseCrdt,
+  SignedChangeSet,
+  createCrdtData,
+  getChangeAuthor,
+  getChangeSetHash,
+  isCrdtData,
+  mergeChangeSets,
 } from ".";
 
 /**
  * Triggers a PUT request to other peers.
+ * Only the changes authored by us that were not published yet are signed and
+ * sent as a new change set, along with the change sets we already know of.
+ * Changes by other authors can only be published by them.
  * @param key key where we want to put the data at.
- * @param value Data we want to any (any type)
+ * @param crdt The CRDT document, its changes must be authored with our address.
  * @param userNamespaced If this key bolongs to a user or its public. Making it private will enforce validation for our address and signatures.
  * @returns Promise<Data | null>
  */
-export default function toolDbCrdtPut<T = any>(
+export default async function toolDbCrdtPut<T = any>(
   this: ToolDb,
   key: string,
   crdt: BaseCrdt<T, any, any>,
   userNamespaced = false,
   to?: string[]
 ): Promise<CrdtPutMessage | null> {
-  return new Promise((resolve, reject) => {
-    if (key.includes(".")) {
-      // Dots are used as a delimitator character between bublic keys and the key of the user's data
-      reject(new Error(`Key cannot include dots!; ${key}`));
-      return;
+  if (key.includes(".")) {
+    // Dots are used as a delimitator character between bublic keys and the key of the user's data
+    throw new Error(`Key cannot include dots!; ${key}`);
+  }
+
+  const address = this.userAccount.getAddress();
+  if (!address) {
+    throw new Error("You need to log in before you can PUT.");
+  }
+
+  const finalKey = userNamespaced ? `:${address}.${key}` : key;
+
+  const data = await this.withKeyLock(finalKey, async () => {
+    // The change sets we already have for this document
+    let sets: SignedChangeSet[] = [];
+    try {
+      const stored = JSON.parse(await this.store.get(finalKey));
+      if (isCrdtData(stored) && stored.c === crdt.type) {
+        sets = stored.sets;
+      }
+    } catch (e) {
+      // nothing stored yet
     }
 
-    if (!this.userAccount.getAddress()) {
-      reject(new Error("You need to log in before you can PUT."));
-      return;
+    const published: Record<string, boolean> = {};
+    sets
+      .filter((set) => set.a === address)
+      .forEach((set) => {
+        set.c.forEach((change) => {
+          published[JSON.stringify(change)] = true;
+        });
+      });
+
+    const newChanges = crdt
+      .getChanges()
+      .filter(
+        (change) =>
+          getChangeAuthor(crdt.type, change) === address &&
+          !published[JSON.stringify(change)]
+      );
+
+    if (newChanges.length > 0) {
+      const set = { a: address, t: new Date().getTime(), c: newChanges };
+      const hash = getChangeSetHash(finalKey, crdt.type, set);
+      const signature = await this.userAccount.signData(hash);
+
+      if (!signature || this.userAccount.getAddress() !== address) {
+        throw new Error("Could not sign the data.");
+      }
+
+      this.verifiedChangeSets.add(hash);
+      sets = mergeChangeSets(finalKey, crdt.type, sets, [
+        { ...set, s: signature },
+      ]).sets;
     }
 
-    const timestamp = new Date().getTime();
+    if (sets.length === 0) {
+      return null;
+    }
 
-    const crdtChanges = crdt.getChanges();
+    const crdtData = createCrdtData(finalKey, crdt.type, sets);
 
-    const encodedData = JSON.stringify(crdtChanges);
+    this.logger("PUT CRDT", key, crdtData);
 
-    const hash = getMessageHash(
-      encodedData,
-      this.userAccount.getAddress() || "",
-      timestamp
-    );
+    try {
+      await this.store.put(finalKey, JSON.stringify(crdtData));
+    } catch (e) {
+      // do nothing
+    }
 
-    this.userAccount
-      .signData(hash)
-      .then((signature) => {
-        if (!signature || !this.userAccount.getAddress()) {
-          reject(new Error("Could not sign the data."));
-          return;
-        }
-
-        // Compose the message
-        const data: VerificationData<any> = {
-          k: userNamespaced ? `:${this.userAccount.getAddress()}.${key}` : key,
-          a: this.userAccount.getAddress() || "",
-          n: 0,
-          t: timestamp,
-          h: hash,
-          s: signature,
-          v: crdtChanges,
-          c: crdt.type,
-        };
-
-        this.logger("PUT CRDT", key, data);
-
-        const finalMessage: CrdtPutMessage<any> = {
-          type: "crdtPut",
-          id: textRandom(10),
-          to: to || [],
-          data,
-        };
-        this.network.sendToAll(finalMessage);
-        resolve(finalMessage);
-      })
-      .catch(reject);
+    return crdtData;
   });
+
+  if (!data) return null;
+
+  const finalMessage: CrdtPutMessage = {
+    type: "crdtPut",
+    id: textRandom(10),
+    to: to || [],
+    data,
+  };
+  this.network.sendToAll(finalMessage);
+
+  return finalMessage;
 }

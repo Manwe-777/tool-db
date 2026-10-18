@@ -1,136 +1,77 @@
 import {
   ToolDb,
-  VerifyResult,
   CrdtPutMessage,
-  VerificationData,
-  MapCrdt,
-  MapChanges,
-  CRDT_COUNTER,
-  CRDT_LIST,
-  CRDT_MAP,
-  ListCrdt,
-  ListChanges,
-  CounterCrdt,
-  CounterChanges,
+  SignedChangeSet,
+  createCrdtData,
+  isCrdtData,
+  mergeChangeSets,
+  toCrdtView,
+  verifyCrdtData,
 } from "..";
 
-import toolDbVerificationWrapper from "../toolDbVerificationWrapper";
-
-export default function handleCrdtPut(
+export default async function handleCrdtPut(
   this: ToolDb,
   message: CrdtPutMessage,
   remotePeerId: string
 ) {
-  toolDbVerificationWrapper.call(this, message.data).then((value) => {
-    // this.logger("Verification wrapper result: ", value, message.k);
-    if (value === VerifyResult.Verified) {
-      const finalMessage: CrdtPutMessage = {
-        ...message,
-        to: [...message.to, remotePeerId],
-      };
+  if (!isCrdtData(message.data)) {
+    // Also drops legacy (unsigned) CRDT documents
+    this.logger("Invalid CRDT data: ", message);
+    return;
+  }
 
-      this.emit("crdtput", finalMessage);
-      this.emit("data", finalMessage.data);
-      this.emit("verified", finalMessage);
-      // relay to other servers !!!
-      this.network.sendToAll(finalMessage, true);
+  const key = message.data.k;
+  const type = message.data.c;
 
-      this.store
-        .get(finalMessage.data.k)
-        .then((oldData) => {
-          if (oldData) {
-            try {
-              const parsedOldData: VerificationData<any> = JSON.parse(oldData);
+  // Only keep the change sets that verify, so a single forged set does not
+  // block the valid ones
+  const validSets = await verifyCrdtData(this, message.data);
+  if (validSets.length === 0) {
+    this.logger("unverified message: ", message);
+    return;
+  }
 
-              let newMessage = finalMessage;
-
-              // Merge old document with new data incoming and save it
-              // Add handles for all kinds of CRDT we add
-              // We use the incoming type, since counters used to be stored
-              // with the list type by mistake.
-              const crdtType = finalMessage.data.c;
-              let oldDoc:
-                | MapCrdt<any>
-                | ListCrdt<any>
-                | CounterCrdt<any>
-                | undefined;
-
-              if (crdtType === CRDT_MAP) {
-                oldDoc = new MapCrdt(
-                  this.userAccount.getAddress() || "",
-                  parsedOldData.v
-                );
-              }
-
-              if (crdtType === CRDT_LIST) {
-                oldDoc = new ListCrdt(
-                  this.userAccount.getAddress() || "",
-                  parsedOldData.v
-                );
-              }
-
-              if (crdtType === CRDT_COUNTER) {
-                oldDoc = new CounterCrdt(
-                  this.userAccount.getAddress() || "",
-                  parsedOldData.v
-                );
-              }
-
-              let changesMerged:
-                | MapChanges<any>[]
-                | ListChanges<any>[]
-                | CounterChanges[] = [];
-
-              if (oldDoc) {
-                oldDoc.mergeChanges(finalMessage.data.v);
-                changesMerged = oldDoc.getChanges();
-              }
-              newMessage = {
-                ...finalMessage,
-              };
-              newMessage.data.v = changesMerged;
-
-              if (parsedOldData.t < finalMessage.data.t) {
-                const key = newMessage.data.k;
-                this.triggerKeyListener(key, newMessage.data);
-                this.store
-                  .put(newMessage.data.k, JSON.stringify(newMessage.data))
-                  .catch((e) => {
-                    // do nothing
-                  });
-              } else {
-                const key = message.data.k;
-                this.triggerKeyListener(key, parsedOldData);
-              }
-              // } else {
-              //   this.logger(
-              //     `${message.k} has old data, but its newer. old ${parsedOldData.t} < new ${message.t}`
-              //   );
-              // }
-            } catch (e) {
-              this.logger("Couldnt parse crdt data", oldData, e);
-            }
-          } else {
-            const key = finalMessage.data.k;
-            this.triggerKeyListener(key, finalMessage.data);
-            this.store
-              .put(finalMessage.data.k, JSON.stringify(finalMessage.data))
-              .catch((e) => {
-                this.logger("Couldnt insert crdt data", e);
-              });
-          }
-        })
-        .catch((e) => {
-          const key = finalMessage.data.k;
-          this.triggerKeyListener(key, finalMessage.data);
-          this.store
-            .put(finalMessage.data.k, JSON.stringify(finalMessage.data))
-            .catch((e) => {
-              // do nothing
-            });
-        });
-    } else {
-      this.logger("unverified message: ", value, message);
+  const data = await this.withKeyLock(key, async () => {
+    let storedSets: SignedChangeSet[] = [];
+    try {
+      const stored = JSON.parse(await this.store.get(key));
+      if (isCrdtData(stored) && stored.c === type) {
+        storedSets = stored.sets;
+      }
+    } catch (e) {
+      // nothing stored yet
     }
+
+    const merged = mergeChangeSets(key, type, storedSets, validSets);
+    if (merged.added === 0) {
+      return null;
+    }
+
+    const mergedData = createCrdtData(key, type, merged.sets);
+    try {
+      await this.store.put(key, JSON.stringify(mergedData));
+    } catch (e) {
+      this.logger("Couldnt insert crdt data", e);
+    }
+    return mergedData;
   });
+
+  // Nothing new
+  if (!data) return;
+
+  const finalMessage: CrdtPutMessage = {
+    ...message,
+    to: [...message.to, remotePeerId],
+    data,
+  };
+
+  this.emit("crdtput", finalMessage);
+  this.emit("data", toCrdtView(data));
+  this.emit("verified", finalMessage);
+
+  // relay to other servers !!!
+  this.network.sendToAll(finalMessage, true);
+
+  // Key listeners of CRDT documents get a CrdtView, with all changes in `v`
+  this.triggerKeyListener(key, toCrdtView(data) as any);
 }

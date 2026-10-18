@@ -41,6 +41,7 @@ jobs:
           - counterCrdt.additional
           - counterCrdt
           - crdt-network
+          - crdtChangeSets
           - ecdh
           - encoding
           - groupKey

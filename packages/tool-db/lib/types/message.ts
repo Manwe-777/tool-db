@@ -129,9 +129,62 @@ export interface PutMessage<T = any> extends BaseMessage {
   data: VerificationData<T>;
 }
 
-export interface CrdtPutMessage<T = any> extends BaseMessage {
+/**
+ * A set of CRDT changes made and signed by a single author.
+ */
+export interface SignedChangeSet<C = any> {
+  /**
+   * Author address, every change in the set must be authored by it
+   */
+  a: string;
+  /**
+   * Timestamp this set was created
+   */
+  t: number;
+  /**
+   * Changes
+   */
+  c: C[];
+  /**
+   * Signature of getChangeSetHash
+   */
+  s: string;
+}
+
+/**
+ * A CRDT document, as stored and sent over the network.
+ * There is no document level signature, every change set is verified on its own.
+ */
+export interface CrdtData<C = any> {
+  /**
+   * Key/id
+   */
+  k: string;
+  /**
+   * CRDT type
+   */
+  c: string;
+  /**
+   * Hash of all the change sets, used for deduplication only
+   */
+  h: string;
+  /**
+   * Signed change sets
+   */
+  sets: SignedChangeSet<C>[];
+}
+
+/**
+ * A CRDT document as given to listeners and events, with all the changes
+ * of its change sets in `v`.
+ */
+export interface CrdtView<C = any> extends CrdtData<C> {
+  v: C[];
+}
+
+export interface CrdtPutMessage<C = any> extends BaseMessage {
   type: "crdtPut";
-  data: VerificationData<T>;
+  data: CrdtData<C>;
 }
 
 export interface CrdtGetMessage<T = any> extends BaseMessage {

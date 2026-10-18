@@ -9,6 +9,7 @@ export { default as randomAnimal } from "./utils/randomAnimal";
 export { default as verifyMessage } from "./utils/verifyMessage";
 export { default as getPeerSignature } from "./utils/getPeerSignature";
 export { default as verifyPeer } from "./utils/verifyPeer";
+export * from "./utils/crdtChangeSets";
 export { default as textRandom } from "./utils/textRandom";
 
 export { default as catchReturn } from "./utils/catchReturn";

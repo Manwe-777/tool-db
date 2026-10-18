@@ -631,7 +631,7 @@ describe("CRDT Additional Tests", () => {
   it("ListCRDT can sync between peers", async () => {
     const key = "list-crdt-" + textRandom(12);
 
-    const aliceList = new ListCrdt("Alice");
+    const aliceList = new ListCrdt(Alice.userAccount.getAddress() || "");
     aliceList.PUSH("item1");
     aliceList.PUSH("item2");
     aliceList.PUSH("item3");
@@ -640,7 +640,7 @@ describe("CRDT Additional Tests", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const bobList = new ListCrdt("Bob");
+    const bobList = new ListCrdt(Bob.userAccount.getAddress() || "");
     await Bob.getCrdt(key, bobList);
 
     expect(bobList.value.length).toBe(3);
@@ -652,7 +652,7 @@ describe("CRDT Additional Tests", () => {
   it("CounterCRDT can sync between peers", async () => {
     const key = "counter-crdt-" + textRandom(12);
 
-    const aliceCounter = new CounterCrdt("Alice");
+    const aliceCounter = new CounterCrdt(Alice.userAccount.getAddress() || "");
     aliceCounter.ADD(5);
     aliceCounter.ADD(3);
 
@@ -660,7 +660,7 @@ describe("CRDT Additional Tests", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const bobCounter = new CounterCrdt("Bob");
+    const bobCounter = new CounterCrdt(Bob.userAccount.getAddress() || "");
     await Bob.getCrdt(key, bobCounter);
 
     expect(bobCounter.value).toBe(8);
@@ -669,8 +669,8 @@ describe("CRDT Additional Tests", () => {
   it("CRDT merges concurrent updates correctly", async () => {
     const key = "merge-crdt-" + textRandom(12);
 
-    const aliceCounter = new CounterCrdt("Alice");
-    const bobCounter = new CounterCrdt("Bob");
+    const aliceCounter = new CounterCrdt(Alice.userAccount.getAddress() || "");
+    const bobCounter = new CounterCrdt(Bob.userAccount.getAddress() || "");
 
     aliceCounter.ADD(10);
     await Alice.putCrdt(key, aliceCounter);

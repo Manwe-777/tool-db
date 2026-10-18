@@ -1,211 +1,127 @@
-# CRDT Authentication: Issues and Proposal
+# CRDT Authentication
 
 ## Summary
 
 Regular keys are signed end to end: every stored record carries the author's
 signature over a hash of its value, and every peer can verify it. CRDT
-documents are not. Servers merge changes from several authors into a single
-record and store it under the signature of whoever sent the last change, so
-the stored record can not be verified, and the author of each change is just
-a field anyone can write.
+documents used to work differently: servers merged changes from several
+authors into a single record and stored it under the signature of whoever
+sent the last change, so stored documents could not be verified, and the
+author of each change was just a field anyone could write.
 
-This document describes the current model, the issues it causes, and a
-proposal to sign every change (or every change set) so CRDT data is
-authenticated the same way regular keys are.
+CRDT documents now use **signed change sets**: every set of changes is
+signed by its author, and every change in a set must be authored by the
+signer. A document is a collection of change sets, each verified on its own,
+so it can be relayed and merged by anyone without losing authentication.
 
-The issues are covered by tests in `__tests__/crdt-network.ts`, marked with
-`it.failing` until they are fixed.
+The implementation lives in `packages/tool-db/lib/utils/crdtChangeSets.ts`.
+It is covered by `__tests__/crdtChangeSets.ts` (unit tests) and
+`__tests__/crdt-network.ts` (attacks over the network).
 
-## Current model
+## Previous issues
 
-1. A client builds a CRDT locally (`MapCrdt`, `ListCrdt`, `CounterCrdt`) and
-   calls `putCrdt`. The message value `v` is the **full change list** of the
-   document, including changes the client merged from other authors.
-2. The message is signed once, by the sender, over
-   `sha256(JSON.stringify(v) + a + t + n)` (see `getMessageHash`).
-3. A server receiving it (`handleCrdtPut`) verifies the signature, merges `v`
-   into its stored document, and stores the merged changes **with the
-   incoming message's `h`, `s`, `a` and `t`**.
-4. Other clients get the stored record through `crdtGet` or `subscribe`.
+1. **Merged documents could not be verified.** The stored value was the
+   merge of several authors' changes, but the hash and signature belonged to
+   a single incoming message. Once the hash was always checked, peers
+   rejected merged documents served by servers.
+2. **Change authorship was not authenticated.** A `crdtPut` signature proved
+   who sent the change list, not who made each change in it, so a signer
+   could include changes attributed to anyone. Custom verificators relying
+   on change authors (like `ownedMapVerificator` in the example app) were
+   fooled by this, and user namespaces only checked the message author.
+3. **CRDT GET replies were merged without verification**, so any peer could
+   answer a `crdtGet` with forged changes.
+4. **`handleCrdtPut` mutated the incoming message** after emitting it to
+   listeners.
+5. **Older timestamps discarded merged changes**: the merge was only stored
+   if the incoming message was newer, so changes from clients with clock
+   skew, or syncing after being offline, were lost.
+6. **Counters were merged as lists**, dropping equal increments from
+   different authors (fixed separately, before this redesign).
 
-Each change identifies its author with a plain field:
-
-| CRDT          | Author field                          |
-| ------------- | ------------------------------------- |
-| `MapCrdt`     | `a`                                   |
-| `CounterCrdt` | `a`                                   |
-| `ListCrdt`    | prefix of `i` (`author-00000001`)     |
-
-## Issues
-
-### 1. Merged documents can not be verified
-
-The stored value is the merge of several authors' changes, but the hash and
-signature belong to a single incoming message whose value was different. Any
-peer that verifies the stored record gets `InvalidHash`.
-
-Before the hash was always checked (commit "Remove proof of work and always
-verify the message hash"), this went unnoticed because the hash was never
-compared to the value. Since then, peers reject merged documents they receive
-from servers: `getCrdt` still merges the reply into the caller's CRDT (see
-issue 3), but `handleCrdtPut` refuses to store it or trigger key listeners.
-
-Test: _Stores CRDT documents merged from several authors in a verifiable way_.
-
-### 2. Change authorship is not authenticated
-
-A `crdtPut` signature proves who **sent** the change list, not who **made**
-each change in it. Since the list contains changes from other authors, a
-signer can include changes attributed to anyone:
-
-```js
-[
-  { t: "SET", k: "alice", a: "<Alice's address>", v: "never written by Alice", i: 9 },
-  { t: "SET", k: "bob", a: "<Bob's address>", v: "b", i: 1 },
-];
-```
-
-Bob's signature is valid and the first change is accepted as Alice's. Custom
-verificators that rely on change authors (like `ownedMapVerificator` in the
-example app, which checks `ch.a === ch.k`) are fooled by this.
-
-Combined with issue 1, today a relay does not even need to sign anything: it
-can add changes to a stored document and serve it.
-
-User namespaced keys (`:address.key`) are affected too: the namespace check
-only applies to the message author, not to the authors of the changes inside.
-
-### 3. CRDT GET replies are merged without verification
-
-`toolDbCrdtGet` merges the changes of the first reply straight into the
-caller's CRDT, before any verification. Any peer can answer a `crdtGet` with
-forged changes. (`getData` had the same problem and was fixed, but the same
-fix can not be applied here until issue 1 is solved, since valid merged
-documents would be rejected too.)
-
-Test: _Does not merge forged changes from a CRDT GET reply_.
-
-### 4. `handleCrdtPut` mutates the incoming message
-
-`newMessage = { ...finalMessage }` is a shallow copy, so
-`newMessage.data.v = changesMerged` replaces the value of the original
-message too, after it was already emitted to `crdtput`, `data` and `verified`
-listeners.
-
-### 5. Older timestamps discard merged changes
-
-The merged document is only stored when the incoming message is newer than
-the stored one (`parsedOldData.t < finalMessage.data.t`). A message with new
-changes but an older timestamp (clock skew, offline client syncing later) is
-merged and then thrown away. For CRDTs the timestamp should not decide
-anything: the merge is always correct, it should be stored whenever it added
-changes.
-
-### Fixed already
-
-- `CounterCrdt` declared `CRDT_LIST` as its type, so servers merged counters
-  as lists and dropped equal increments from different authors. Fixed in
-  "Fix counter CRDTs being merged as lists"; servers now merge using the
-  incoming message type, so counters already stored as `LIST` are handled.
-
-## Proposal: sign changes
-
-Each change carries the signature of its author, so it can be verified on its
-own, anywhere, regardless of who relays it or what it is merged with. A merged
-document is then just a set of individually verified changes and needs no
-signature of its own.
-
-### Option A: sign every change
-
-```ts
-interface SignedChange<C> {
-  c: C; // the change itself (map, list or counter change)
-  a: string; // author address, must be the signer
-  s: string; // signature over getChangeHash(...)
-}
-```
-
-The hash covers everything that gives the change meaning, so it can not be
-replayed into another document or type:
-
-```ts
-getChangeHash(key, crdtType, change) =
-  sha256(JSON.stringify([key, crdtType, change]));
-```
-
-### Option B: sign change sets (recommended)
-
-Each `putCrdt` sends only the changes the author made since their last put, as
-one signed set:
+## Format
 
 ```ts
 interface SignedChangeSet<C> {
-  a: string; // author address, must be the signer
-  q: number; // sequence number of this set for this author
-  c: C[]; // changes, all of them must be authored by `a`
-  s: string; // signature over sha256(JSON.stringify([key, crdtType, a, q, c]))
+  a: string; // author address, every change must be authored by it
+  t: number; // timestamp the set was created
+  c: C[]; // changes
+  s: string; // signature of getChangeSetHash(key, type, set)
+}
+
+interface CrdtData<C> {
+  k: string; // key
+  c: string; // CRDT type: MAP:2, LIST:2 or COUNTER:2
+  h: string; // hash of all the sets, only used for deduplication
+  sets: SignedChangeSet<C>[];
 }
 ```
 
-This gives the same guarantees as option A with one signature per put instead
-of one per change, which matters for counters and lists where a single edit
-can produce many changes. The rule "every change in a set must be authored by
-the set signer" is what closes issue 2.
+The signed hash is `sha256(JSON.stringify([key, type, a, t, c]))`. It
+includes the key and type, so a set can not be replayed into another
+document.
 
-### Rules (both options)
+The author of a change is its `a` field for maps and counters, and the prefix
+of its `i` field (`author-00000001`) for lists.
 
-- A change (or set) is accepted only if its signature verifies for `a`, and
-  every change in it is authored by `a` (`a` field for maps and counters, `i`
-  prefix for lists).
-- For user namespaced keys, every author must be the namespace owner.
-- Custom verificators keep working as today, but receive changes whose
-  authors are proven, so checks like `ch.a === ch.k` become meaningful.
-- Stored CRDT records hold `{ k, c, v: SignedChangeSet[] }` with no record
-  level `h` / `s` / `a`. They are verified set by set, not as a message.
-- Servers store the merge whenever it added new sets, regardless of
-  timestamps (fixes issue 5), building a new object instead of mutating the
-  incoming message (fixes issue 4).
-- `getCrdt` verifies each set in a reply before merging it (fixes issue 3).
-- Peers can cache verified set signatures, so each set is only verified once.
+## Rules
 
-### Migration
+A change set is accepted only if:
 
-The stored format and the wire format change, so this is a protocol version
-bump. Suggested approach:
+- its fields are valid and every change has a valid shape for the type,
+- its timestamp is not more than 30 seconds in the future,
+- every change is authored by the set author,
+- for user namespaced keys (`:address.key`), the set author is the owner,
+- the signature verifies for the author,
+- all matching custom verificators pass.
 
-- Use new CRDT type ids (for example `MAP:2`, `LIST:2`, `COUNTER:2`) so old
-  and new documents can not be confused, and old peers ignore new documents
-  instead of corrupting them.
-- Legacy documents (`MAP`, `LIST`, `COUNTER`) can not be authenticated after
-  the fact. Either keep serving them read only as untrusted data, or drop
-  them; this depends on how much legacy data exists in deployments.
+Peers keep the valid sets of a document and drop the invalid ones, so a
+single forged set does not block the valid ones. Verified set hashes are
+cached, so each set is only verified once per peer.
 
-### Costs
+Who may modify or delete what (for example, whether Bob can `DEL` a key
+Alice set) is left to custom verificators. They receive each change set as a
+regular message: `msg.a` is the proven author, `msg.v` the changes, and the
+previous value is the stored document with all its changes in `v`.
 
-- **Size:** roughly 130 hex characters per signature, plus the author
-  address, per change (option A) or per put (option B).
-- **CPU:** one signature verification per change or set received. WebCrypto
-  ECDSA (`ecdsa-user`) is fast; `web3-user` verifies in plain JS and is
-  noticeably slower. Both should be benchmarked with realistic documents.
-- **Growth:** change logs are never compacted today, signatures make each
-  entry bigger. Compaction (snapshots signed by a quorum, or per author
-  checkpoints) is out of scope here, but becomes more relevant.
+## Behavior
 
-## Interim options
+- **`putCrdt`** signs only the changes authored by us that were not
+  published yet, as one new set. Changes by other authors are kept in the
+  document only through their own signed sets. The CRDT must be created
+  with our address as its author. The document is stored locally too.
+- **Servers** (`handleCrdtPut`) verify the incoming sets, merge them with the
+  stored ones, and store and relay the result whenever new sets were added,
+  regardless of timestamps. Reading, merging and writing a key is done under
+  a per-key lock, so concurrent puts do not lose sets.
+- **`getCrdt`** merges local data right away. When connected, it still waits
+  for a reply from other peers (or the timeout), and only merges the sets in
+  the reply that verify. It resolves with a `CrdtView`.
+- **Key listeners, `data` events and subscriptions** get a `CrdtView`: the
+  stored document plus all of its changes in `v`, so listeners that merge
+  `msg.v` keep working.
+- **Regular messages** with a CRDT type (`c !== null`) are rejected; CRDT
+  data only travels as change sets.
 
-Until the proposal is implemented, CRDT sync between peers through servers is
-degraded (issue 1). If that matters before the redesign lands, a temporary
-change can skip the hash check for CRDT records (`c !== null`) in
-`verifyMessage`. That restores the previous behavior, including its lack of
-authentication.
+## Breaking changes
 
-## Open questions
+- New CRDT type ids (`MAP:2`, `LIST:2`, `COUNTER:2`). Legacy documents
+  (`MAP`, `LIST`, `COUNTER`) are ignored: they can not be authenticated after
+  the fact. Apps that need the old data must migrate it themselves, by
+  reading it and putting it again with the new version.
+- CRDTs must be created with the user's address as author, changes by any
+  other author are not published by `putCrdt`.
+- `getCrdt` resolves with a `CrdtView` instead of a raw record or message.
+- The stored and wire formats of CRDT documents changed, so old and new peers
+  can not sync CRDTs with each other.
 
-- Option A or option B?
-- Who can delete or overwrite what? Signing proves authorship, but whether
-  Bob may `DEL` a key Alice set (or tombstone her list item) is an app level
-  rule. Should there be a default policy, or is this left to custom
-  verificators?
-- What to do with legacy CRDT documents in existing deployments?
-- Should merged documents be compacted, and how can a compacted snapshot be
-  trusted?
+## Open items
+
+- **Verification cost**: one signature verification per new change set.
+  WebCrypto ECDSA (`ecdsa-user`) is fast; `web3-user` verifies in plain JS
+  and is noticeably slower. Worth benchmarking with realistic documents.
+- **Growth**: change logs are never compacted, and signatures make each set
+  bigger. Compaction (signed snapshots or per author checkpoints) would need
+  its own design to stay verifiable.
+- **Default permissions**: there is no built in rule for modifying or
+  deleting other authors' entries; apps rely on custom verificators.

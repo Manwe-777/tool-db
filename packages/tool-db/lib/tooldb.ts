@@ -97,6 +97,31 @@ export default class ToolDb extends EventEmitter {
     return this._processedOutHashes;
   }
 
+  private _keyLocks: Record<string, Promise<unknown>> = {};
+
+  /**
+   * Runs the given function once all the previous calls for this key finished.
+   * Used to avoid losing data when reading, merging and writing the same key
+   * concurrently.
+   */
+  public withKeyLock<R>(key: string, fn: () => Promise<R>): Promise<R> {
+    const previous = this._keyLocks[key] || Promise.resolve();
+    const result = previous.then(fn);
+    const lock = result.catch(() => undefined);
+    this._keyLocks[key] = lock;
+    lock.then(() => {
+      if (this._keyLocks[key] === lock) delete this._keyLocks[key];
+    });
+    return result;
+  }
+
+  /**
+   * Hashes of CRDT change sets we already verified, so we only verify them once
+   */
+  public verifiedChangeSets = new BoundedSet<string>(
+    ToolDb.DEDUP_CACHE_SIZE * 2
+  );
+
   public subscribeData = toolDbSubscribe;
 
   public isConnected = false;
