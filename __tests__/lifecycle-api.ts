@@ -21,7 +21,6 @@ describe("ToolDb Lifecycle API", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null, // Bypass POW for faster tests
     });
   });
 

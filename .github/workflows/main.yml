@@ -51,7 +51,6 @@ jobs:
           - network-base
           - network.additional
           - network
-          - pow
           - sha1
           - sha256
           - signup-local-first

@@ -1,4 +1,4 @@
-export { default as proofOfWork } from "./utils/proofOfWork";
+export { default as getMessageHash } from "./utils/getMessageHash";
 export { default as sha1 } from "./utils/sha1";
 export { default as sha256 } from "./utils/sha256";
 export { default as uniq } from "./utils/uniq";

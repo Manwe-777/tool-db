@@ -52,7 +52,6 @@ npx jest __tests__/filename.ts --watch
 
 - Single test file: ~5 seconds
 - All tests: ~180-200 seconds
-- Some tests (like pow.ts) can take 90+ seconds due to proof-of-work calculations
 
 ## Project Structure
 

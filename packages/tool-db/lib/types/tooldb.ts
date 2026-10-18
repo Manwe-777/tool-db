@@ -46,11 +46,6 @@ export interface ToolDbOptions {
    */
   wait: number;
   /**
-   * Proof of work difficulty (number of leading zeroes required).
-   * Set to null to bypass POW calculations entirely (useful for testing/CI).
-   */
-  pow: number | null;
-  /**
    * Whether we are a server or not
    */
   server: boolean;

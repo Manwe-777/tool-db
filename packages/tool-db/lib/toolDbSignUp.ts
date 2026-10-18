@@ -3,7 +3,7 @@ import {
   PutMessage,
   textRandom,
   VerificationData,
-  proofOfWork,
+  getMessageHash,
   sha256,
 } from ".";
 
@@ -46,18 +46,17 @@ export default async function toolDbSignUp(
 
   const userData = await account.encryptAccount(sha256(password));
   const timestamp = new Date().getTime();
-  const userDataString = `${JSON.stringify(
-    userData
-  )}${account.getAddress()}${timestamp}`;
-
-  // Use configured PoW difficulty
-  const { hash, nonce } = await proofOfWork(userDataString, this.options.pow);
+  const hash = getMessageHash(
+    JSON.stringify(userData),
+    account.getAddress() || "",
+    timestamp
+  );
   const signature = await account.signData(hash);
 
   const signupMessage: VerificationData = {
     k: userRoot,
     a: account.getAddress() || "",
-    n: nonce,
+    n: 0,
     t: timestamp,
     h: hash,
     s: signature,

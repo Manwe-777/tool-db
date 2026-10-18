@@ -12,8 +12,7 @@ export enum VerifyResult {
   CantOverwrite = "CantOverwrite",
   InvalidTimestamp = "InvalidTimestamp",
   AddressMismatch = "AddressMismatch",
-  NoProofOfWork = "NoProofOfWork",
-  InvalidHashNonce = "InvalidHashNonce",
+  InvalidHash = "InvalidHash",
   InvalidSignature = "InvalidSignature",
   Verified = "Verified",
 }
@@ -28,11 +27,11 @@ export interface VerificationData<T = any> {
    */
   a: string;
   /**
-   * Nonce
+   * Nonce, always 0 (legacy proof of work field, kept for compatibility)
    */
   n: number;
   /**
-   * Hash of JSON.stringify(value) + nonce
+   * Hash of JSON.stringify(value) + address + timestamp + nonce
    */
   h: string;
   /**

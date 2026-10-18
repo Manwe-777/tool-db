@@ -3,7 +3,7 @@ import {
   ToolDb,
   VerificationData,
   PutMessage,
-  proofOfWork,
+  getMessageHash,
   sha256,
 } from "../packages/tool-db";
 
@@ -29,7 +29,6 @@ describe("Username Conflict Resolution in handlePut", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null,
     });
 
     await server.store.ready;
@@ -45,7 +44,6 @@ describe("Username Conflict Resolution in handlePut", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null,
     });
 
     client2 = new ToolDb({
@@ -55,7 +53,6 @@ describe("Username Conflict Resolution in handlePut", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null,
     });
 
     await Promise.all([client1.store.ready, client2.store.ready]);
@@ -221,15 +218,17 @@ describe("Username Conflict Resolution in handlePut", () => {
     const userData = await client2Account.encryptAccount(sha256(password));
     // Use a timestamp older than client1's signup
     const oldTimestamp = Date.now() - 10000; // 10 seconds earlier
-    const userDataString = `${JSON.stringify(userData)}${client2Account.getAddress()}${oldTimestamp}`;
-
-    const { hash, nonce } = await proofOfWork(userDataString, 0);
+    const hash = getMessageHash(
+      JSON.stringify(userData),
+      client2Account.getAddress() || "",
+      oldTimestamp
+    );
     const signature = await client2Account.signData(hash);
 
     const olderSignupData: VerificationData = {
       k: userRoot,
       a: client2Account.getAddress() || "",
-      n: nonce,
+      n: 0,
       t: oldTimestamp,
       h: hash,
       s: signature,
@@ -271,16 +270,19 @@ describe("Username Conflict Resolution in handlePut", () => {
     const account1 = client1.userAccount;
     await account1.anonUser();
     const userData1 = await account1.encryptAccount(sha256("password"));
-    const userDataString1 = `${JSON.stringify(userData1)}${account1.getAddress()}${sharedTimestamp}`;
-    const pow1 = await proofOfWork(userDataString1, 0);
-    const signature1 = await account1.signData(pow1.hash);
+    const hash1 = getMessageHash(
+      JSON.stringify(userData1),
+      account1.getAddress() || "",
+      sharedTimestamp
+    );
+    const signature1 = await account1.signData(hash1);
 
     const signup1: VerificationData = {
       k: userRoot,
       a: account1.getAddress() || "",
-      n: pow1.nonce,
+      n: 0,
       t: sharedTimestamp,
-      h: pow1.hash,
+      h: hash1,
       s: signature1,
       v: userData1,
       c: null,
@@ -290,16 +292,19 @@ describe("Username Conflict Resolution in handlePut", () => {
     const account2 = client2.userAccount;
     await account2.anonUser();
     const userData2 = await account2.encryptAccount(sha256("password"));
-    const userDataString2 = `${JSON.stringify(userData2)}${account2.getAddress()}${sharedTimestamp}`;
-    const pow2 = await proofOfWork(userDataString2, 0);
-    const signature2 = await account2.signData(pow2.hash);
+    const hash2 = getMessageHash(
+      JSON.stringify(userData2),
+      account2.getAddress() || "",
+      sharedTimestamp
+    );
+    const signature2 = await account2.signData(hash2);
 
     const signup2: VerificationData = {
       k: userRoot,
       a: account2.getAddress() || "",
-      n: pow2.nonce,
+      n: 0,
       t: sharedTimestamp,
-      h: pow2.hash,
+      h: hash2,
       s: signature2,
       v: userData2,
       c: null,

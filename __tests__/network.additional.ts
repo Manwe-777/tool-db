@@ -59,7 +59,6 @@ beforeAll(async () => {
   try {
     // Create servers first
     nodeA = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: true,
       host: "127.0.0.1",
       port: 9100,
@@ -95,7 +94,6 @@ beforeAll(async () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     nodeB = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: true,
       peers: [{ host: "localhost", port: 9100 }],
       host: "127.0.0.1",
@@ -137,7 +135,6 @@ beforeAll(async () => {
 
     // Create clients and wait for them to connect
     Alice = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-additional-alice",
@@ -147,7 +144,6 @@ beforeAll(async () => {
     });
 
     Bob = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 8100 }],
       storageName: ".test-db/test-additional-bob",
@@ -157,7 +153,6 @@ beforeAll(async () => {
     });
 
     Chris = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-additional-chris",
@@ -721,7 +716,6 @@ describe("Peer Connection Events", () => {
     let peerConnectCalled = false;
 
     const tempClient = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-additional-temp-" + textRandom(8),
@@ -751,7 +745,6 @@ describe("Keys Sign In", () => {
 
     // Create new client and sign in with the same private key
     const newClient = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-keys-signin-" + textRandom(8),
@@ -777,7 +770,6 @@ describe("Keys Sign In", () => {
 describe("Anonymous Sign In", () => {
   it("Can perform anonymous sign in", async () => {
     const anonClient = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9100 }],
       storageName: ".test-db/test-anon-" + textRandom(8),

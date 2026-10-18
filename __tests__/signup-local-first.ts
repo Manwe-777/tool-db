@@ -21,7 +21,6 @@ describe("Local-First Signup", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null, // Bypass POW for faster tests
     });
     await db.ready;
   });
@@ -46,7 +45,7 @@ describe("Local-First Signup", () => {
     expect(result.data.k).toBe(`==${username}`);
 
     // Should complete much faster than the old 3-second network wait
-    // Allow up to 2 seconds for PoW calculation (even with null pow, there's some overhead)
+    // Allow up to 2 seconds for signing and storage overhead
     expect(elapsedTime).toBeLessThan(2000);
   });
 
@@ -109,7 +108,6 @@ describe("Local-First Signup", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null,
     });
     await db2.store.ready;
 
@@ -174,7 +172,6 @@ describe("Signup Conflict Detection Events", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null,
     });
     await db.store.ready;
   });
@@ -222,7 +219,6 @@ describe("Signup with Network", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null,
     });
 
     // Wait for server to be ready using the new lifecycle API
@@ -239,7 +235,6 @@ describe("Signup with Network", () => {
       storageAdapter: ToolDbLeveldb,
       networkAdapter: ToolDbWebsockets,
       userAdapter: ToolDbWeb3,
-      pow: null,
     });
     await client.ready;
 

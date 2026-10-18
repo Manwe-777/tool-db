@@ -54,9 +54,14 @@ it("Can verify PUT", () => {
   });
 });
 
-it("Can catch invalid POW", () => {
-  return ClientA.verifyMessage(putOk, 5).then((result) => {
-    expect(result).toEqual(VerifyResult.NoProofOfWork);
+it("Can catch a signed message with a swapped value", () => {
+  // Attack: reuse a valid hash and signature, but replace the value
+  const swappedValue: VerificationData<string> = {
+    ...putOk,
+    v: "attacker value",
+  };
+  return ClientA.verifyMessage(swappedValue).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidHash);
   });
 });
 
@@ -72,7 +77,7 @@ const putSig: VerificationData<string> = {
 };
 
 it("Can catch tampered messages (signature)", () => {
-  return ClientA.verifyMessage(putSig, 3).then((result) => {
+  return ClientA.verifyMessage(putSig).then((result) => {
     expect(result).toEqual(VerifyResult.InvalidSignature);
   });
 });
@@ -88,9 +93,9 @@ const tamperedNonce: VerificationData<string> = {
   c: null,
 };
 
-it("Can catch tampered POW", () => {
-  return ClientA.verifyMessage(tamperedNonce, 3).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidHashNonce);
+it("Can catch tampered nonce", () => {
+  return ClientA.verifyMessage(tamperedNonce).then((result) => {
+    expect(result).toEqual(VerifyResult.InvalidHash);
   });
 });
 

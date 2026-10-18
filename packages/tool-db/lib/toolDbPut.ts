@@ -3,7 +3,7 @@ import {
   PutMessage,
   textRandom,
   VerificationData,
-  proofOfWork,
+  getMessageHash,
 } from ".";
 
 /**
@@ -33,51 +33,51 @@ export default function toolDbPut<T = any>(
     }
 
     const timestamp = new Date().getTime();
-    const dataString = `${JSON.stringify(
-      value
-    )}${this.userAccount.getAddress()}${timestamp}`;
+    const hash = getMessageHash(
+      JSON.stringify(value),
+      this.userAccount.getAddress() || "",
+      timestamp
+    );
 
-    // WORK
-    proofOfWork(dataString, this.options.pow)
-      .then(({ hash, nonce }) => {
-        this.userAccount.signData(hash).then((signature) => {
-          if (signature && this.userAccount.getAddress()) {
-            const finalKey = userNamespaced
-              ? `:${this.userAccount.getAddress()}.${key}`
-              : key;
+    this.userAccount
+      .signData(hash)
+      .then((signature) => {
+        if (signature && this.userAccount.getAddress()) {
+          const finalKey = userNamespaced
+            ? `:${this.userAccount.getAddress()}.${key}`
+            : key;
 
-            // Compose the message
-            const data: VerificationData = {
-              k: finalKey,
-              a: this.userAccount.getAddress() || "",
-              n: nonce,
-              t: timestamp,
-              h: hash,
-              s: signature,
-              v: value,
-              c: null,
-            };
+          // Compose the message
+          const data: VerificationData = {
+            k: finalKey,
+            a: this.userAccount.getAddress() || "",
+            n: 0,
+            t: timestamp,
+            h: hash,
+            s: signature,
+            v: value,
+            c: null,
+          };
 
-            this.logger("PUT", key, data);
+          this.logger("PUT", key, data);
 
-            const finalMessage: PutMessage = {
-              type: "put",
-              id: textRandom(10),
-              to: to || [],
-              data,
-            };
+          const finalMessage: PutMessage = {
+            type: "put",
+            id: textRandom(10),
+            to: to || [],
+            data,
+          };
 
-            this.network.sendToAll(finalMessage);
-            this.store
-              .put(finalKey, JSON.stringify(data))
-              .catch((e) => {
-                // do nothing
-              })
-              .finally(() => {
-                resolve(finalMessage);
-              });
-          }
-        });
+          this.network.sendToAll(finalMessage);
+          this.store
+            .put(finalKey, JSON.stringify(data))
+            .catch((e) => {
+              // do nothing
+            })
+            .finally(() => {
+              resolve(finalMessage);
+            });
+        }
       })
       .catch(reject);
   });

@@ -3,7 +3,7 @@ import {
   CrdtPutMessage,
   textRandom,
   VerificationData,
-  proofOfWork,
+  getMessageHash,
   BaseCrdt,
 } from ".";
 
@@ -39,39 +39,41 @@ export default function toolDbCrdtPut<T = any>(
 
     const encodedData = JSON.stringify(crdtChanges);
 
-    const dataString = `${encodedData}${this.userAccount.getAddress()}${timestamp}`;
+    const hash = getMessageHash(
+      encodedData,
+      this.userAccount.getAddress() || "",
+      timestamp
+    );
 
-    // WORK
-    proofOfWork(dataString, this.options.pow)
-      .then(({ hash, nonce }) => {
-        this.userAccount.signData(hash).then((signature) => {
-          if (signature && this.userAccount.getAddress()) {
-            // Compose the message
-            const data: VerificationData<any> = {
-              k: userNamespaced
-                ? `:${this.userAccount.getAddress()}.${key}`
-                : key,
-              a: this.userAccount.getAddress() || "",
-              n: nonce,
-              t: timestamp,
-              h: hash,
-              s: signature,
-              v: crdtChanges,
-              c: crdt.type,
-            };
+    this.userAccount
+      .signData(hash)
+      .then((signature) => {
+        if (signature && this.userAccount.getAddress()) {
+          // Compose the message
+          const data: VerificationData<any> = {
+            k: userNamespaced
+              ? `:${this.userAccount.getAddress()}.${key}`
+              : key,
+            a: this.userAccount.getAddress() || "",
+            n: 0,
+            t: timestamp,
+            h: hash,
+            s: signature,
+            v: crdtChanges,
+            c: crdt.type,
+          };
 
-            this.logger("PUT CRDT", key, data);
+          this.logger("PUT CRDT", key, data);
 
-            const finalMessage: CrdtPutMessage<any> = {
-              type: "crdtPut",
-              id: textRandom(10),
-              to: to || [],
-              data,
-            };
-            this.network.sendToAll(finalMessage);
-            resolve(finalMessage);
-          }
-        });
+          const finalMessage: CrdtPutMessage<any> = {
+            type: "crdtPut",
+            id: textRandom(10),
+            to: to || [],
+            data,
+          };
+          this.network.sendToAll(finalMessage);
+          resolve(finalMessage);
+        }
       })
       .catch(reject);
   });

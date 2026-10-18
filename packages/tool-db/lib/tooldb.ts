@@ -262,7 +262,6 @@ export default class ToolDb extends EventEmitter {
     maxRetries: 5,
     triggerDebouce: 100,
     wait: 2000,
-    pow: 0,
     server: false,
     host: "127.0.0.1",
     port: 8080,

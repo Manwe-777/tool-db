@@ -58,7 +58,6 @@ beforeAll(async () => {
   try {
     // Create servers first
     nodeA = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: true,
       host: "127.0.0.1",
       port: 9000,
@@ -82,7 +81,6 @@ beforeAll(async () => {
     // Give server A time to start listening
     await new Promise((resolve) => setTimeout(resolve, 500));
     nodeB = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: true,
       // Node A is going to be our "bootstrap" node
       peers: [{ host: "localhost", port: 9000 }],
@@ -101,7 +99,6 @@ beforeAll(async () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     // Create clients and wait for them to connect
     Alice = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9000 }],
       storageName: ".test-db/test-alice",
@@ -110,7 +107,6 @@ beforeAll(async () => {
       userAdapter: ToolDbWeb3,
     });
     Bob = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 8000 }],
       storageName: ".test-db/test-bob",
@@ -119,7 +115,6 @@ beforeAll(async () => {
       userAdapter: ToolDbWeb3,
     });
     Chris = new ToolDb({
-      pow: null, // Bypass POW for faster CI tests
       server: false,
       peers: [{ host: "localhost", port: 9000 }],
       storageName: ".test-db/test-chris",

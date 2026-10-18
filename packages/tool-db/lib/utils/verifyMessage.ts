@@ -1,15 +1,13 @@
-import { ToolDb, VerifyResult, VerificationData, sha256 } from "..";
+import { ToolDb, VerifyResult, VerificationData, getMessageHash } from "..";
 
 /**
- * Verifies a message validity (PoW, Address, timestamp, signatures)
+ * Verifies a message validity (hash, address, timestamp, signatures)
  * @param msg AnyMessage
- * @param pow amount of proof of work required, number of leading zeroes (default is 0/no pow)
- * @returns boolean or undefined if the message type does not match
+ * @returns VerifyResult
  */
 export default async function verifyMessage<T>(
   this: ToolDb,
-  msg: Partial<VerificationData<T>>,
-  pow: number | null = 0
+  msg: Partial<VerificationData<T>>
 ): Promise<VerifyResult> {
   // this.logger("verify: ", msg);
   const strData = JSON.stringify(msg.v);
@@ -20,6 +18,7 @@ export default async function verifyMessage<T>(
     msg.h === undefined ||
     msg.a === undefined ||
     msg.s === undefined ||
+    msg.n === undefined ||
     msg.c === undefined
   ) {
     return VerifyResult.InvalidData;
@@ -55,7 +54,7 @@ export default async function verifyMessage<T>(
       .catch(() => {
         return null;
       });
-    
+
     // If data exists with a different author, compare timestamps
     // The OLDER timestamp wins (first writer owns forever)
     if (data && data.a !== msg.a) {
@@ -73,20 +72,10 @@ export default async function verifyMessage<T>(
     return VerifyResult.AddressMismatch;
   }
 
-  // Verify hash and nonce (adjust zeroes for difficulty of the network)
-  // While this POW does not enforce security per-se, it does make it harder
-  // for attackers to spam the network, and could be adjusted by peers.
-  // When pow is null, skip POW verification entirely (useful for testing/CI)
-  if (pow !== null && pow > 0) {
-    if (msg.h.slice(0, pow) !== new Array(pow).fill("0").join("")) {
-      // this.logger("No valid hash (no pow)");
-      return VerifyResult.NoProofOfWork;
-    }
-
-    if (sha256(`${strData}${msg.a}${msg.t}${msg.n}`) !== msg.h) {
-      // this.logger("Specified hash does not generate a valid pow");
-      return VerifyResult.InvalidHashNonce;
-    }
+  // The signature only covers the hash, so the hash must be checked against
+  // the actual value or anyone could swap the value of a signed message.
+  if (getMessageHash(strData, msg.a, msg.t, msg.n) !== msg.h) {
+    return VerifyResult.InvalidHash;
   }
 
   const verified = this.userAccount
