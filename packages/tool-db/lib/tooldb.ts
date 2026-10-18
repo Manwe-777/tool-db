@@ -258,7 +258,7 @@ export default class ToolDb extends EventEmitter {
     };
 
     this._customVerificator.push(newListener);
-    return this._customVerificator.length;
+    return this._customVerificator.length - 1;
   };
 
   public removeCustomVerification = (id: number) => {

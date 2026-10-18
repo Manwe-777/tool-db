@@ -249,6 +249,14 @@ describe("Custom verification", () => {
     const result = await ClientA.verify(putOk);
     expect(result).toEqual(VerifyResult.CustomVerificationFailed);
   });
+
+  it("Can remove a custom verificator", async () => {
+    const id = ClientA.addCustomVerification("test", async () => false);
+    ClientA.removeCustomVerification(id);
+
+    const result = await ClientA.verify(putOk);
+    expect(result).toEqual(VerifyResult.Verified);
+  });
 });
 
 // This test fails because we are testing on a local node
