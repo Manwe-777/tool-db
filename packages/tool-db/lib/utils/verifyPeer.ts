@@ -5,9 +5,8 @@ export default function verifyPeer(tooldb: ToolDb, peer: Peer) {
     `${peer.topic}-${peer.timestamp}-${peer.host}:${peer.port}`
   );
 
-  // its not really a message but this function works with a Partial
-  // I want to keep it like this so the signature verification is in a single place
-  return tooldb.verifyMessage({
+  // Peers are not messages, so we only check the signature of the peer data
+  return tooldb.userAccount.verifySignature({
     h: data,
     a: peer.address,
     s: peer.sig,

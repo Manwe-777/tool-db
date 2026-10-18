@@ -207,7 +207,33 @@ it("Can verify peers", async () => {
 
   const verified = await verifyPeer(ClientA, peerData);
 
-  expect(verified).toBeTruthy();
+  expect(verified).toBe(true);
+});
+
+it("Can catch tampered peers", async () => {
+  const timestamp = new Date().getTime();
+
+  const signature = await getPeerSignature(
+    ClientA.peerAccount,
+    "topic",
+    timestamp,
+    "host",
+    8080
+  );
+
+  // Attack: reuse a valid peer signature but point it to another host
+  const peerData: Peer = {
+    topic: "topic",
+    timestamp: timestamp,
+    host: "attacker-host",
+    port: 8080,
+    address: ClientA.peerAccount.getAddress() || "",
+    sig: signature,
+  };
+
+  const verified = await verifyPeer(ClientA, peerData);
+
+  expect(verified).toBe(false);
 });
 
 describe("Custom verification", () => {
