@@ -62,7 +62,8 @@ export class ListCrdt<T> extends BaseCrdt<T, ListChanges<T>, T[]> {
     const temp: ListTempCursor<T>[] = [];
     // Only update if we have new changes
     if (this._changes.length !== this._lastUpdateSize) {
-      this._changes.sort(this.changesSort).forEach((change) => {
+      const sorted = this._changes.sort(this.changesSort);
+      sorted.forEach((change) => {
         if (change.t === "INS") {
           let poisitionToInsert = 0;
           if (change.p) {
@@ -80,9 +81,15 @@ export class ListCrdt<T> extends BaseCrdt<T, ListChanges<T>, T[]> {
           };
 
           temp.splice(poisitionToInsert, 0, cursorValue);
-        } else if (change.t === "DEL") {
-          const poisitionToInsert = temp.findIndex((v) => v.index === change.v);
-          temp[poisitionToInsert].tomb = true;
+        }
+      });
+      // Deletes are applied after all inserts, since a delete can sort before
+      // the insert it targets (when its author sorts first). Deletes of items
+      // we do not have are ignored.
+      sorted.forEach((change) => {
+        if (change.t === "DEL") {
+          const target = temp.find((v) => v.index === change.v);
+          if (target) target.tomb = true;
         }
       });
       this._lastUpdateSize = this._changes.length;

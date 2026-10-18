@@ -376,3 +376,27 @@ describe("ListCrdt - Additional Edge Cases", () => {
   });
 });
 
+
+describe("ListCrdt deletes", () => {
+  it("Can delete items from authors whose index sorts after ours", () => {
+    const zed = new ListCrdt<string>("zed");
+    zed.PUSH("x");
+    zed.PUSH("y");
+
+    const amy = new ListCrdt<string>("amy");
+    amy.mergeChanges(zed.getChanges());
+    amy.DEL(0);
+
+    // "amy-..." sorts before "zed-...", so the delete comes first
+    const other = new ListCrdt<string>("other");
+    other.mergeChanges(amy.getChanges());
+    expect(other.value).toEqual(["y"]);
+  });
+
+  it("Ignores deletes of items it does not have", () => {
+    const list = new ListCrdt<string>("alice");
+    list.PUSH("a");
+    list.mergeChanges([{ t: "DEL", v: "bob-00000000", i: "bob-00000001" }]);
+    expect(list.value).toEqual(["a"]);
+  });
+});
