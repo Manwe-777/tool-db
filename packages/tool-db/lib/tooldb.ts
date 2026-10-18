@@ -43,6 +43,14 @@ import handleSubscribe from "./messageHandlers/handleSubscribe";
 
 import logger from "./logger";
 
+import { isNostrNetwork } from "./nostrData/values";
+import {
+  nostrGetData,
+  nostrPutData,
+  nostrSubscribeData,
+  nostrUnsubscribeData,
+} from "./nostrData/api";
+
 export interface Listener<T = any> {
   key: string;
   timeout: number | null;
@@ -123,6 +131,16 @@ export default class ToolDb extends EventEmitter {
   );
 
   public subscribeData = toolDbSubscribe;
+
+  /**
+   * Stops receiving updates of a key (Nostr network only)
+   */
+  public unsubscribeData = nostrUnsubscribeData;
+
+  /**
+   * Open relay subscriptions by key (Nostr network only)
+   */
+  public _nostrSubscriptions: Record<string, () => void> = {};
 
   public isConnected = false;
 
@@ -354,6 +372,14 @@ export default class ToolDb extends EventEmitter {
     // Create network adapter synchronously so it can listen to "init" event
     // The network adapter will wait for the "init" event before doing anything critical
     this._network = new this.options.networkAdapter(this);
+
+    // While the Nostr rewrite is in progress, the Nostr network adapter uses
+    // its own implementations. See NOSTR_FIRST.md.
+    if (isNostrNetwork(this._network)) {
+      this.putData = nostrPutData as any;
+      this.getData = nostrGetData as any;
+      this.subscribeData = nostrSubscribeData as any;
+    }
 
     const DEFAULT_KEYS = "%default-peer%";
     const DEFAULT_USER_KEYS = "%default-user%";
