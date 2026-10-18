@@ -1,4 +1,5 @@
 import {
+  BoundedSet,
   ToolDb,
   PingMessage,
   ToolDbMessage,
@@ -106,6 +107,34 @@ export default class ToolDbNetworkAdapter {
     }
   }
 
+  /**
+   * Sends a message to a client, skipping data we already sent to it.
+   * @param clientId Client ID
+   * @param msg message data
+   * @param finalMessage serialized message
+   */
+  private sendDeduplicated(
+    clientId: string,
+    msg: ToolDbMessage,
+    finalMessage: string
+  ) {
+    // Unknown or disconnected client
+    if (!this._clientToSend[clientId]) return;
+
+    if (msg.type === "put" || msg.type === "crdtPut") {
+      if (!this.tooldb.processedOutHashes[clientId]) {
+        this.resetOutHashes(clientId);
+      }
+      const sentHashes = this.tooldb.processedOutHashes[clientId];
+      if (sentHashes.has(msg.data.h)) return;
+
+      this.executeSendToClient(clientId, finalMessage);
+      sentHashes.add(msg.data.h);
+    } else {
+      this.executeSendToClient(clientId, finalMessage);
+    }
+  }
+
   public getClientAddress() {
     // This is not a good idea to use on all adapters, so it should be replaced
     // if its causing issues. The only reason we use the last 20 chars is to
@@ -113,9 +142,16 @@ export default class ToolDbNetworkAdapter {
     return (this.tooldb.peerAccount.getAddress() || "").slice(-20);
   }
 
+  private resetOutHashes(clientId: string) {
+    this.tooldb.processedOutHashes[clientId] = new BoundedSet(
+      ToolDb.DEDUP_CACHE_SIZE
+    );
+  }
+
   public onClientDisconnect(clientId: string) {
     delete this._clientToSend[clientId];
     delete this._clientIsServer[clientId];
+    delete this.tooldb.processedOutHashes[clientId];
   }
 
   /**
@@ -134,7 +170,7 @@ export default class ToolDbNetworkAdapter {
     // this.tooldb.logger("onClientMessage", clientId);
 
     if (clientId && !this.tooldb.processedOutHashes[clientId]) {
-      this.tooldb.processedOutHashes[clientId] = [];
+      this.resetOutHashes(clientId);
     }
 
     try {
@@ -146,7 +182,7 @@ export default class ToolDbNetworkAdapter {
         setClientId(cid);
         this.tooldb.onPeerConnect(cid);
         this._clientIsServer[cid] = parsedMessage.isServer;
-        this.tooldb.processedOutHashes[cid] = [];
+        this.resetOutHashes(cid);
         this.tooldb.clientOnMessage(parsedMessage, cid);
       } else if (clientId) {
         this.tooldb.clientOnMessage(parsedMessage, clientId);
@@ -178,14 +214,7 @@ export default class ToolDbNetworkAdapter {
       if ((crossServerOnly && this.isServer(clientId)) || !crossServerOnly) {
         this.tooldb.logger(to, "Sent out to:", clientId);
 
-        if (msg.type === "put" || msg.type === "crdtPut") {
-          if (!this.tooldb.processedOutHashes[clientId].includes(msg.data.h)) {
-            this.executeSendToClient(clientId, finalMessage);
-            this.tooldb.processedOutHashes[clientId].push(msg.data.h);
-          }
-        } else {
-          this.executeSendToClient(clientId, finalMessage);
-        }
+        this.sendDeduplicated(clientId, msg, finalMessage);
       }
       // } else {
       //   this.tooldb.logger("Fitlered out;", clientId);
@@ -203,16 +232,6 @@ export default class ToolDbNetworkAdapter {
     const to = uniq([...msg.to, this.getClientAddress()]);
     const finalMessage = JSON.stringify({ ...msg, to });
 
-    if (msg.type === "put" || msg.type === "crdtPut") {
-      if (
-        clientId &&
-        !this.tooldb.processedOutHashes[clientId].includes(msg.data.h)
-      ) {
-        this.executeSendToClient(clientId, finalMessage);
-        this.tooldb.processedOutHashes[clientId].push(msg.data.h);
-      }
-    } else {
-      this.executeSendToClient(clientId, finalMessage);
-    }
+    this.sendDeduplicated(clientId, msg, finalMessage);
   }
 }

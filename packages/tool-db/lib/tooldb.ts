@@ -1,6 +1,7 @@
 import EventEmitter from "events";
 
 import {
+  BoundedSet,
   Peer,
   randomAnimal,
   ServerFunction,
@@ -77,13 +78,20 @@ export default class ToolDb extends EventEmitter {
     return this._subscriptions;
   }
 
-  private _processedIds: Record<string, string[]> = {};
+  /**
+   * Max amount of message ids (per message type) and outgoing hashes (per peer)
+   * we remember for deduplication. Duplicates arrive shortly after the original,
+   * so we only need to remember the latest ones.
+   */
+  public static readonly DEDUP_CACHE_SIZE = 5000;
+
+  private _processedIds: Record<string, BoundedSet<string>> = {};
 
   get processedIds() {
     return this._processedIds;
   }
 
-  private _processedOutHashes: Record<string, string[]> = {};
+  private _processedOutHashes: Record<string, BoundedSet<string>> = {};
 
   get processedOutHashes() {
     return this._processedOutHashes;

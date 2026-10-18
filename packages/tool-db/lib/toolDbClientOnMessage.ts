@@ -1,4 +1,4 @@
-import { ToolDb, ToolDbMessage } from ".";
+import { BoundedSet, ToolDb, ToolDbMessage } from ".";
 
 export default function toolDbClientOnMessage(
   this: ToolDb,
@@ -6,9 +6,9 @@ export default function toolDbClientOnMessage(
   remotePeerId: string
 ) {
   if (!this.processedIds[message.type]) {
-    this.processedIds[message.type] = [];
+    this.processedIds[message.type] = new BoundedSet(ToolDb.DEDUP_CACHE_SIZE);
   }
-  if (this.processedIds[message.type].includes(message.id)) {
+  if (this.processedIds[message.type].has(message.id)) {
     // this.logger(
     //   `Already processed this message > ${message.type} from ${remotePeerId}`
     // );
@@ -17,7 +17,7 @@ export default function toolDbClientOnMessage(
 
   this.emit("message", message, remotePeerId);
 
-  this.processedIds[message.type].push(message.id);
+  this.processedIds[message.type].add(message.id);
 
   this.logger(`Got message ${message.type} from ${remotePeerId}`);
   this.logger(message);

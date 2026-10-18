@@ -37,6 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         test:
+          - boundedSet
           - counterCrdt.additional
           - counterCrdt
           - ecdh
