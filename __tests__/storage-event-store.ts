@@ -105,8 +105,10 @@ describe.each(adapters)("StorageEventStore on %s", (_name, createAdapter) => {
 
   it("Queries by kind, author, tag and time, newest first", async () => {
     const key = generateSecretKey();
+    // One base time, so a second boundary during the test does not matter
+    const base = now();
     const events = [3, 2, 1].map((age) =>
-      sign({ created_at: now() - age, tags: [["t", "store-query"]] }, key)
+      sign({ created_at: base - age, tags: [["t", "store-query"]] }, key)
     );
     const other = sign({ kind: 2, tags: [["t", "store-query"]] });
     for (const event of [...events, other]) await store.add(event);
@@ -122,7 +124,7 @@ describe.each(adapters)("StorageEventStore on %s", (_name, createAdapter) => {
       events[1].id,
     ]);
     expect(
-      await ids([{ "#t": ["store-query"], since: now() - 2, until: now() - 2 }])
+      await ids([{ "#t": ["store-query"], since: base - 2, until: base - 2 }])
     ).toEqual([events[1].id]);
     expect(await ids([{ kinds: [2] }, { ids: [events[0].id] }])).toEqual([
       other.id,
