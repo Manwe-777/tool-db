@@ -144,7 +144,7 @@ export default class NostrRelay {
   }
 
   /**
-   * Disconnects every client and stops listening
+   * Disconnects every client, stops listening and closes the store
    */
   public async close(): Promise<void> {
     if (!this.wss) return;
@@ -155,6 +155,7 @@ export default class NostrRelay {
       await new Promise((resolve) => this.httpServer!.close(resolve));
     }
     this.wss = undefined;
+    await this.store.close?.();
   }
 
   protected send(socket: WebSocket, message: unknown[]) {

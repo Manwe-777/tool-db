@@ -17,6 +17,10 @@ export interface EventStore {
    * Returns the stored events matching any of the filters, newest first
    */
   query(filters: NostrFilter[]): Promise<NostrEvent[]>;
+  /**
+   * Releases the storage, if needed
+   */
+  close?(): Promise<void>;
 }
 
 const newestFirst = (a: NostrEvent, b: NostrEvent) =>

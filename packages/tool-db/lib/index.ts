@@ -28,5 +28,6 @@ export * from "./data/keys";
 export * from "./data/verify";
 export * from "./data/values";
 export * from "./data/crdts";
+export * from "./data/functions";
 
 export { default as ToolDb } from "./tooldb";

@@ -17,6 +17,11 @@ export default class MemoryStore extends ToolDbStorageAdapter {
       : Promise.reject(new Error("Not found"));
   }
 
+  delete(key: string) {
+    delete this.data[key];
+    return Promise.resolve(true);
+  }
+
   query(key: string) {
     return Promise.resolve(
       Object.keys(this.data).filter((k) => k.startsWith(key))

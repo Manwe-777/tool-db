@@ -20,6 +20,7 @@ import {
   unsubscribeData,
 } from "./data/api";
 import { getCrdt, putCrdt, getStoredCrdt, toCrdtView } from "./data/crdts";
+import { doFunction } from "./data/functions";
 import { eventToRecord, getStoredEvent } from "./data/values";
 import { CustomVerificator, VerifyContext } from "./data/verify";
 
@@ -43,6 +44,7 @@ export default class ToolDb extends EventEmitter {
     debug: false,
     relays: [],
     topic: "tool-db-default",
+    functionServers: [],
     triggerDebouce: 100,
     storageName: "tooldb",
     storageAdapter: ToolDbStorageAdapter,
@@ -93,6 +95,7 @@ export default class ToolDb extends EventEmitter {
 
   public queryKeys = queryKeys;
 
+  public doFunction = doFunction;
 
   /**
    * Open relay subscriptions, by key

@@ -38,6 +38,7 @@ jobs:
       matrix:
         test:
           - boundedSet
+          - browser-interop
           - counterCrdt
           - counterCrdt.additional
           - lifecycle-api
@@ -53,8 +54,10 @@ jobs:
           - put-signing
           - relay-pool
           - sha256
+          - storage-event-store
           - store
           - textRandom
+          - tooldb-relay
     steps:
       - name: "Setup node"
         uses: actions/setup-node@v4

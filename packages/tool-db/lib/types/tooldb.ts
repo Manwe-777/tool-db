@@ -17,6 +17,10 @@ export interface ToolDbOptions {
    */
   topic: string;
   /**
+   * Public keys of the relay nodes we trust to run server functions
+   */
+  functionServers: string[];
+  /**
    * How long to wait (max) for a debounced key listener recv
    */
   triggerDebouce: number;
