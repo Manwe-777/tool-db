@@ -1,11 +1,8 @@
 import { ToolDb, EventTemplate, NostrEvent, ToolDbUserAdapter } from "..";
 
-import {
-  finalizeEvent,
-  generateSecretKey,
-  getPublicKey,
-} from "../nostr/event";
+import { finalizeEvent, generateSecretKey, getPublicKey } from "../nostr/event";
 import { normalizeSecretKey, npubEncode, nsecEncode } from "../nostr/nip19";
+import { getConversationKey, nip44Decrypt, nip44Encrypt } from "../nostr/nip44";
 import { decryptSecretKey, encryptSecretKey } from "../nostr/nip49";
 import randomAnimal from "../utils/randomAnimal";
 
@@ -73,6 +70,26 @@ export default class ToolDbNostrUser extends ToolDbUserAdapter {
 
   public async signEvent(event: EventTemplate): Promise<NostrEvent> {
     return finalizeEvent(event, this._secretKey);
+  }
+
+  public async nip44Encrypt(
+    publicKey: string,
+    plaintext: string
+  ): Promise<string> {
+    return nip44Encrypt(
+      plaintext,
+      getConversationKey(this._secretKey, publicKey)
+    );
+  }
+
+  public async nip44Decrypt(
+    publicKey: string,
+    payload: string
+  ): Promise<string> {
+    return nip44Decrypt(
+      payload,
+      getConversationKey(this._secretKey, publicKey)
+    );
   }
 
   public async encryptAccount(

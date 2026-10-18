@@ -36,6 +36,20 @@ export default class ToolDbUserAdapter {
     );
   }
 
+  /**
+   * Encrypts a message for another public key (NIP-44)
+   */
+  public nip44Encrypt(publicKey: string, plaintext: string): Promise<string> {
+    return Promise.reject(new Error("This user adapter can not encrypt"));
+  }
+
+  /**
+   * Decrypts a message from another public key (NIP-44)
+   */
+  public nip44Decrypt(publicKey: string, payload: string): Promise<string> {
+    return Promise.reject(new Error("This user adapter can not decrypt"));
+  }
+
   public getAccountFromPrivate(privateKey: string): Promise<unknown> {
     return Promise.resolve(undefined);
   }

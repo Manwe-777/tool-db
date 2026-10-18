@@ -10,6 +10,7 @@ export * from "./nostr/event";
 export * from "./nostr/filter";
 export * from "./nostr/nip19";
 export * from "./nostr/nip49";
+export * from "./nostr/nip44";
 export { default as RelayPool } from "./nostr/pool";
 export * from "./nostr/pool";
 
@@ -30,5 +31,6 @@ export * from "./data/verify";
 export * from "./data/values";
 export * from "./data/crdts";
 export * from "./data/functions";
+export * from "./data/groups";
 
 export { default as ToolDb } from "./tooldb";

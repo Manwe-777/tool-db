@@ -41,11 +41,13 @@ jobs:
           - browser-interop
           - counterCrdt
           - counterCrdt.additional
+          - groups
           - lifecycle-api
           - listCrdt
           - listCrdt.additional
           - mapCrdt
           - mapCrdt.additional
+          - nip44
           - nostr-crdt
           - nostr-data
           - nostr-event
