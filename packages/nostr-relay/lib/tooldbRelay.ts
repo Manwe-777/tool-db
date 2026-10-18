@@ -5,6 +5,7 @@ import {
   FUNCTION_RESPONSE_KIND,
   FunctionReturn,
   NostrEvent,
+  PROFILE_KIND,
   ServerFunction,
   StorageContext,
   ToolDbStorageAdapter,
@@ -174,6 +175,18 @@ export default class ToolDbRelay extends NostrRelay {
       event.kind === FUNCTION_RESPONSE_KIND
     ) {
       return true;
+    }
+
+    // User profiles, apps use them for names
+    if (event.kind === PROFILE_KIND) {
+      try {
+        const profile = JSON.parse(event.content);
+        return typeof profile === "object" && profile !== null
+          ? true
+          : "invalid profile";
+      } catch (e) {
+        return "invalid profile";
+      }
     }
 
     if (event.kind === VALUE_KIND) {

@@ -54,6 +54,7 @@ jobs:
           - nostr-event
           - nostr-relay
           - nostr-user
+          - profiles
           - put-signing
           - relay-pool
           - sha256

@@ -22,6 +22,7 @@ import {
 } from "./data/api";
 import { getCrdt, putCrdt, getStoredCrdt, toCrdtView } from "./data/crdts";
 import { doFunction } from "./data/functions";
+import { getProfile, putProfile } from "./data/profiles";
 import { eventToRecord, getStoredEvent } from "./data/values";
 import { CustomVerificator, VerifyContext } from "./data/verify";
 
@@ -97,6 +98,10 @@ export default class ToolDb extends EventEmitter {
   public queryKeys = queryKeys;
 
   public doFunction = doFunction;
+
+  public putProfile = putProfile;
+
+  public getProfile = getProfile;
 
   /**
    * Open relay subscriptions, by key
