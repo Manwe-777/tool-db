@@ -32,6 +32,4 @@ export default function handlePong(
       });
     }
   });
-
-  this.onPeerConnect(this.peerAccount.getAddress() || "");
 }

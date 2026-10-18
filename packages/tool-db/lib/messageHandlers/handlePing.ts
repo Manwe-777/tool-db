@@ -30,8 +30,6 @@ export default function handlePing(
         servers: this.serverPeers,
         id: message.id,
       } as PongMessage);
-
-      this.onPeerConnect(this.peerAccount.getAddress() || "");
     } else {
       this.logger("Blocked a remote peer from joining; ", verified, message);
       // Drop connection here!

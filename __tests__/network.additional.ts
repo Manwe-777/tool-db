@@ -735,6 +735,31 @@ describe("Peer Connection Events", () => {
       done();
     };
   });
+
+  it("onPeerConnect is called with the remote peer id", async () => {
+    const peerIds: string[] = [];
+
+    const tempClient = new ToolDb({
+      server: false,
+      peers: [{ host: "localhost", port: 9100 }],
+      storageName: ".test-db/test-additional-temp-" + textRandom(8),
+      storageAdapter: ToolDbLeveldb,
+      networkAdapter: ToolDbWebsockets,
+      userAdapter: ToolDbWeb3,
+    });
+    tempClient.onPeerConnect = (peerId: string) => peerIds.push(peerId);
+
+    await new Promise<void>((resolve) => {
+      tempClient.onConnect = () => resolve();
+    });
+    // Wait for the ping/pong exchange to finish
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    expect(peerIds.length).toBeGreaterThan(0);
+    peerIds.forEach((peerId) => {
+      expect(peerId).toBe(nodeA.network.getClientAddress());
+    });
+  });
 });
 
 describe("Keys Sign In", () => {
