@@ -61,3 +61,14 @@ export async function runCustomVerificators(
     ? VerifyResult.Verified
     : VerifyResult.CustomVerificationFailed;
 }
+
+/**
+ * A custom verificator that only accepts data from the given authors, for
+ * shared keys only some users should write (like admins).
+ * Rules based on who wrote first can not be enforced on an open network
+ * (timestamps are chosen by the signer, and peers see data in different
+ * orders), rules based on who is writing can.
+ */
+export function onlyAuthors(authors: string[]): CustomVerificator["fn"] {
+  return async (msg) => authors.includes(msg.a);
+}

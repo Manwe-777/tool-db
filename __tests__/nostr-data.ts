@@ -3,6 +3,7 @@ import { WebSocketServer } from "ws";
 import {
   finalizeEvent,
   generateSecretKey,
+  onlyAuthors,
   ToolDb,
   VALUE_KIND,
 } from "../packages/tool-db";
@@ -167,6 +168,23 @@ it("Applies custom verificators to values", async () => {
   await Alice.putData(key, "valid value");
   await wait(100);
   expect(await Chris.getData(key)).toBe("valid value");
+  Chris.removeCustomVerification(id);
+});
+
+it("Can restrict shared keys to some authors", async () => {
+  const key = uniqueKey("admins");
+  const id = Chris.addCustomVerification(
+    key,
+    onlyAuthors([Alice.userAccount.getAddress() || ""])
+  );
+
+  await Alice.putData(key, "by alice");
+  await wait(1100);
+  await Bob.putData(key, "by bob");
+  await wait(100);
+
+  // Bob's value is newer, but only Alice can write this key
+  expect(await Chris.getData(key)).toBe("by alice");
   Chris.removeCustomVerification(id);
 });
 

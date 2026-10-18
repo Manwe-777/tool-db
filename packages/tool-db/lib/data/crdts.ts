@@ -21,7 +21,7 @@ import { VerifyContext, isInFuture, runCustomVerificators } from "./verify";
 
 /**
  * Kind of the events holding CRDT change sets. A regular event, relays keep
- * every one of them. Not registered in the NIPs yet, see NOSTR_FIRST.md.
+ * every one of them. Not used by any NIP, see NOSTR_FIRST.md.
  */
 export const CRDT_EVENT_KIND = 1078;
 

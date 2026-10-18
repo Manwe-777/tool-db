@@ -107,8 +107,11 @@ kind and `d` tag, which is exactly ToolDB's "latest value per key" model.
 - **User namespace** (`:pubkey.key`): the value of a key written by its
   owner. Reads filter by author, so nobody else can write it.
 - **Shared keys** (no namespace): any author can write the same `d` tag.
-  Reads query all authors and keep the newest. This keeps today's semantics
-  (anyone can overwrite a shared key) and its risks; see open questions.
+  Reads query all authors and keep the newest, so anyone can overwrite a
+  shared key. Apps restrict who can write with custom verificators, like
+  `onlyAuthors([...])` for admin keys. Rules based on who wrote first can not
+  be enforced on an open network (timestamps are chosen by the signer, and
+  peers see data in different orders); rules based on who is writing can.
 - **Conflicts**: newest `created_at` wins, ties go to the lowest event id,
   the same rule NIP-01 uses for replaceable events.
 - **Timestamps** are in seconds (`created_at`), not milliseconds. Events more
@@ -162,8 +165,12 @@ by its own key, referencing the request (`e`) and the caller (`p`), with
   `functionServers` option (or the `server` given to `doFunction`).
 - Functions get the arguments and the caller's public key, so they can
   check permissions.
-- A node only runs requests that reach it directly (clients connected to
-  it); it does not listen for requests on other relays.
+- Requests reach a node directly (clients connected to it), or through the
+  relays in its `listenRelays` option, like public relays: they only forward
+  the events, and since requests name their server, other nodes ignore them.
+- A node runs each request once (it can arrive through several relays), and
+  ignores requests older than 60 seconds, so requests seen on public relays
+  can not be replayed later.
 - Payloads are not encrypted yet; NIP-44 can be added.
 
 ### Encryption
@@ -258,7 +265,9 @@ Decisions taken while implementing:
 - **CRDT subscriptions**: `subscribeData` listens for both values and CRDT
   change sets of a key, since apps subscribe to CRDT keys with it.
 - **Event kinds**: 1078 (CRDT change sets), 21078 and 21079 (function
-  requests and responses) are placeholders until kinds are chosen.
+  requests and responses) are not used by any NIP (checked in October 2026).
+  Kinds do not need approval; the NIPs list them only to avoid collisions,
+  and ToolDB events are also identified by their topic tags.
 - **Verification context**: verification only needs the topic, the custom
   verificators and a way to load the previous value, so relay nodes run the
   exact same checks as clients.
@@ -272,16 +281,9 @@ Decisions taken while implementing:
 
 ## Open questions
 
-- **Event kinds**: CRDT change sets need a regular kind (1000-9999), and
-  functions two ephemeral kinds, not used by other NIPs; check the NIPs
-  registry before release.
-- **Shared keys**: keep "anyone can overwrite" semantics, make them write
-  once, or require a custom verificator?
 - **Durability**: which relays to use by default, and should apps be
   encouraged to always run at least one ToolDB relay node?
 - **Prefix queries**: is local filtering enough, or are path tags needed
   from the start?
 - **Millisecond ordering**: second resolution makes ties more common; is the
   lowest id tie break enough, or should a millisecond tag be added?
-- **Function reach**: should relay nodes also listen for function requests
-  on public relays, so clients do not need to connect to them directly?

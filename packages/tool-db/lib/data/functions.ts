@@ -9,7 +9,7 @@ import {
 /**
  * Server function requests and responses are ephemeral events: relays
  * forward them, but never store them.
- * Not registered in the NIPs yet, see NOSTR_FIRST.md.
+ * Not used by any NIP, see NOSTR_FIRST.md.
  */
 export const FUNCTION_REQUEST_KIND = 21078;
 
