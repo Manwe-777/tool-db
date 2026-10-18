@@ -1,4 +1,11 @@
-import { ToolDb, textRandom } from "../packages/tool-db";
+import {
+  getMessageHash,
+  PutMessage,
+  sha256,
+  ToolDb,
+  textRandom,
+  VerificationData,
+} from "../packages/tool-db";
 
 import ToolDbLeveldb from "../packages/leveldb-store";
 import ToolDbWebsockets from "../packages/websocket-network";
@@ -100,4 +107,57 @@ it("Replies to every GET, even if the data was already sent", async () => {
 
   expect(await noStore.getData(key)).toBe("value");
   expect(await noStore.getData(key)).toBe("value");
+});
+
+// Known issue: signup timestamps are chosen by the signer, and the oldest
+// signup wins a username. Anyone can claim an existing username by signing
+// their own signup with an older timestamp. Remove `.failing` once fixed.
+describe("Username hijacking by backdating", () => {
+  const hijack = async (getTimestamp: (victimTimestamp: number) => number) => {
+    const username = "victim-" + textRandom(12);
+    const userRoot = `==${username}`;
+
+    await Alice.signUp(username, "password");
+    await wait(500);
+    const victim = JSON.parse(await server.store.get(userRoot));
+
+    // The attacker signs a signup with their own keys and an older timestamp
+    const attacker = Bob.userAccount;
+    const userData = await attacker.encryptAccount(sha256("password"));
+    const t = getTimestamp(victim.t);
+    const h = getMessageHash(
+      JSON.stringify(userData),
+      attacker.getAddress() || "",
+      t
+    );
+    const data: VerificationData = {
+      k: userRoot,
+      a: attacker.getAddress() || "",
+      n: 0,
+      t,
+      h,
+      s: await attacker.signData(h),
+      v: userData,
+      c: null,
+    };
+    const message: PutMessage = {
+      type: "put",
+      id: textRandom(10),
+      to: [],
+      data,
+    };
+    Bob.network.sendToAll(message);
+    await wait(500);
+
+    const owner = JSON.parse(await server.store.get(userRoot));
+    expect(owner.a).toBe(victim.a);
+  };
+
+  it.failing("Can not claim a username with an ancient timestamp", () =>
+    hijack(() => 1)
+  );
+
+  it.failing("Can not claim a username just before the original signup", () =>
+    hijack((victimTimestamp) => victimTimestamp - 1)
+  );
 });
