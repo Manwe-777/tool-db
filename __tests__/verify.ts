@@ -226,6 +226,31 @@ it("Can verify peers", async () => {
   expect(verified).toBeTruthy();
 });
 
+describe("Custom verification", () => {
+  const ids: number[] = [];
+
+  afterEach(() => {
+    ids.splice(0).forEach((id) => ClientA.removeCustomVerification(id));
+  });
+
+  it("Can not bypass signature checks with a custom verificator", async () => {
+    // Attack: a message with a forged signature, on a key that has a
+    // permissive custom verificator, must still be rejected.
+    ids.push(ClientA.addCustomVerification("test", async () => true));
+
+    const result = await ClientA.verify(putSig);
+    expect(result).toEqual(VerifyResult.InvalidSignature);
+  });
+
+  it("Requires all matching custom verificators to pass", async () => {
+    ids.push(ClientA.addCustomVerification("test", async () => true));
+    ids.push(ClientA.addCustomVerification("test", async () => false));
+
+    const result = await ClientA.verify(putOk);
+    expect(result).toEqual(VerifyResult.CustomVerificationFailed);
+  });
+});
+
 // This test fails because we are testing on a local node
 // if it were a test against a remote node it will work
 // But now I am not sure if I should add verification to local PUTs as well?
