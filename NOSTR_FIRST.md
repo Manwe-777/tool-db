@@ -64,7 +64,9 @@ node is `ToolDbRelay` in `@tool-db/nostr-relay`.
 - **Signers** sign events, ToolDB never needs the private key directly:
   - local key: generated or imported (`nsec`), for servers, tests and apps
     that manage keys themselves,
-  - NIP-07: browser extensions (`window.nostr`), the user's existing identity,
+  - NIP-07: browser extensions (`window.nostr`), the user's existing identity
+    (`ToolDbNip07User`); the events they return are checked to be exactly
+    what was asked to sign,
   - NIP-46: remote signers ("bunkers"), for multi device use. This is the
     supported way of delegating signing in Nostr; NIP-26 delegation is marked
     as unrecommended by the Nostr protocol.
@@ -72,8 +74,9 @@ node is `ToolDbRelay` in `@tool-db/nostr-relay`.
   longer depends on which signer the author used.
 - **Usernames**: the `==username` frozen namespace (first come, timestamp
   based, hijackable by backdating) is removed. Names come from Nostr
-  profiles (kind 0) and NIP-05 identifiers (`name@domain`), which are backed
-  by DNS instead of timestamps.
+  profiles (kind 0, `putProfile` and `getProfile`) and NIP-05 identifiers
+  (`name@domain`, `verifyProfileName`), which are backed by DNS instead of
+  timestamps.
 - **Passwords**: encrypted keystores are no longer published to the network
   (anyone could brute force them offline). A local key can be stored
   encrypted with a password using NIP-49 (scrypt + XChaCha20-Poly1305),
@@ -165,9 +168,14 @@ by its own key, referencing the request (`e`) and the caller (`p`), with
 
 ### Encryption
 
-Identities are secp256k1 now, so the P-256 ECDH and group key utilities of
-`ecdsa-user` are replaced by NIP-44 (secp256k1 ECDH + ChaCha20), with group
-keys wrapped for each member using NIP-44.
+NIP-44 (secp256k1 ECDH, ChaCha20 and HMAC), checked against the official
+test vectors. Signers encrypt and decrypt for other public keys
+(`nip44Encrypt`, `nip44Decrypt`), the same way browser extensions do.
+
+Group keys replace the P-256 utilities of `ecdsa-user`: a group key is a
+Nostr secret key, wrapped for each member with NIP-44, and group messages are
+encrypted with the group key itself (`createGroupKey`, `wrapGroupKey`,
+`unwrapGroupKey`, `encryptForGroup`, `decryptForGroup`).
 
 ### Deletion
 
@@ -230,15 +238,15 @@ relay nodes use them:
 
 ## Status
 
-| Phase                             | State                                                                        |
-| --------------------------------- | ---------------------------------------------------------------------------- |
-| 1. Foundations                    | Done: event primitives, local key signer, relay                              |
-| 2. Network                        | Done: relay pool, `putData`, `getData`, `subscribeData`                      |
-| 3. CRDTs                          | Done: change sets as events                                                  |
-| 4. ToolDB relay node              | Done: validation, storage, server functions, NIP-11                          |
-| 5. Identity                       | Partly: NIP-49 and NIP-19; NIP-07, NIP-46 and NIP-05 not started             |
-| 6. Functions, encryption, queries | Partly: server functions and `queryKeys` done; NIP-44 encryption not started |
-| 7. Cleanup                        | Done: old packages, protocol and example removed                             |
+| Phase                             | State                                                                                     |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1. Foundations                    | Done: event primitives, local key signer, relay                                           |
+| 2. Network                        | Done: relay pool, `putData`, `getData`, `subscribeData`                                   |
+| 3. CRDTs                          | Done: change sets as events                                                               |
+| 4. ToolDB relay node              | Done: validation, storage, server functions, NIP-11                                       |
+| 5. Identity                       | Partly: NIP-49, NIP-19, NIP-07 signer, profiles and NIP-05 names done; NIP-46 not started |
+| 6. Functions, encryption, queries | Done: server functions, `queryKeys`, NIP-44 encryption and group keys                     |
+| 7. Cleanup                        | Done: old packages, protocol and example removed                                          |
 
 Decisions taken while implementing:
 

@@ -123,6 +123,28 @@ const db = new ToolDb({
 await db.doFunction("add", { a: 1, b: 2 }); // { code: "OK", return: 3 }
 ```
 
+### Identity and encryption
+
+```javascript
+import { ToolDb, ToolDbNip07User, createGroupKey, wrapGroupKey } from "tool-db";
+
+// Sign with the user's Nostr browser extension, the app never sees the key
+const db = new ToolDb({
+  relays,
+  topic: "my-app",
+  userAdapter: ToolDbNip07User,
+});
+await db.ready;
+
+// Names come from Nostr profiles, verified with NIP-05 (name@domain)
+await db.putProfile({ name: "alice", nip05: "alice@example.com" });
+
+// NIP-44 encryption, for one user or a group
+const secret = await db.userAccount.nip44Encrypt(bobPubkey, "hi bob");
+const groupKey = createGroupKey();
+const forBob = await wrapGroupKey(db.userAccount, groupKey, bobPubkey);
+```
+
 ---
 
 ## 📦 Packages
