@@ -11,10 +11,10 @@ for the design.
 ## Install
 
 ```
-npm install tool-db@next
+npm install tool-db
 ```
 
-(version 3 is published under the `next` tag while it is tested)
+(not published on npm yet; until then, build it from the repository)
 
 or as a script, which exposes every export in `tooldb`:
 

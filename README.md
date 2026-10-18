@@ -14,9 +14,8 @@
 
 </div>
 
-> **Version 3** is a rewrite of ToolDB on top of Nostr, not compatible with
-> version 2. See the [documentation](https://manwe-777.github.io/tool-db-docs/)
-> and [NOSTR_FIRST.md](NOSTR_FIRST.md) for the design.
+> See the [documentation](https://manwe-777.github.io/tool-db-docs/) and
+> [NOSTR_FIRST.md](NOSTR_FIRST.md) for the design.
 
 ## 💡 Philosophy
 
@@ -64,10 +63,11 @@ This project is intentionally permissive. Commercial use, private deployments, a
 ## 🚀 Quick Start
 
 ```bash
-npm install tool-db@next
+npm install tool-db
 ```
 
-Version 3 is published under the `next` tag while it is tested; `npm install tool-db` still installs version 2.
+The packages are not published on npm yet; until then, build them from this
+repository.
 
 ```javascript
 import { ToolDb, MapCrdt } from "tool-db";
