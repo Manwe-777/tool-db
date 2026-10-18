@@ -19,6 +19,7 @@ export default async function verifyMessage<T>(
     msg.a === undefined ||
     msg.s === undefined ||
     msg.n === undefined ||
+    msg.v === undefined ||
     msg.c === undefined
   ) {
     return VerifyResult.InvalidData;

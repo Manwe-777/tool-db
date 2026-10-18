@@ -100,42 +100,26 @@ it("Can catch tampered nonce", () => {
 });
 
 it("Can catch messages with missing data", () => {
-  const delA: any = delete { ...putOk }.h;
-  const pa = ClientA.verifyMessage(delA).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidData);
-  });
+  const fields: (keyof VerificationData)[] = [
+    "h",
+    "k",
+    "n",
+    "a",
+    "s",
+    "t",
+    "v",
+    "c",
+  ];
 
-  const delB: any = delete { ...putOk }.k;
-  const pb = ClientA.verifyMessage(delB).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidData);
-  });
-
-  const delC: any = delete { ...putOk }.n;
-  const pc = ClientA.verifyMessage(delC).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidData);
-  });
-
-  const delD: any = delete { ...putOk }.a;
-  const pd = ClientA.verifyMessage(delD).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidData);
-  });
-
-  const delE: any = delete { ...putOk }.s;
-  const pe = ClientA.verifyMessage(delE).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidData);
-  });
-
-  const delF: any = delete { ...putOk }.t;
-  const pf = ClientA.verifyMessage(delF).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidData);
-  });
-
-  const delG: any = delete { ...putOk }.v;
-  const pg = ClientA.verifyMessage(delG).then((result) => {
-    expect(result).toEqual(VerifyResult.InvalidData);
-  });
-
-  return Promise.all([pa, pb, pc, pd, pe, pf, pg]);
+  return Promise.all(
+    fields.map((field) => {
+      const missing: Partial<VerificationData<string>> = { ...putOk };
+      delete missing[field];
+      return ClientA.verifyMessage(missing).then((result) => {
+        expect([field, result]).toEqual([field, VerifyResult.InvalidData]);
+      });
+    })
+  );
 });
 
 it("Can print errors", async () => {
