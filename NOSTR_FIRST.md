@@ -199,6 +199,39 @@ on Node, IndexedDB in browsers), so they keep working.
    events, NIP-44 encryption and group keys, `queryKeys`.
 7. **Cleanup**: remove the old packages, update the README and example app.
 
+## Status
+
+| Phase | State |
+| ----- | ----- |
+| 1. Foundations | Done: event primitives, `nostr-user`, `nostr-relay` |
+| 2. Network | Done: `nostr-network`, `putData`, `getData`, `subscribeData` |
+| 3. CRDTs | Done: change sets as events |
+| 4. ToolDB relay node | Not started (`nostr-relay` exists, without storage adapters or ToolDB validation) |
+| 5. Identity | Partly: NIP-49 and NIP-19 in `nostr-user`; NIP-07, NIP-46 and NIP-05 not started |
+| 6. Functions, encryption, queries | Not started |
+| 7. Cleanup | Not started |
+
+Decisions taken while implementing:
+
+- **Transition**: `ToolDb` uses the Nostr implementations of `putData`,
+  `getData`, `subscribeData`, `putCrdt` and `getCrdt` only when the network
+  adapter is `nostr-network`, so the old adapters and their tests keep
+  working until phase 7 removes them.
+- **Same second writes**: `putData` bumps `created_at` past our previous
+  event for the key, so our latest write always wins even within the same
+  second (otherwise the lowest id would win the tie).
+- **Records**: listeners and custom verificators keep getting records shaped
+  like before (`k`, `a`, `t` in milliseconds, `v`), built from the event.
+- **CRDT subscriptions**: `subscribeData` listens for both values and CRDT
+  change sets of a key, since apps subscribe to CRDT keys with it.
+- **CRDT kind**: 1078 is a placeholder until a kind is chosen (see below).
+- **Interop**: event ids and signatures, NIP-19, NIP-49 and the relay are
+  checked against `nostr-tools`.
+- **Runtimes**: the network adapter uses the global `WebSocket` (browsers,
+  Node 22+) or `ws`. CI runs Node 18, which has no global `WebSocket`, so it
+  covers the `ws` fallback; Node 18 is end of life and CI should move to a
+  supported version.
+
 ## Open questions
 
 - **CRDT event kind**: needs a regular kind (1000-9999) not used by other
