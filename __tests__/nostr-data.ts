@@ -7,15 +7,11 @@ import {
   VALUE_KIND,
 } from "../packages/tool-db";
 
-import NostrRelay from "../packages/nostr-relay";
-import ToolDbNostrNetwork from "../packages/nostr-network";
-import ToolDbNostrUser from "../packages/nostr-user";
+import { NostrRelay } from "../packages/nostr-relay";
 
 import MemoryStore from "../test-utils/memoryStore";
 
 jest.setTimeout(15000);
-
-ToolDbNostrUser.encryptionLogN = 10;
 
 const TOPIC = "nostr-data-test";
 
@@ -23,8 +19,6 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const createClient = async (relays: string[], topic = TOPIC) => {
   const db = new ToolDb({
-    networkAdapter: ToolDbNostrNetwork,
-    userAdapter: ToolDbNostrUser,
     storageAdapter: MemoryStore,
     relays,
     topic,
@@ -122,7 +116,7 @@ it("Does not accept writes to a namespace from other users", async () => {
     },
     generateSecretKey()
   );
-  await (Bob.network as ToolDbNostrNetwork).publish(forged);
+  await Bob.relays.publish(forged);
   await wait(100);
 
   expect(await Chris.getData(aliceKey)).toBe("alice's");
@@ -192,7 +186,7 @@ it("Reads values written by any Nostr client", async () => {
     },
     generateSecretKey()
   );
-  await (Alice.network as ToolDbNostrNetwork).publish(event);
+  await Alice.relays.publish(event);
   await wait(100);
 
   expect(await Bob.getData(key)).toEqual([1, 2, 3]);

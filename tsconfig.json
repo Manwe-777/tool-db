@@ -68,17 +68,10 @@
     "forceConsistentCasingInFileNames": true,  /* Disallow inconsistently-cased references to the same file. */
     "baseUrl": ".",
     "paths": {
-      "@tool-db/hybrid-network": ["../hybrid-network"],
-      "@tool-db/websocket-network": ["../websocket-network"],
-      "@tool-db/webrtc-network": ["../webrtc-network"],
       "@tool-db/indexeddb-store": ["../indexeddb-store"],
       "@tool-db/leveldb-store": ["../leveldb-store"],
       "@tool-db/redis-store": ["../redis-store"],
-      "@tool-db/ecdsa-user": ["../ecdsa-user"],
-      "@tool-db/web3-user": ["../web3-user"],
-      "@tool-db/nostr-user": ["../nostr-user"],
       "@tool-db/nostr-relay": ["../nostr-relay"],
-      "@tool-db/nostr-network": ["../nostr-network"],
       "tool-db": ["../tool-db"],
     }
   },

@@ -1,5 +1,10 @@
-import { ToolDb, VerificationData, EventTemplate, NostrEvent } from "..";
+import { ToolDb, EventTemplate, NostrEvent } from "..";
 
+/**
+ * A signer for our identity: a Nostr key, or something holding one (a
+ * browser extension, a remote signer). Verification does not depend on it,
+ * every event is verified with Schnorr signatures.
+ */
 export default class ToolDbUserAdapter {
   private _tooldb: ToolDb;
 
@@ -11,17 +16,15 @@ export default class ToolDbUserAdapter {
     this._tooldb = db;
   }
 
+  /**
+   * Switches to a new random identity
+   */
   public async anonUser(): Promise<void> {
     return;
   }
 
-  public async setUser(
-    account: unknown | undefined,
-    name: string
-  ): Promise<void> {}
-
-  public signData(data: string): Promise<string> {
-    return Promise.resolve("");
+  public async setUser(account: unknown, name: string): Promise<void> {
+    return;
   }
 
   /**
@@ -31,12 +34,6 @@ export default class ToolDbUserAdapter {
     return Promise.reject(
       new Error("This user adapter can not sign Nostr events")
     );
-  }
-
-  public verifySignature(
-    message: Partial<VerificationData<any>>
-  ): Promise<boolean> {
-    return Promise.resolve(false);
   }
 
   public getAccountFromPrivate(privateKey: string): Promise<unknown> {
@@ -51,6 +48,9 @@ export default class ToolDbUserAdapter {
     return Promise.resolve(undefined);
   }
 
+  /**
+   * Our public key (hex)
+   */
   public getAddress(): string | undefined {
     return "";
   }

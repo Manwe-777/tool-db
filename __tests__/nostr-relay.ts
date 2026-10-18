@@ -8,7 +8,7 @@ import {
   NostrEvent,
 } from "../packages/tool-db";
 
-import NostrRelay from "../packages/nostr-relay";
+import { NostrRelay } from "../packages/nostr-relay";
 
 jest.setTimeout(10000);
 

@@ -1,4 +1,4 @@
-import { BoundedSet, PutMessage, ToolDb } from "../packages/tool-db";
+import { BoundedSet } from "../packages/tool-db";
 
 it("Remembers only the latest items", () => {
   const set = new BoundedSet<string>(3);
@@ -19,40 +19,4 @@ it("Does not evict when adding an existing item", () => {
   expect(set.size).toBe(2);
   expect(set.has("a")).toBeTruthy();
   expect(set.has("b")).toBeTruthy();
-});
-
-describe("Outgoing message deduplication", () => {
-  const putMessage = (hash: string): PutMessage => ({
-    type: "put",
-    id: hash,
-    to: [],
-    data: { k: "key", a: "", n: 0, h: hash, t: 0, s: "", v: "", c: null },
-  });
-
-  it("Sends the same data only once per client", () => {
-    const db = new ToolDb();
-    const sent: string[] = [];
-    db.network.clientToSend["peer"] = (msg) => sent.push(msg);
-
-    db.network.sendToClientId("peer", putMessage("hash-a"));
-    db.network.sendToClientId("peer", putMessage("hash-a"));
-    db.network.sendToClientId("peer", putMessage("hash-b"));
-
-    expect(sent.length).toBe(2);
-  });
-
-  it("Does not throw when sending to a disconnected client", () => {
-    const db = new ToolDb();
-    const sent: string[] = [];
-    db.network.clientToSend["peer"] = (msg) => sent.push(msg);
-
-    db.network.sendToClientId("peer", putMessage("hash-a"));
-    db.network.onClientDisconnect("peer");
-
-    expect(db.processedOutHashes["peer"]).toBeUndefined();
-    expect(() =>
-      db.network.sendToClientId("peer", putMessage("hash-b"))
-    ).not.toThrow();
-    expect(sent.length).toBe(1);
-  });
 });

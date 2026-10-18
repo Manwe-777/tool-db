@@ -1,2 +1,0 @@
-# `tool-db-websocket`
-

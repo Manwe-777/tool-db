@@ -1,28 +1,6 @@
-import { Server as HTTPServer } from "http";
-import { Server as HTTPSServer } from "https";
-
-import {
-  ToolDb,
-  ToolDbMessage,
-  ToolDbNetworkAdapter,
-  ToolDbStorageAdapter,
-  ToolDbUserAdapter,
-} from "..";
-
-export interface Peer {
-  topic: string;
-  timestamp: number;
-  host: string;
-  port: number;
-  address: string;
-  sig: string;
-}
-
-export type ToolDbMessageHandler = (
-  this: ToolDb,
-  message: ToolDbMessage,
-  remotePeerId: string
-) => void;
+import type ToolDbStorageAdapter from "../adapters-base/storageAdapter";
+import type ToolDbUserAdapter from "../adapters-base/userAdapter";
+import type { WebSocketConstructor } from "../nostr/pool";
 
 export interface ToolDbOptions {
   /**
@@ -30,77 +8,34 @@ export interface ToolDbOptions {
    */
   debug: boolean;
   /**
-   * Array of peers to connect to
-   */
-  peers: { host: string; port: number }[];
-  /**
-   * Nostr relays to connect to (nostr-network adapter)
+   * Nostr relays to connect to
    */
   relays: string[];
   /**
-   * Max number of tries when a connection fails
+   * The namespace/topic of our app (default is "tool-db-default").
+   * Apps sharing relays only see the keys of their own topic.
    */
-  maxRetries: number;
+  topic: string;
   /**
    * How long to wait (max) for a debounced key listener recv
    */
   triggerDebouce: number;
   /**
-   * How long to wait between retries
-   */
-  wait: number;
-  /**
-   * Whether we are a server or not
-   */
-  server: boolean;
-  /**
-   * A server instance like Express (server only)
-   */
-  httpServer: HTTPServer | HTTPSServer | undefined;
-  /**
-   * Our hostname (server only)
-   */
-  host: string;
-  /**
-   * Port to listen incoming connections (server only, default is 8080)
-   */
-  port: number;
-  /**
-   * If we are listening over SSL or not
-   */
-  ssl: boolean;
-  /**
    * Our storage namespace (default is "tooldb")
    */
   storageName: string;
   /**
-   * A custom network adapter class
-   */
-  networkAdapter: typeof ToolDbNetworkAdapter;
-  /**
-   * A custom storage adapter function
+   * A custom storage adapter class
    */
   storageAdapter: typeof ToolDbStorageAdapter;
   /**
-   * A custom user storage and validation adapter class
+   * The signer of our identity (a local Nostr key by default)
    */
   userAdapter: typeof ToolDbUserAdapter;
   /**
-   * The namespace/topic of our app (default is "tool-db-default")
+   * WebSocket implementation, defaults to the global one (browsers, Node 22+)
    */
-  topic: string;
-  /*
-   * The name of the server (works like a domain)
-   */
-  serverName: string | undefined;
-  /*
-   * Used only for modules extra options
-   * Ideally should be uesd as an internal key within
-   * like "db.options.hybrid.url" to avoid conflicts between modules using the same keys
-   */
-  modules: {
-    [module: string]: any;
-  };
+  WebSocket: WebSocketConstructor | undefined;
 }
 
 export type GenericObject = { [key: string]: any };
@@ -112,7 +47,8 @@ export type AllowedFunctionReturn<R = unknown> = R;
 export type FunctionCodes = "OK" | "ERR" | "NOT_FOUND";
 
 export type ServerFunction<R, A = GenericObject> = (
-  args: AllowedFunctionArguments<A>
+  args: AllowedFunctionArguments<A>,
+  caller: string
 ) => Promise<AllowedFunctionReturn<R>>;
 
 export interface FunctionReturnBase {

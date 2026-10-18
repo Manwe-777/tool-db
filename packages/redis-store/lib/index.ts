@@ -1,10 +1,10 @@
-import { ToolDb, ToolDbStorageAdapter } from "tool-db";
+import { StorageContext, ToolDbStorageAdapter } from "tool-db";
 import { createClient } from "redis";
 
 export default class toolDbRedis extends ToolDbStorageAdapter {
   private redisClient = createClient();
 
-  constructor(db: ToolDb, forceStorageName?: string) {
+  constructor(db: StorageContext, forceStorageName?: string) {
     super(db, forceStorageName);
 
     this._readyPromise = this.redisClient.connect().then(() => { });
@@ -29,8 +29,17 @@ export default class toolDbRedis extends ToolDbStorageAdapter {
   public async query(key: string) {
     await this.waitForReady();
 
-    const v = await this.redisClient.keys(key + "*");
+    // Escape glob characters, so the key is matched literally as a prefix
+    const pattern = key.replace(/[*?[\]\\]/g, "\\$&") + "*";
+    const v = await this.redisClient.keys(pattern);
     if (v) return v;
     else throw new Error("Error retrieving data");
+  }
+
+  public async delete(key: string) {
+    await this.waitForReady();
+
+    await this.redisClient.del(key);
+    return true;
   }
 }

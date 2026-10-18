@@ -1,12 +1,13 @@
-import { ToolDb, verifyEvent, VerifyResult } from "../packages/tool-db";
-
-import ToolDbNostrUser, {
+import {
+  ToolDb,
+  ToolDbNostrUser,
+  verifyEvent,
   decryptSecretKey,
   encryptSecretKey,
   npubEncode,
   nsecDecode,
   nsecEncode,
-} from "../packages/nostr-user";
+} from "../packages/tool-db";
 
 // Fixtures created with nostr-tools 2.10.4, to check interoperability
 const SECRET_KEY =
@@ -25,7 +26,7 @@ ToolDbNostrUser.encryptionLogN = 10;
 let db: ToolDb;
 
 beforeAll(async () => {
-  db = new ToolDb({ userAdapter: ToolDbNostrUser });
+  db = new ToolDb();
   await db.ready;
 });
 
@@ -87,19 +88,6 @@ it("Signs events", async () => {
   expect(verifyEvent(event)).toBe(true);
 });
 
-it("Signs and verifies data", async () => {
-  const user = new ToolDbNostrUser(db);
-  const h = "a".repeat(64);
-  const s = await user.signData(h);
-
-  expect(await user.verifySignature({ h, a: user.getAddress(), s })).toBe(true);
-  expect(
-    await user.verifySignature({ h: "b".repeat(64), a: user.getAddress(), s })
-  ).toBe(false);
-  expect(await user.verifySignature({ h, a: PUBLIC_KEY, s })).toBe(false);
-  expect(await user.verifySignature({ h, a: "not hex", s })).toBe(false);
-});
-
 it("Encrypts and restores accounts", async () => {
   const user = new ToolDbNostrUser(db);
   await user.setUser(SECRET_KEY, "restored");
@@ -113,10 +101,16 @@ it("Encrypts and restores accounts", async () => {
   expect(restored.getUsername()).toBe("restored");
 });
 
-it("Works as the identity of a database", async () => {
-  // Messages signed with Nostr keys verify with the existing core
-  await db.anonSignIn();
-  const message = await db.putData("nostr-user-key", "value");
-  expect(message).not.toBeNull();
-  expect(await db.verifyMessage(message!.data)).toBe(VerifyResult.Verified);
+it("Is the default identity of a database", async () => {
+  const fresh = new ToolDb();
+  expect(fresh.userAccount).toBeInstanceOf(ToolDbNostrUser);
+
+  await fresh.keysSignIn(NSEC, "keys");
+  expect(fresh.userAccount.getAddress()).toBe(PUBLIC_KEY);
+  expect(fresh.userAccount.getUsername()).toBe("keys");
+
+  const event = await fresh.putData("nostr-user-key", "value");
+  expect(event.pubkey).toBe(PUBLIC_KEY);
+  expect(verifyEvent(event)).toBe(true);
+  await fresh.close();
 });

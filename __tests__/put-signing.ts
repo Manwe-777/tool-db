@@ -1,13 +1,10 @@
 import { MapCrdt, ToolDb, ToolDbUserAdapter } from "../packages/tool-db";
 
-// A user adapter that is logged in but fails to produce signatures
+// A user adapter that is logged in but fails to sign (the base adapter
+// rejects signEvent), like a signer the user declined
 class NoSignatureUser extends ToolDbUserAdapter {
   public getAddress() {
     return "no-signature-address";
-  }
-
-  public signData() {
-    return Promise.resolve("");
   }
 }
 

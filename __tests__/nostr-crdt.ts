@@ -8,20 +8,17 @@ import {
   generateSecretKey,
   getPublicKey,
   ListCrdt,
+  MapChanges,
   MapCrdt,
   NostrEvent,
   ToolDb,
 } from "../packages/tool-db";
 
-import NostrRelay from "../packages/nostr-relay";
-import ToolDbNostrNetwork from "../packages/nostr-network";
-import ToolDbNostrUser from "../packages/nostr-user";
+import { NostrRelay } from "../packages/nostr-relay";
 
 import MemoryStore from "../test-utils/memoryStore";
 
 jest.setTimeout(15000);
-
-ToolDbNostrUser.encryptionLogN = 10;
 
 const TOPIC = "nostr-crdt-test";
 
@@ -32,8 +29,6 @@ const uniqueKey = (name: string) =>
 
 const createClient = async (relays: string[]) => {
   const db = new ToolDb({
-    networkAdapter: ToolDbNostrNetwork,
-    userAdapter: ToolDbNostrUser,
     storageAdapter: MemoryStore,
     relays,
     topic: TOPIC,
@@ -186,7 +181,7 @@ it("Does not accept changes attributed to another author", async () => {
     [{ t: "SET", k: "alice", a: address(Alice), v: "forged", i: 1 }],
     generateSecretKey()
   );
-  await (Bob.network as ToolDbNostrNetwork).publish(forged);
+  await Bob.relays.publish(forged);
   await wait(100);
 
   const chrisMap = new MapCrdt<string>(address(Chris));
@@ -240,8 +235,10 @@ it("Sends CRDT updates to subscribers", async () => {
   const key = uniqueKey("subscribed");
   const bobMap = new MapCrdt<string>(address(Bob));
 
-  // The same pattern the example app uses
-  Bob.addKeyListener(key, (msg) => bobMap.mergeChanges(msg.v));
+  // Listeners merge the changes in `v`
+  Bob.addKeyListener<MapChanges<string>[]>(key, (msg) =>
+    bobMap.mergeChanges(msg.v)
+  );
   await Bob.subscribeData(key);
   await wait(100);
 

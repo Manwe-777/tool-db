@@ -1,4 +1,4 @@
-import { ToolDb, ToolDbStorageAdapter } from "tool-db";
+import { StorageContext, ToolDbStorageAdapter } from "tool-db";
 
 export default class ToolDbIndexedb extends ToolDbStorageAdapter {
   private database: IDBDatabase | undefined;
@@ -21,7 +21,7 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
     });
   }
 
-  constructor(db: ToolDb, forceStorageName?: string) {
+  constructor(db: StorageContext, forceStorageName?: string) {
     super(db, forceStorageName);
 
     // Use the base class's protected _readyPromise
@@ -70,6 +70,21 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
     });
   }
 
+  public async delete(key: string) {
+    await this.waitForReady();
+
+    return new Promise((resolve, reject) => {
+      if (!this.database) {
+        reject(new Error("Database not ready"));
+        return;
+      }
+      const tx = this.database.transaction([this.storageName], "readwrite");
+      const req = tx.objectStore(this.storageName).delete("" + key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = (eve: any) => reject(eve || "delete.tx.error");
+    });
+  }
+
   public async get(key: string) {
     await this.waitForReady();
 
@@ -102,7 +117,8 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
         return;
       }
       try {
-        const keyRange = IDBKeyRange.bound(key, key + "|", true, true);
+        // Every key starting with the prefix
+        const keyRange = IDBKeyRange.bound(key, key + "\uffff");
 
         const tx = this.database.transaction([this.storageName], "readonly");
         const obj = tx.objectStore(this.storageName);
