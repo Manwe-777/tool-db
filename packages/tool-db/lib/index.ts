@@ -20,6 +20,8 @@ export { default as ToolDbUserAdapter } from "./adapters-base/userAdapter";
 export { default as ToolDbMemoryStore } from "./adapters/memoryStore";
 export { default as ToolDbNostrUser } from "./adapters/nostrUser";
 export * from "./adapters/nostrUser";
+export { default as ToolDbNip07User } from "./adapters/nip07User";
+export * from "./adapters/nip07User";
 
 export * from "./crdt/baseCrdt";
 export * from "./crdt/counterCrdt";

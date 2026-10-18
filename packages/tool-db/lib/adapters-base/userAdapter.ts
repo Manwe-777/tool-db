@@ -17,6 +17,14 @@ export default class ToolDbUserAdapter {
   }
 
   /**
+   * Resolves when the signer is ready, for signers that need to load their
+   * public key first (like browser extensions)
+   */
+  get ready(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /**
    * Switches to a new random identity
    */
   public async anonUser(): Promise<void> {

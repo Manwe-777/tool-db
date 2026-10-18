@@ -47,6 +47,7 @@ jobs:
           - listCrdt.additional
           - mapCrdt
           - mapCrdt.additional
+          - nip07-user
           - nip44
           - nostr-crdt
           - nostr-data

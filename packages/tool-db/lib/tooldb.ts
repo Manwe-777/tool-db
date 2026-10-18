@@ -115,9 +115,14 @@ export default class ToolDb extends EventEmitter {
       onStatus: (connected) => this.onRelayStatus(connected),
     });
 
-    this._readyPromise = this._store.ready.then(() => {
+    this._readyPromise = Promise.all([
+      this._store.ready,
+      this._userAccount.ready,
+    ]).then(() => {
       this.emit("init", this._userAccount.getAddress());
     });
+    // Still rejects for whoever awaits it, without being an unhandled rejection
+    this._readyPromise.catch((e) => this.logger("Could not initialize", e));
   }
 
   get options() {
