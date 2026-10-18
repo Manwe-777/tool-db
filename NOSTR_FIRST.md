@@ -245,15 +245,15 @@ relay nodes use them:
 
 ## Status
 
-| Phase                             | State                                                                                     |
-| --------------------------------- | ----------------------------------------------------------------------------------------- |
-| 1. Foundations                    | Done: event primitives, local key signer, relay                                           |
-| 2. Network                        | Done: relay pool, `putData`, `getData`, `subscribeData`                                   |
-| 3. CRDTs                          | Done: change sets as events                                                               |
-| 4. ToolDB relay node              | Done: validation, storage, server functions, NIP-11                                       |
-| 5. Identity                       | Partly: NIP-49, NIP-19, NIP-07 signer, profiles and NIP-05 names done; NIP-46 not started |
-| 6. Functions, encryption, queries | Done: server functions, `queryKeys`, NIP-44 encryption and group keys                     |
-| 7. Cleanup                        | Done: old packages, protocol and example removed                                          |
+| Phase                             | State                                                                                                                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Foundations                    | Done: event primitives, local key signer, relay                                                                                                                        |
+| 2. Network                        | Done: relay pool, `putData`, `getData`, `subscribeData`                                                                                                                |
+| 3. CRDTs                          | Done: change sets as events                                                                                                                                            |
+| 4. ToolDB relay node              | Done: validation, storage, server functions, NIP-11                                                                                                                    |
+| 5. Identity                       | Partly: NIP-49, NIP-19, NIP-07 signer, profiles and NIP-05 names done; NIP-46 specified in [specs/nip46-remote-signers.md](specs/nip46-remote-signers.md), not started |
+| 6. Functions, encryption, queries | Done: server functions, `queryKeys`, NIP-44 encryption and group keys                                                                                                  |
+| 7. Cleanup                        | Done: old packages, protocol and example removed                                                                                                                       |
 
 Decisions taken while implementing:
 
