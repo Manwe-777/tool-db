@@ -1,3 +1,8 @@
+/**
+ * Redis is used on Node only, and its client needs Node globals (like
+ * setImmediate) that the browser-like default test environment lacks.
+ * @jest-environment node
+ */
 import {
   finalizeEvent,
   generateSecretKey,

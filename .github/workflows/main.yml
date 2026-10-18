@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     name: "Build"
     steps:
       - name: "Setup node"
@@ -31,6 +32,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     name: "Test: ${{ matrix.test }}"
     strategy:
@@ -81,6 +83,7 @@ jobs:
 
   test-redis:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     name: "Test: redis-store"
     services:
