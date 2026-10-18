@@ -63,11 +63,10 @@ This project is intentionally permissive. Commercial use, private deployments, a
 ## 🚀 Quick Start
 
 ```bash
-npm install tool-db
+npm install tool-db@next
 ```
 
-The packages are not published on npm yet; until then, build them from this
-repository.
+The packages are published under the `next` tag while they are tested.
 
 ```javascript
 import { ToolDb, MapCrdt } from "tool-db";
