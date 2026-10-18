@@ -227,11 +227,21 @@ export default class ToolDbNetworkAdapter {
    * This function also takes care of the message deduplication.
    * @param clientId Peer/Client id we want to send to.
    * @param msg message data
+   * @param deduplicate Skip data we already sent to this peer. Replies to a
+   * request should always be sent, since the peer explicitly asked for them.
    */
-  public sendToClientId(clientId: string, msg: ToolDbMessage) {
+  public sendToClientId(
+    clientId: string,
+    msg: ToolDbMessage,
+    deduplicate = true
+  ) {
     const to = uniq([...msg.to, this.getClientAddress()]);
     const finalMessage = JSON.stringify({ ...msg, to });
 
-    this.sendDeduplicated(clientId, msg, finalMessage);
+    if (deduplicate) {
+      this.sendDeduplicated(clientId, msg, finalMessage);
+    } else {
+      this.executeSendToClient(clientId, finalMessage);
+    }
   }
 }

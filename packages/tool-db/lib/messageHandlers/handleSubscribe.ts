@@ -35,7 +35,7 @@ export default function handleSubscribe(
           type: "put",
           to: [],
         };
-        this.network.sendToClientId(remotePeerId, oldData);
+        this.network.sendToClientId(remotePeerId, oldData, false);
       } catch (e) {
         // do nothing
       }

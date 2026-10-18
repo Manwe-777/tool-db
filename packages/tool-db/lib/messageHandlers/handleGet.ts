@@ -16,7 +16,7 @@ export default function handleGet(
           to: [],
           id: message.id,
         } as PutMessage;
-        this.network.sendToClientId(remotePeerId, oldData);
+        this.network.sendToClientId(remotePeerId, oldData, false);
       } catch (e) {
         // socket.send(data);
         // do nothing

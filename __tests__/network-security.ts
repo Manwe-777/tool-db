@@ -82,3 +82,22 @@ it("Does not return valid data from another key in a GET reply", async () => {
   const value = await Chris.getData(key);
   expect(value).not.toBe("other value");
 });
+
+it("Replies to every GET, even if the data was already sent", async () => {
+  const key = "repeated-get-" + textRandom(12);
+  await Bob.putData(key, "value");
+  await wait(500);
+
+  // A client that keeps nothing locally, so it relies on the server replies
+  const noStore = new ToolDb({
+    server: false,
+    peers: [{ host: "localhost", port: 9310 }],
+    networkAdapter: ToolDbWebsockets,
+    userAdapter: ToolDbWeb3,
+  });
+  await waitForConnect(noStore);
+  await wait(300);
+
+  expect(await noStore.getData(key)).toBe("value");
+  expect(await noStore.getData(key)).toBe("value");
+});
