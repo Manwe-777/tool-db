@@ -55,6 +55,7 @@ jobs:
           - network.additional
           - network
           - nostr-event
+          - nostr-user
           - network-security
           - put-signing
           - sha1

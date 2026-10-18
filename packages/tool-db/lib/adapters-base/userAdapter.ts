@@ -1,4 +1,4 @@
-import { ToolDb, VerificationData } from "..";
+import { ToolDb, VerificationData, EventTemplate, NostrEvent } from "..";
 
 export default class ToolDbUserAdapter {
   private _tooldb: ToolDb;
@@ -15,10 +15,22 @@ export default class ToolDbUserAdapter {
     return;
   }
 
-  public async setUser(account: unknown | undefined, name: string): Promise<void> { }
+  public async setUser(
+    account: unknown | undefined,
+    name: string
+  ): Promise<void> {}
 
   public signData(data: string): Promise<string> {
     return Promise.resolve("");
+  }
+
+  /**
+   * Signs a Nostr event with this account.
+   */
+  public signEvent(event: EventTemplate): Promise<NostrEvent> {
+    return Promise.reject(
+      new Error("This user adapter can not sign Nostr events")
+    );
   }
 
   public verifySignature(

@@ -1,0 +1,34 @@
+{
+  "name": "@tool-db/nostr-user",
+  "version": "0.1.0",
+  "description": "Nostr identity (signer) adapter for tool-db",
+  "author": "Manwe <manuel.etchegaray7@gmail.com>",
+  "homepage": "https://github.com/Manwe-777/tool-db#readme",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Manwe-777/tool-db.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "npm run build"
+  },
+  "bugs": {
+    "url": "https://github.com/Manwe-777/tool-db/issues"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@noble/ciphers": "^1.2.1",
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
+    "@scure/base": "^1.2.4",
+    "tool-db": "^2.6.4"
+  }
+}

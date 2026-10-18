@@ -76,6 +76,7 @@
       "@tool-db/redis-store": ["../redis-store"],
       "@tool-db/ecdsa-user": ["../ecdsa-user"],
       "@tool-db/web3-user": ["../web3-user"],
+      "@tool-db/nostr-user": ["../nostr-user"],
       "tool-db": ["../tool-db"],
     }
   },
