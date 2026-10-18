@@ -7,6 +7,7 @@ import {
   VerificationData,
 } from ".";
 
+import ToolDbMemoryStore from "./adapters/memoryStore";
 import ToolDbNostrUser from "./adapters/nostrUser";
 import RelayPool, { WebSocketConstructor } from "./nostr/pool";
 import randomAnimal from "./utils/randomAnimal";
@@ -47,7 +48,7 @@ export default class ToolDb extends EventEmitter {
     functionServers: [],
     triggerDebouce: 100,
     storageName: "tooldb",
-    storageAdapter: ToolDbStorageAdapter,
+    storageAdapter: ToolDbMemoryStore,
     userAdapter: ToolDbNostrUser,
     WebSocket: undefined,
   };

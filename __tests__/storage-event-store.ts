@@ -5,12 +5,11 @@ import {
   StorageContext,
   textRandom,
   ToolDbStorageAdapter,
+  ToolDbMemoryStore,
 } from "../packages/tool-db";
 
 import { StorageEventStore } from "../packages/nostr-relay";
 import ToolDbLeveldb from "../packages/leveldb-store";
-
-import MemoryStore from "../test-utils/memoryStore";
 
 jest.setTimeout(15000);
 
@@ -31,7 +30,7 @@ const sign = (
   );
 
 const adapters: [string, () => ToolDbStorageAdapter][] = [
-  ["memory", () => new MemoryStore(context("memory"))],
+  ["memory", () => new ToolDbMemoryStore(context("memory"))],
   [
     "leveldb",
     () =>

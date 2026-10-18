@@ -29,7 +29,7 @@ export interface ToolDbOptions {
    */
   storageName: string;
   /**
-   * A custom storage adapter class
+   * Local storage adapter class (in memory by default)
    */
   storageAdapter: typeof ToolDbStorageAdapter;
   /**

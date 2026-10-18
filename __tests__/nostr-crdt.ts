@@ -16,8 +16,6 @@ import {
 
 import { NostrRelay } from "../packages/nostr-relay";
 
-import MemoryStore from "../test-utils/memoryStore";
-
 jest.setTimeout(15000);
 
 const TOPIC = "nostr-crdt-test";
@@ -29,7 +27,6 @@ const uniqueKey = (name: string) =>
 
 const createClient = async (relays: string[]) => {
   const db = new ToolDb({
-    storageAdapter: MemoryStore,
     relays,
     topic: TOPIC,
   });

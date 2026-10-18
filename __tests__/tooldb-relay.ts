@@ -18,8 +18,6 @@ import {
 import { ToolDbRelay } from "../packages/nostr-relay";
 import ToolDbLeveldb from "../packages/leveldb-store";
 
-import MemoryStore from "../test-utils/memoryStore";
-
 jest.setTimeout(15000);
 
 const TOPIC = "tooldb-relay-test";
@@ -36,7 +34,6 @@ const createClient = async (
 ) => {
   const db = new ToolDb({
     relays: [relay.url],
-    storageAdapter: MemoryStore,
     topic: TOPIC,
     functionServers,
   });
@@ -132,6 +129,41 @@ it("Serves its information document with its public key (NIP-11)", async () => {
 it("Accepts valid ToolDB data of its topic", async () => {
   const result = await publish(relay, valueEvent(uniqueKey("valid"), "value"));
   expect(result[2]).toBe(true);
+});
+
+it("Answers requests after the events sent before them", async () => {
+  // A REQ right after an EVENT on the same connection must see the event,
+  // even though validating it is asynchronous
+  const key = uniqueKey("ordered");
+  const event = valueEvent(key, "value");
+
+  // With LevelDB, storing takes longer than answering the request
+  const node = new ToolDbRelay({
+    topic: TOPIC,
+    storageAdapter: ToolDbLeveldb,
+    storageName: ".test-db/test-tooldb-relay-ordered-" + textRandom(8),
+  });
+  await node.start();
+
+  const socket = new WebSocket(node.url);
+  await new Promise((resolve) => socket.once("open", resolve));
+  const events: NostrEvent[] = [];
+  const eose = new Promise<void>((resolve) =>
+    socket.on("message", (data) => {
+      const message = JSON.parse(data.toString());
+      if (message[0] === "EVENT") events.push(message[2]);
+      if (message[0] === "EOSE") resolve();
+    })
+  );
+  socket.send(JSON.stringify(["EVENT", event]));
+  socket.send(
+    JSON.stringify(["REQ", "ordered", { "#d": [`${TOPIC}:${key}`] }])
+  );
+  await eose;
+  socket.close();
+  await node.close();
+
+  expect(events).toEqual([event]);
 });
 
 it("Rejects writes to a user namespace from other users", async () => {

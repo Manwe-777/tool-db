@@ -16,6 +16,7 @@ export * from "./nostr/pool";
 export { default as ToolDbStorageAdapter } from "./adapters-base/storageAdapter";
 export * from "./adapters-base/storageAdapter";
 export { default as ToolDbUserAdapter } from "./adapters-base/userAdapter";
+export { default as ToolDbMemoryStore } from "./adapters/memoryStore";
 export { default as ToolDbNostrUser } from "./adapters/nostrUser";
 export * from "./adapters/nostrUser";
 

@@ -167,10 +167,16 @@ export default class NostrRelay {
   private onConnection(socket: WebSocket) {
     this.subscriptions.set(socket, new Map());
 
+    // Messages of a connection are handled in order, so a request sees the
+    // events sent before it, even if storing them takes longer
+    let queue: Promise<void> = Promise.resolve();
     socket.on("message", (data) => {
-      this.onMessage(socket, data.toString()).catch((e) => {
-        this.send(socket, ["NOTICE", `error: ${e?.message || e}`]);
-      });
+      const message = data.toString();
+      queue = queue.then(() =>
+        this.onMessage(socket, message).catch((e) => {
+          this.send(socket, ["NOTICE", `error: ${e?.message || e}`]);
+        })
+      );
     });
 
     socket.on("close", () => {

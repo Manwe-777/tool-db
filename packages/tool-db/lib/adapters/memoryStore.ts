@@ -1,9 +1,10 @@
-import { ToolDbStorageAdapter } from "../packages/tool-db";
+import ToolDbStorageAdapter from "../adapters-base/storageAdapter";
 
 /**
- * Storage adapter kept in memory, for tests
+ * Storage adapter kept in memory, the default one. Data is lost when the
+ * process or page closes, use a persistent adapter to keep it.
  */
-export default class MemoryStore extends ToolDbStorageAdapter {
+export default class ToolDbMemoryStore extends ToolDbStorageAdapter {
   private data: Record<string, string> = {};
 
   put(key: string, data: string) {

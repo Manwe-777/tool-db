@@ -9,8 +9,6 @@ import {
 
 import { NostrRelay } from "../packages/nostr-relay";
 
-import MemoryStore from "../test-utils/memoryStore";
-
 jest.setTimeout(15000);
 
 const TOPIC = "nostr-data-test";
@@ -19,7 +17,6 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const createClient = async (relays: string[], topic = TOPIC) => {
   const db = new ToolDb({
-    storageAdapter: MemoryStore,
     relays,
     topic,
   });
@@ -72,6 +69,15 @@ it("Stores values locally, and reads them offline", async () => {
 
   await offline.putData(key, "local value");
   expect(await offline.getData(key)).toBe("local value");
+});
+
+it("Reads its own writes with the default store", async () => {
+  const db = new ToolDb({ relays: [relay.url], topic: TOPIC });
+  clients.push(db);
+  const key = uniqueKey("default-store");
+
+  await db.putData(key, "mine");
+  expect(await db.getData(key)).toBe("mine");
 });
 
 it("Returns null for keys nobody wrote", async () => {

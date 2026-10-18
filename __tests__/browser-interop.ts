@@ -7,8 +7,6 @@ import browserify from "browserify";
 import { MapCrdt, textRandom, ToolDb } from "../packages/tool-db";
 import { ToolDbRelay } from "../packages/nostr-relay";
 
-import MemoryStore from "../test-utils/memoryStore";
-
 jest.setTimeout(30000);
 
 const TOPIC = "browser-interop-test";
@@ -73,7 +71,6 @@ beforeAll(async () => {
   node = new ToolDb({
     relays: [relay.url],
     topic: TOPIC,
-    storageAdapter: MemoryStore,
   });
   await Promise.all([waitForConnect(browser), waitForConnect(node)]);
 });
