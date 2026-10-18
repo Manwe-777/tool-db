@@ -1,135 +1,144 @@
-import { useCallback, useEffect, useReducer } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { ToolDb, ToolDbNostrUser, npubEncode } from "tool-db";
 
-import { Routes, Route } from "react-router-dom";
+import {
+  GroupData,
+  createGroup,
+  getMyGroups,
+  groupKey,
+  me,
+  parseGroupRef,
+  requestToJoin,
+} from "../chat";
+import { useData } from "../hooks";
+import { RELAYS } from "../identity";
+import GroupView from "./GroupView";
 
-import _ from "lodash";
+function GroupItem({
+  db,
+  groupRefId,
+  selected,
+  onSelect,
+}: {
+  db: ToolDb;
+  groupRefId: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const group = useData<GroupData>(db, groupKey(parseGroupRef(groupRefId)));
+  const pending = group && !group.members.includes(me(db));
+  return (
+    <button
+      className={`group-item ${selected ? "active" : ""}`}
+      onClick={onSelect}
+    >
+      {group?.name || "Loading…"}
+      {pending && <span className="badge">pending</span>}
+    </button>
+  );
+}
 
-import { GlobalState, Message } from "../types";
-import UserGroupsList from "./UserGroupsList";
-import Group from "./Group";
-import WebRtcDebug from "./WebRtcDebug";
-
-import reducer from "../state/reducer";
-import getToolDb from "../utils/getToolDb";
-import { encryptGroupMessage, getCachedGroupKey } from "../utils/groupCrypto";
-
-import setupTooldb from "./setupTooldb";
-
-const initialState: GlobalState = {
-  names: {},
-  publicKeys: {},
-  encryptionKeys: {},
-  groups: {},
-  groupsList: [],
-};
-
-export default function ChatApp() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  // console.log(state);
-  const toolDb = getToolDb();
+export default function ChatApp({ db }: { db: ToolDb }) {
+  const myGroups = useData<string[]>(db, `:${me(db)}.groups`) || [];
+  const [selected, setSelected] = useState<string>();
+  const [newGroup, setNewGroup] = useState("");
+  const [joinLink, setJoinLink] = useState("");
+  const [error, setError] = useState("");
+  const [connected, setConnected] = useState(db.isConnected);
 
   useEffect(() => {
-    // Wait for database to be ready before accessing user account
-    toolDb.ready
-      .then(() => {
-        const addr = toolDb.userAccount.getAddress();
-        if (addr) {
-          dispatch({
-            type: "SET_USER_NAME",
-            userId: addr,
-            username: toolDb.userAccount.getUsername() || "",
-          });
-        }
-        setupTooldb(dispatch);
-      })
-      .catch((err) => {
-        console.error("Failed to initialize ToolDb in ChatApp:", err);
-      });
-  }, []);
+    db.onConnect = () => setConnected(true);
+    db.onDisconnect = () => setConnected(false);
+    // Our groups, also from before this session
+    getMyGroups(db);
+  }, [db]);
 
-  const sendMessage = useCallback(
-    async (groupId: string, msg: string) => {
-      const address = toolDb.userAccount.getAddress() || "";
+  useEffect(() => {
+    if (!selected && myGroups.length > 0) setSelected(myGroups[0]);
+  }, [myGroups.length]);
 
-      if (!state.groups[groupId]) return;
-      if (!state.groups[groupId].members.includes(address)) return;
+  const create = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!newGroup.trim()) return;
+    const group = await createGroup(db, newGroup.trim());
+    setNewGroup("");
+    setSelected(`${group.owner}/${group.id}`);
+  };
 
-      // Check if we have the group key for encryption
-      const hasGroupKey = !!getCachedGroupKey(groupId);
+  const join = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    try {
+      parseGroupRef(joinLink);
+      await requestToJoin(db, joinLink.trim());
+      setSelected(joinLink.trim());
+      setJoinLink("");
+    } catch (e: any) {
+      setError(e?.message || String(e));
+    }
+  };
 
-      // Encrypt the message if we have the key
-      const messageContent = hasGroupKey
-        ? await encryptGroupMessage(msg, groupId)
-        : msg;
-
-      const newMessage: Message = {
-        m: messageContent,
-        t: new Date().getTime(),
-        e: hasGroupKey, // Only mark as encrypted if we actually encrypted
-      };
-
-      // Build network array from existing messages, stripping 'decrypted' field
-      // to avoid sending decrypted content to the network
-      const existingMessages = state.groups[groupId].messages[address] || [];
-      const networkMessagesArray: Message[] = [
-        ...existingMessages.map(
-          ({ decrypted: _decrypted, u: _u, ...rest }) => rest
-        ),
-        newMessage,
-      ];
-
-      // For local display, show the decrypted message
-      const displayMessage: Message = {
-        m: messageContent, // Keep encrypted content in m
-        t: newMessage.t,
-        e: hasGroupKey,
-        decrypted: msg, // Decrypted text for display
-      };
-
-      const displayMessagesArray: Message[] = [
-        ...existingMessages,
-        displayMessage,
-      ];
-
-      // Push to local state for immediate display
-      dispatch({
-        type: "SET_USER_GROUP_MESSAGES",
-        userId: address,
-        groupId: groupId,
-        messages: displayMessagesArray,
-      });
-
-      // Send to network (without decrypted field)
-      toolDb.putData<Message[]>(`group-${groupId}`, networkMessagesArray, true);
-    },
-    [state]
-  );
+  const isLocalKey = db.userAccount instanceof ToolDbNostrUser;
 
   return (
-    <>
-      <div className="left-column">
-        <WebRtcDebug />
-        <UserGroupsList
-          dispatch={dispatch}
-          groupsList={state.groupsList}
-          groups={state.groups}
-        />
-      </div>
-      <Routes>
-        <Route path="/" element={<p>Select or create a group to start</p>} />
-        <Route path="/group">
-          <Route
-            path=":groupRoute"
-            element={
-              <Group
-                sendMessage={sendMessage}
-                dispatch={dispatch}
-                state={state}
-              />
-            }
+    <div className="app">
+      <aside>
+        <div className="me">
+          <strong>{db.userAccount.getUsername() || "Nostr user"}</strong>
+          <span className="muted small" title={me(db)}>
+            {npubEncode(me(db)).slice(0, 20)}…
+          </span>
+          <span className={`status ${connected ? "online" : ""}`}>
+            {connected ? "Connected" : "Offline"} · {RELAYS.join(", ")}
+          </span>
+          {isLocalKey && (
+            <span className="muted small">Key saved in this browser</span>
+          )}
+        </div>
+
+        <h3>Groups</h3>
+        {myGroups.length === 0 && (
+          <p className="muted small">
+            Create a group, or join one with a link.
+          </p>
+        )}
+        {myGroups.map((ref) => (
+          <GroupItem
+            key={ref}
+            db={db}
+            groupRefId={ref}
+            selected={ref === selected}
+            onSelect={() => setSelected(ref)}
           />
-        </Route>
-      </Routes>
-    </>
+        ))}
+
+        <form onSubmit={create}>
+          <input
+            placeholder="New group name"
+            value={newGroup}
+            onChange={(e) => setNewGroup(e.target.value)}
+          />
+          <button type="submit">Create</button>
+        </form>
+
+        <form onSubmit={join}>
+          <input
+            placeholder="Paste an invite link"
+            value={joinLink}
+            onChange={(e) => setJoinLink(e.target.value)}
+          />
+          <button type="submit">Join</button>
+        </form>
+        {error && <p className="error">{error}</p>}
+      </aside>
+
+      <main>
+        {selected ? (
+          <GroupView key={selected} db={db} groupRefId={selected} />
+        ) : (
+          <div className="empty">Select or create a group</div>
+        )}
+      </main>
+    </div>
   );
 }

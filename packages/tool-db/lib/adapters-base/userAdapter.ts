@@ -1,5 +1,10 @@
-import { ToolDb, VerificationData } from "..";
+import { ToolDb, EventTemplate, NostrEvent } from "..";
 
+/**
+ * A signer for our identity: a Nostr key, or something holding one (a
+ * browser extension, a remote signer). Verification does not depend on it,
+ * every event is verified with Schnorr signatures.
+ */
 export default class ToolDbUserAdapter {
   private _tooldb: ToolDb;
 
@@ -11,20 +16,46 @@ export default class ToolDbUserAdapter {
     this._tooldb = db;
   }
 
+  /**
+   * Resolves when the signer is ready, for signers that need to load their
+   * public key first (like browser extensions)
+   */
+  get ready(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /**
+   * Switches to a new random identity
+   */
   public async anonUser(): Promise<void> {
     return;
   }
 
-  public async setUser(account: unknown | undefined, name: string): Promise<void> { }
-
-  public signData(data: string): Promise<string> {
-    return Promise.resolve("");
+  public async setUser(account: unknown, name: string): Promise<void> {
+    return;
   }
 
-  public verifySignature(
-    message: Partial<VerificationData<any>>
-  ): Promise<boolean> {
-    return Promise.resolve(false);
+  /**
+   * Signs a Nostr event with this account.
+   */
+  public signEvent(event: EventTemplate): Promise<NostrEvent> {
+    return Promise.reject(
+      new Error("This user adapter can not sign Nostr events")
+    );
+  }
+
+  /**
+   * Encrypts a message for another public key (NIP-44)
+   */
+  public nip44Encrypt(publicKey: string, plaintext: string): Promise<string> {
+    return Promise.reject(new Error("This user adapter can not encrypt"));
+  }
+
+  /**
+   * Decrypts a message from another public key (NIP-44)
+   */
+  public nip44Decrypt(publicKey: string, payload: string): Promise<string> {
+    return Promise.reject(new Error("This user adapter can not decrypt"));
   }
 
   public getAccountFromPrivate(privateKey: string): Promise<unknown> {
@@ -39,6 +70,9 @@ export default class ToolDbUserAdapter {
     return Promise.resolve(undefined);
   }
 
+  /**
+   * Our public key (hex)
+   */
   public getAddress(): string | undefined {
     return "";
   }

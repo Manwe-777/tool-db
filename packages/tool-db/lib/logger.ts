@@ -1,4 +1,4 @@
-import { ToolDb, sha1 } from ".";
+import { ToolDb, sha256 } from ".";
 
 export default function logger(
   this: ToolDb,
@@ -18,7 +18,7 @@ export default function logger(
     const style = isNode
       ? ""
       : "background: #" +
-        sha1(this.options.storageName).slice(-6) +
+        sha256(this.options.storageName).slice(-6) +
         "; padding: 2px; color: black";
 
     console.log(

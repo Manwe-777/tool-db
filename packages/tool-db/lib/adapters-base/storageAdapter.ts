@@ -1,7 +1,13 @@
-import { ToolDb } from "..";
+/**
+ * What a storage adapter needs from its owner (a database or a relay)
+ */
+export interface StorageContext {
+  options: { storageName: string };
+  logger: (...args: any[]) => void;
+}
 
 export default class ToolDbStorageAdapter {
-  private _tooldb: ToolDb;
+  private _context: StorageContext;
 
   private _forceStorageName: string | undefined;
 
@@ -20,15 +26,15 @@ export default class ToolDbStorageAdapter {
   }
 
   get tooldb() {
-    return this._tooldb;
+    return this._context;
   }
 
   get storageName() {
-    return this._forceStorageName || this._tooldb.options.storageName;
+    return this._forceStorageName || this._context.options.storageName;
   }
 
-  constructor(db: ToolDb, forceStorageName?: string) {
-    this._tooldb = db;
+  constructor(context: StorageContext, forceStorageName?: string) {
+    this._context = context;
 
     if (forceStorageName) {
       this._forceStorageName = forceStorageName;
@@ -47,11 +53,21 @@ export default class ToolDbStorageAdapter {
     return Promise.resolve();
   }
 
+  /**
+   * Rejects if the key does not exist
+   */
   get(key: string): Promise<string> {
-    return Promise.resolve("");
+    return Promise.reject(new Error("Not found"));
   }
 
-  query(key: string): Promise<string[]> {
+  /**
+   * Returns the keys starting with the given prefix
+   */
+  query(prefix: string): Promise<string[]> {
     return Promise.resolve([]);
+  }
+
+  delete(key: string): Promise<unknown> {
+    return Promise.resolve();
   }
 }

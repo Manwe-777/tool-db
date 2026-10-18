@@ -1,0 +1,434 @@
+import http from "http";
+import WebSocket from "ws";
+
+import {
+  CRDT_EVENT_KIND,
+  CRDT_MAP,
+  EventTemplate,
+  FUNCTION_REQUEST_KIND,
+  finalizeEvent,
+  generateSecretKey,
+  getPublicKey,
+  MapCrdt,
+  NostrEvent,
+  textRandom,
+  ToolDb,
+  VALUE_KIND,
+} from "../packages/tool-db";
+
+import { NostrRelay, ToolDbRelay } from "../packages/nostr-relay";
+import ToolDbLeveldb from "../packages/leveldb-store";
+
+jest.setTimeout(15000);
+
+const TOPIC = "tooldb-relay-test";
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const now = () => Math.floor(Date.now() / 1000);
+
+const uniqueKey = (name: string) => `${name}-${textRandom(10)}`;
+
+const createClient = async (
+  relay: ToolDbRelay,
+  functionServers: string[] = []
+) => {
+  const db = new ToolDb({
+    relays: [relay.url],
+    topic: TOPIC,
+    functionServers,
+  });
+  await db.ready;
+  if (!db.isConnected) {
+    await new Promise<void>((resolve) => {
+      db.onConnect = () => resolve();
+    });
+  }
+  return db;
+};
+
+/**
+ * Publishes an event directly, returning the OK message of the relay
+ */
+const publish = async (relay: ToolDbRelay, event: NostrEvent) => {
+  const socket = new WebSocket(relay.url);
+  await new Promise((resolve) => socket.once("open", resolve));
+  const reply = new Promise<any[]>((resolve) =>
+    socket.once("message", (data) => resolve(JSON.parse(data.toString())))
+  );
+  socket.send(JSON.stringify(["EVENT", event]));
+  const result = await reply;
+  socket.close();
+  return result;
+};
+
+const sign = (
+  template: Partial<EventTemplate>,
+  secretKey = generateSecretKey()
+) =>
+  finalizeEvent(
+    { kind: 1, created_at: now(), tags: [], content: "", ...template },
+    secretKey
+  );
+
+const valueEvent = (key: string, value: unknown, secretKey?: string) =>
+  sign(
+    {
+      kind: VALUE_KIND,
+      tags: [["d", `${TOPIC}:${key}`]],
+      content: JSON.stringify(value),
+    },
+    secretKey
+  );
+
+let relay: ToolDbRelay;
+const clients: ToolDb[] = [];
+
+beforeAll(async () => {
+  relay = new ToolDbRelay({ topic: TOPIC });
+  relay.addServerFunction<number, { a: number; b: number }>(
+    "add",
+    async ({ a, b }) => {
+      if (typeof a !== "number" || typeof b !== "number") {
+        throw new Error("Invalid arguments");
+      }
+      return a + b;
+    }
+  );
+  relay.addServerFunction<string>("whoami", async (_args, caller) => caller);
+  await relay.start();
+});
+
+afterAll(async () => {
+  await Promise.all(clients.map((db) => db.close()));
+  await relay.close();
+});
+
+it("Serves its information document with its public key (NIP-11)", async () => {
+  const info = await new Promise<any>((resolve, reject) => {
+    http
+      .get(
+        `http://127.0.0.1:${relay.port}`,
+        { headers: { Accept: "application/nostr+json" } },
+        (response) => {
+          let body = "";
+          response.on("data", (chunk) => (body += chunk));
+          response.on("end", () =>
+            resolve({ headers: response.headers, body })
+          );
+        }
+      )
+      .on("error", reject);
+  });
+
+  expect(info.headers["access-control-allow-origin"]).toBe("*");
+  const document = JSON.parse(info.body);
+  expect(document.pubkey).toBe(relay.pubkey);
+  expect(document.supported_nips).toEqual([1, 11]);
+});
+
+it("Accepts valid ToolDB data of its topic", async () => {
+  const result = await publish(relay, valueEvent(uniqueKey("valid"), "value"));
+  expect(result[2]).toBe(true);
+});
+
+it("Answers requests after the events sent before them", async () => {
+  // A REQ right after an EVENT on the same connection must see the event,
+  // even though validating it is asynchronous
+  const key = uniqueKey("ordered");
+  const event = valueEvent(key, "value");
+
+  // With LevelDB, storing takes longer than answering the request
+  const node = new ToolDbRelay({
+    topic: TOPIC,
+    storageAdapter: ToolDbLeveldb,
+    storageName: ".test-db/test-tooldb-relay-ordered-" + textRandom(8),
+  });
+  await node.start();
+
+  const socket = new WebSocket(node.url);
+  await new Promise((resolve) => socket.once("open", resolve));
+  const events: NostrEvent[] = [];
+  const eose = new Promise<void>((resolve) =>
+    socket.on("message", (data) => {
+      const message = JSON.parse(data.toString());
+      if (message[0] === "EVENT") events.push(message[2]);
+      if (message[0] === "EOSE") resolve();
+    })
+  );
+  socket.send(JSON.stringify(["EVENT", event]));
+  socket.send(
+    JSON.stringify(["REQ", "ordered", { "#d": [`${TOPIC}:${key}`] }])
+  );
+  await eose;
+  socket.close();
+  await node.close();
+
+  expect(events).toEqual([event]);
+});
+
+it("Rejects writes to a user namespace from other users", async () => {
+  const owner = getPublicKey(generateSecretKey());
+  const result = await publish(
+    relay,
+    valueEvent(`:${owner}.${uniqueKey("namespace")}`, "not yours")
+  );
+  expect(result.slice(2)).toEqual([false, "blocked: AddressMismatch"]);
+});
+
+it("Rejects CRDT changes attributed to another author", async () => {
+  const someoneElse = getPublicKey(generateSecretKey());
+  const event = sign({
+    kind: CRDT_EVENT_KIND,
+    tags: [
+      ["k", `${TOPIC}:${uniqueKey("crdt")}`],
+      ["c", CRDT_MAP],
+    ],
+    content: JSON.stringify([
+      { t: "SET", k: "x", a: someoneElse, v: "forged", i: 1 },
+    ]),
+  });
+
+  const result = await publish(relay, event);
+  expect(result.slice(2)).toEqual([false, "blocked: AddressMismatch"]);
+});
+
+it("Rejects values that are not JSON", async () => {
+  const event = sign({
+    kind: VALUE_KIND,
+    tags: [["d", `${TOPIC}:${uniqueKey("json")}`]],
+    content: "not json",
+  });
+  expect((await publish(relay, event)).slice(2)).toEqual([
+    false,
+    "blocked: InvalidData",
+  ]);
+});
+
+it("Rejects events that are not ToolDB data of its topic", async () => {
+  const note = sign({ kind: 1, content: "hello" });
+  expect((await publish(relay, note))[2]).toBe(false);
+
+  const otherTopic = sign({
+    kind: VALUE_KIND,
+    tags: [["d", "other-topic:key"]],
+    content: "1",
+  });
+  expect((await publish(relay, otherTopic))[2]).toBe(false);
+});
+
+it("Can accept other events, like a regular relay", async () => {
+  const open = new ToolDbRelay({ topic: TOPIC, acceptForeignEvents: true });
+  await open.start();
+  expect((await publish(open, sign({ kind: 1, content: "hello" })))[2]).toBe(
+    true
+  );
+  await open.close();
+});
+
+it("Applies its custom verificators", async () => {
+  const key = uniqueKey("custom");
+  const id = relay.addCustomVerification(key, async (msg, previous) => {
+    // Values can only grow
+    return typeof msg.v === "number" && (!previous || msg.v > previous.v);
+  });
+
+  const secretKey = generateSecretKey();
+  const first = sign(
+    {
+      kind: VALUE_KIND,
+      created_at: now() - 1,
+      tags: [["d", `${TOPIC}:${key}`]],
+      content: "5",
+    },
+    secretKey
+  );
+  expect((await publish(relay, first))[2]).toBe(true);
+  expect((await publish(relay, valueEvent(key, 3)))[2]).toBe(false);
+  expect((await publish(relay, valueEvent(key, 6)))[2]).toBe(true);
+
+  relay.removeCustomVerification(id);
+});
+
+describe("Server functions", () => {
+  let client: ToolDb;
+
+  beforeAll(async () => {
+    client = await createClient(relay, [relay.pubkey]);
+    clients.push(client);
+  });
+
+  it("Runs functions and returns their result", async () => {
+    expect(await client.doFunction("add", { a: 2, b: 3 })).toEqual({
+      code: "OK",
+      return: 5,
+    });
+  });
+
+  it("Gives functions the public key of the caller", async () => {
+    expect(await client.doFunction("whoami", null)).toEqual({
+      code: "OK",
+      return: client.userAccount.getAddress(),
+    });
+  });
+
+  it("Returns errors thrown by functions", async () => {
+    expect(await client.doFunction("add", { a: "2" })).toEqual({
+      code: "ERR",
+      return: "Invalid arguments",
+    });
+  });
+
+  it("Reports functions that do not exist", async () => {
+    const result = await client.doFunction("missing", {});
+    expect(result.code).toBe("NOT_FOUND");
+  });
+
+  it("Does not run on servers that are not trusted", async () => {
+    const untrusted = await createClient(relay, [
+      getPublicKey(generateSecretKey()),
+    ]);
+    clients.push(untrusted);
+    const result = await untrusted.doFunction(
+      "add",
+      { a: 1, b: 1 },
+      { timeoutMs: 500 }
+    );
+    expect(result).toEqual({
+      code: "ERR",
+      return: "No server answered in time",
+    });
+  });
+
+  it("Needs function servers to be configured", async () => {
+    const noServers = await createClient(relay);
+    clients.push(noServers);
+    expect((await noServers.doFunction("add", { a: 1, b: 1 })).code).toBe(
+      "ERR"
+    );
+  });
+});
+
+it("Keeps the data of its clients across restarts", async () => {
+  const storageName = ".test-db/test-tooldb-relay-" + textRandom(8);
+  const options = {
+    topic: TOPIC,
+    storageAdapter: ToolDbLeveldb,
+    storageName,
+  };
+
+  const node = new ToolDbRelay(options);
+  await node.start();
+  const { port } = node;
+  const alice = await createClient(node);
+
+  const key = uniqueKey("persisted");
+  await alice.putData(key, { saved: true });
+  const map = new MapCrdt<string>(alice.userAccount.getAddress() || "");
+  map.SET("a", "1");
+  await alice.putCrdt(key + "-crdt", map);
+  await wait(200);
+  await alice.close();
+  await node.close();
+
+  // The node restarts on the same port, with the same storage
+  const restarted = new ToolDbRelay({ ...options, port });
+  await restarted.start();
+  const bob = await createClient(restarted);
+
+  expect(await bob.getData(key)).toEqual({ saved: true });
+  const bobMap = new MapCrdt<string>(bob.userAccount.getAddress() || "");
+  await bob.getCrdt(key + "-crdt", bobMap);
+  expect(bobMap.value).toEqual({ a: "1" });
+
+  await bob.close();
+  await restarted.close();
+});
+
+describe("Server functions over other relays", () => {
+  let publicRelay: NostrRelay;
+  let node: ToolDbRelay;
+  let calls = 0;
+
+  beforeAll(async () => {
+    publicRelay = new NostrRelay();
+    await publicRelay.start();
+    node = new ToolDbRelay({ topic: TOPIC, listenRelays: [publicRelay.url] });
+    node.addServerFunction("count", async () => {
+      calls += 1;
+      return calls;
+    });
+    await node.start();
+    // Give the node time to subscribe on the public relay
+    await wait(200);
+  });
+
+  afterAll(async () => {
+    await node.close();
+    await publicRelay.close();
+  });
+
+  const clientOn = async (relays: string[]) => {
+    const db = new ToolDb({
+      relays,
+      topic: TOPIC,
+      functionServers: [node.pubkey],
+    });
+    await new Promise<void>((resolve) => {
+      db.onConnect = () => resolve();
+    });
+    // Connected to the first relay, wait for the others
+    await wait(100);
+    clients.push(db);
+    return db;
+  };
+
+  const request = (secretKey: string, created_at = now()) =>
+    finalizeEvent(
+      {
+        kind: FUNCTION_REQUEST_KIND,
+        created_at,
+        tags: [
+          ["p", node.pubkey],
+          ["f", "count"],
+        ],
+        content: "null",
+      },
+      secretKey
+    );
+
+  it("Runs functions requested through a public relay", async () => {
+    const client = await clientOn([publicRelay.url]);
+    const before = calls;
+    expect(await client.doFunction("count", null)).toEqual({
+      code: "OK",
+      return: before + 1,
+    });
+  });
+
+  it("Runs a request once, even if it arrives twice", async () => {
+    // Connected to the node and the public relay, the request reaches the
+    // node directly and through the public relay
+    const client = await clientOn([node.url, publicRelay.url]);
+    const before = calls;
+    await client.doFunction("count", null);
+    await wait(200);
+    expect(calls).toBe(before + 1);
+  });
+
+  it("Does not run replayed requests", async () => {
+    const event = request(generateSecretKey());
+    const before = calls;
+    await publish(node, event);
+    await publish(node, event);
+    await wait(100);
+    expect(calls).toBe(before + 1);
+  });
+
+  it("Ignores old requests", async () => {
+    const before = calls;
+    await publish(node, request(generateSecretKey(), now() - 120));
+    await wait(100);
+    expect(calls).toBe(before);
+  });
+});

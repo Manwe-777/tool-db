@@ -1,4 +1,4 @@
-import { ToolDb, ToolDbStorageAdapter } from "tool-db";
+import { StorageContext, ToolDbStorageAdapter } from "tool-db";
 import level from "level";
 import fs from "fs";
 import path from "path";
@@ -9,7 +9,7 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
   private openError: Error | null = null;
   private closingPromise: Promise<void> | null = null;
 
-  constructor(db: ToolDb, forceStorageName?: string) {
+  constructor(db: StorageContext, forceStorageName?: string) {
     super(db, forceStorageName);
 
     // Initialize database asynchronously to ensure directory exists first
@@ -120,6 +120,20 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     });
   }
 
+  public async delete(key: string) {
+    await this.waitForReady();
+
+    return new Promise((resolve, reject) => {
+      this.database!.del(key, (err: any) => {
+        if (err) {
+          reject(new Error("Error deleting data"));
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
+
   public async get(key: string) {
     await this.waitForReady();
 
@@ -164,3 +178,6 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     });
   }
 }
+
+// Named export, for Node ESM (a default import there gets module.exports)
+export { ToolDbLeveldb };

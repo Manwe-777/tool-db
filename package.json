@@ -2,7 +2,7 @@
   "name": "@tool-db/tool-db",
   "private": true,
   "version": "0.0.0",
-  "description": "A decentralized database model for p2p networks.",
+  "description": "A database on top of Nostr: signed data, CRDTs and relays, for Node and browsers.",
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build --include-dependencies",
@@ -11,25 +11,20 @@
     "test": "jest --clearCache && jest ./ --detectOpenHandles",
     "test:ci": "jest --clearCache && jest ./ --detectOpenHandles --runInBand",
     "test:watch": "jest --watch ./",
-    "demo": "node scripts/run-demo.js",
-    "demo:fresh": "node scripts/run-demo.js --clean"
+    "test:e2e": "playwright test"
   },
   "author": "Manwe <manuel.etchegaray7@gmail.com>",
   "license": "Apache-2.0",
   "optionalDependencies": {
     "level": "^7.0.0",
-    "simple-peer": "^9.11.1",
-    "web3": "^1.7.4",
-    "web3-core": "^1.7.4",
-    "wrtc": "^0.4.7",
     "ws": "^8.8.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
+    "@playwright/test": "1.49.1",
     "@types/jest": "^28.1.4",
     "@types/level": "^6.0.1",
-    "@types/simple-peer": "^9.11.4",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "browserify": "^17.0.0",
@@ -38,7 +33,6 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^26.5.3",
-    "gh-pages": "^6.3.0",
     "jest": "^28.1.2",
     "jest-environment-jsdom": "^28.1.2",
     "jest-environment-jsdom-global": "^3.1.2",
@@ -56,7 +50,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=22.0.0"
   },
   "watch": {
     "build": {

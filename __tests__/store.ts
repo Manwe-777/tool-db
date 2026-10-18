@@ -1,40 +1,47 @@
 import { textRandom, ToolDb } from "../packages/tool-db";
 
 import ToolDbLeveldb from "../packages/leveldb-store";
-import ToolDbWebsockets from "../packages/websocket-network";
-import ToolDbWeb3 from "../packages/web3-user";
 
-// Increase timeout for CI environments where LevelDB initialization can be slower
 jest.setTimeout(10000);
 
 let Alice: ToolDb;
 
 beforeAll(async () => {
   Alice = new ToolDb({
-    server: false,
-    peers: [],
     storageName: ".test-db/test-store",
     storageAdapter: ToolDbLeveldb,
-    networkAdapter: ToolDbWebsockets,
-    userAdapter: ToolDbWeb3,
   });
-  // Wait for store to be ready before proceeding
-  await Alice.store.ready;
-  await Alice.anonSignIn();
-}, 10000); // beforeAll timeout
-
-afterAll(async () => {
-  // Close the LevelDB connection to prevent post-test async operations
-  if (Alice && Alice.store && typeof (Alice.store as any).close === "function") {
-    await (Alice.store as any).close();
-  }
+  await Alice.ready;
 });
+
+afterAll(() => Alice.close());
 
 it("Can write and read inmediately", async () => {
   const testKey = "io-test-" + textRandom(16);
   const testValue = textRandom(24);
 
   await Alice.store.put(testKey, testValue);
-  const val = await Alice.store.get(testKey);
-  expect(val).toBe(testValue);
+  expect(await Alice.store.get(testKey)).toBe(testValue);
+});
+
+it("Rejects reads of missing keys", async () => {
+  await expect(Alice.store.get("missing-" + textRandom(16))).rejects.toThrow();
+});
+
+it("Can delete keys", async () => {
+  const testKey = "delete-test-" + textRandom(16);
+  await Alice.store.put(testKey, "value");
+  await Alice.store.delete(testKey);
+  await expect(Alice.store.get(testKey)).rejects.toThrow();
+});
+
+it("Can query keys by prefix", async () => {
+  const prefix = "query-test-" + textRandom(8) + "/";
+  await Alice.store.put(prefix + "a", "1");
+  await Alice.store.put(prefix + "b~ñ", "2");
+  await Alice.store.put(prefix.slice(0, -1) + "x", "3");
+
+  expect((await Alice.store.query(prefix)).sort()).toEqual(
+    [prefix + "a", prefix + "b~ñ"].sort()
+  );
 });

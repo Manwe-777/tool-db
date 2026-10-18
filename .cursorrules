@@ -44,19 +44,19 @@ npx jest __tests__/filename.ts --watch
 
 ### Other Useful Jest Commands
 
-- Run tests matching a pattern: `npx jest --testPathPattern=network`
+- Run tests matching a pattern: `npx jest --testPathPattern=nostr`
 - Run with coverage: `npx jest __tests__/filename.ts --coverage`
 - Run only tests with a specific name: `npx jest -t "test name"`
 
 ## Test Performance Notes
 
 - Single test file: ~5 seconds
-- All tests: ~180-200 seconds
+- All tests: ~30 seconds
 
 ## Project Structure
 
 - Tests are located in `__tests__/` directory
-- Test database files are created in `_____peer_.test-db/` (automatically managed)
+- Test database files are created in `.test-db/` (automatically managed)
 - This is a monorepo using Lerna with packages in `packages/`
 
 ## Technology Stack

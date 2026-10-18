@@ -1,28 +1,10 @@
 import { useState } from "react";
+import { ToolDb } from "tool-db";
+
+import ChatApp from "./ChatApp";
 import Login from "./Login";
 
-import "./App.css";
-import Chat from "./ChatApp";
-
-import WebRtcDebug from "./WebRtcDebug";
-
-function App() {
-  const [isLoggedIn, setLoggedIn] = useState(false);
-
-  return (
-    <div className="wrapper">
-      {isLoggedIn ? (
-        <Chat />
-      ) : (
-        <>
-          <div className="left-column login-debug">
-            <WebRtcDebug />
-          </div>
-          <Login setLoggedIn={setLoggedIn} />
-        </>
-      )}
-    </div>
-  );
+export default function App() {
+  const [db, setDb] = useState<ToolDb>();
+  return db ? <ChatApp db={db} /> : <Login onLogin={setDb} />;
 }
-
-export default App;
