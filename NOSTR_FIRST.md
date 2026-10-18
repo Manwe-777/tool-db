@@ -277,6 +277,3 @@ Decisions taken while implementing:
   lowest id tie break enough, or should a millisecond tag be added?
 - **Function reach**: should relay nodes also listen for function requests
   on public relays, so clients do not need to connect to them directly?
-- **Redis**: the Redis adapter always connects to the default local server
-  and shares one keyspace between instances; it needs connection options and
-  key prefixes.
