@@ -54,6 +54,7 @@ jobs:
           - network-base
           - network.additional
           - network
+          - nostr-event
           - network-security
           - put-signing
           - sha1

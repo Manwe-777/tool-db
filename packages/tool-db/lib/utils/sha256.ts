@@ -1,7 +1,8 @@
-import crypto, { BinaryLike } from "crypto";
+import { sha256 as nobleSha256 } from "@noble/hashes/sha256";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils";
 
-export default function sha256(str: BinaryLike): string {
-  const hash = crypto.createHash("sha256");
-  hash.update(str);
-  return hash.digest("hex");
+export default function sha256(data: string | Uint8Array): string {
+  return bytesToHex(
+    nobleSha256(typeof data === "string" ? utf8ToBytes(data) : data)
+  );
 }
