@@ -20,6 +20,8 @@ const relay = new ToolDbRelay({
   storageName: "./data",
   // Keep the same key, clients trust it to run functions
   secretKey: process.env.RELAY_SECRET_KEY,
+  // Also answer function requests sent through these relays
+  listenRelays: ["wss://relay.example.com"],
 });
 
 relay.addServerFunction("add", async ({ a, b }, caller) => a + b);

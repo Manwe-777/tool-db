@@ -1,4 +1,5 @@
 import {
+  BoundedSet,
   CRDT_EVENT_KIND,
   CustomVerificator,
   FUNCTION_REQUEST_KIND,
@@ -6,6 +7,8 @@ import {
   FunctionReturn,
   NostrEvent,
   PROFILE_KIND,
+  RelayPool,
+  WebSocketConstructor,
   ServerFunction,
   StorageContext,
   ToolDbStorageAdapter,
@@ -33,6 +36,12 @@ import { EventStore, MemoryEventStore } from "./eventStore";
 import NostrRelay, { NostrRelayOptions } from "./relay";
 import { StorageEventStore } from "./storageEventStore";
 
+/**
+ * Function requests older than this (in seconds) are ignored, so a request
+ * seen on a public relay can not be replayed later
+ */
+const MAX_REQUEST_AGE = 60;
+
 export interface ToolDbRelayOptions
   extends Omit<NostrRelayOptions, "store" | "acceptEvent"> {
   /**
@@ -57,6 +66,16 @@ export interface ToolDbRelayOptions
    * Nostr relay (default false)
    */
   acceptForeignEvents?: boolean;
+  /**
+   * Other relays (like public ones) to listen on for function requests
+   * addressed to this node, so clients do not need to connect to it
+   */
+  listenRelays?: string[];
+  /**
+   * WebSocket implementation to connect to listenRelays, the global one by
+   * default (Node 22+)
+   */
+  WebSocket?: WebSocketConstructor;
   debug?: boolean;
 }
 
@@ -73,6 +92,14 @@ export default class ToolDbRelay extends NostrRelay {
   private functions: Record<string, ServerFunction<any, any>> = {};
 
   private customVerificators: (CustomVerificator | null)[] = [];
+
+  /**
+   * Ids of the function requests we already ran, since the same request can
+   * arrive directly and through other relays
+   */
+  private handledRequests = new BoundedSet<string>(10000);
+
+  private listenPool: RelayPool | undefined;
 
   constructor(options: ToolDbRelayOptions) {
     const secretKey = options.secretKey || generateSecretKey();
@@ -220,11 +247,20 @@ export default class ToolDbRelay extends NostrRelay {
   }
 
   /**
-   * Runs function requests addressed to us, instead of relaying them
+   * Runs a function request addressed to us, once.
+   * @returns the signed response, or undefined if the request was already
+   * handled, is too old (could be a replay) or is not for us
    */
-  protected async interceptEvent(event: NostrEvent): Promise<boolean> {
+  private async runFunction(
+    event: NostrEvent
+  ): Promise<NostrEvent | undefined> {
     const request = parseFunctionRequest(event, this.pubkey);
-    if (!request) return false;
+    if (!request) return undefined;
+    if (this.handledRequests.has(event.id)) return undefined;
+    if (event.created_at < Math.floor(Date.now() / 1000) - MAX_REQUEST_AGE) {
+      return undefined;
+    }
+    this.handledRequests.add(event.id);
 
     let response: FunctionReturn<any>;
     const fn = this.functions[request.name];
@@ -241,9 +277,55 @@ export default class ToolDbRelay extends NostrRelay {
       }
     }
 
-    this.broadcast(
-      finalizeEvent(createFunctionResponse(event, response), this.secretKey)
+    return finalizeEvent(
+      createFunctionResponse(event, response),
+      this.secretKey
     );
+  }
+
+  /**
+   * Runs function requests addressed to us, instead of relaying them
+   */
+  protected async interceptEvent(event: NostrEvent): Promise<boolean> {
+    if (!parseFunctionRequest(event, this.pubkey)) return false;
+
+    const response = await this.runFunction(event);
+    if (response) this.broadcast(response);
     return true;
+  }
+
+  public async start(): Promise<void> {
+    await super.start();
+
+    const { listenRelays } = this.relayOptions;
+    if (listenRelays && listenRelays.length > 0) {
+      const pool = new RelayPool(listenRelays, {
+        WebSocket:
+          this.relayOptions.WebSocket ||
+          ((globalThis as any).WebSocket as WebSocketConstructor),
+      });
+      this.listenPool = pool;
+
+      pool.subscribe(
+        [
+          {
+            kinds: [FUNCTION_REQUEST_KIND],
+            "#p": [this.pubkey],
+            since: Math.floor(Date.now() / 1000) - MAX_REQUEST_AGE,
+          },
+        ],
+        (event) => {
+          this.runFunction(event).then((response) => {
+            if (response) pool.publish(response);
+          });
+        }
+      );
+    }
+  }
+
+  public async close(): Promise<void> {
+    this.listenPool?.close();
+    this.listenPool = undefined;
+    await super.close();
   }
 }

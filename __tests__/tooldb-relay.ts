@@ -5,6 +5,7 @@ import {
   CRDT_EVENT_KIND,
   CRDT_MAP,
   EventTemplate,
+  FUNCTION_REQUEST_KIND,
   finalizeEvent,
   generateSecretKey,
   getPublicKey,
@@ -15,7 +16,7 @@ import {
   VALUE_KIND,
 } from "../packages/tool-db";
 
-import { ToolDbRelay } from "../packages/nostr-relay";
+import { NostrRelay, ToolDbRelay } from "../packages/nostr-relay";
 import ToolDbLeveldb from "../packages/leveldb-store";
 
 jest.setTimeout(15000);
@@ -342,4 +343,92 @@ it("Keeps the data of its clients across restarts", async () => {
 
   await bob.close();
   await restarted.close();
+});
+
+describe("Server functions over other relays", () => {
+  let publicRelay: NostrRelay;
+  let node: ToolDbRelay;
+  let calls = 0;
+
+  beforeAll(async () => {
+    publicRelay = new NostrRelay();
+    await publicRelay.start();
+    node = new ToolDbRelay({ topic: TOPIC, listenRelays: [publicRelay.url] });
+    node.addServerFunction("count", async () => {
+      calls += 1;
+      return calls;
+    });
+    await node.start();
+    // Give the node time to subscribe on the public relay
+    await wait(200);
+  });
+
+  afterAll(async () => {
+    await node.close();
+    await publicRelay.close();
+  });
+
+  const clientOn = async (relays: string[]) => {
+    const db = new ToolDb({
+      relays,
+      topic: TOPIC,
+      functionServers: [node.pubkey],
+    });
+    await new Promise<void>((resolve) => {
+      db.onConnect = () => resolve();
+    });
+    // Connected to the first relay, wait for the others
+    await wait(100);
+    clients.push(db);
+    return db;
+  };
+
+  const request = (secretKey: string, created_at = now()) =>
+    finalizeEvent(
+      {
+        kind: FUNCTION_REQUEST_KIND,
+        created_at,
+        tags: [
+          ["p", node.pubkey],
+          ["f", "count"],
+        ],
+        content: "null",
+      },
+      secretKey
+    );
+
+  it("Runs functions requested through a public relay", async () => {
+    const client = await clientOn([publicRelay.url]);
+    const before = calls;
+    expect(await client.doFunction("count", null)).toEqual({
+      code: "OK",
+      return: before + 1,
+    });
+  });
+
+  it("Runs a request once, even if it arrives twice", async () => {
+    // Connected to the node and the public relay, the request reaches the
+    // node directly and through the public relay
+    const client = await clientOn([node.url, publicRelay.url]);
+    const before = calls;
+    await client.doFunction("count", null);
+    await wait(200);
+    expect(calls).toBe(before + 1);
+  });
+
+  it("Does not run replayed requests", async () => {
+    const event = request(generateSecretKey());
+    const before = calls;
+    await publish(node, event);
+    await publish(node, event);
+    await wait(100);
+    expect(calls).toBe(before + 1);
+  });
+
+  it("Ignores old requests", async () => {
+    const before = calls;
+    await publish(node, request(generateSecretKey(), now() - 120));
+    await wait(100);
+    expect(calls).toBe(before);
+  });
 });
