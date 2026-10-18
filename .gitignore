@@ -30,3 +30,5 @@ _____peer
 _____peer_**
 lerna-debug.log
 .DS_Store
+test-results
+playwright-report

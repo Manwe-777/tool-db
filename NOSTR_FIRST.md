@@ -276,8 +276,10 @@ Decisions taken while implementing:
   locally, so reading them back does not depend on relays.
 - **Interop**: event ids and signatures, NIP-19, NIP-49 and the relay are
   checked against `nostr-tools`. The core is bundled with browserify and run
-  in a sandbox with only browser globals, syncing with a Node client (a real
-  browser test would still be better).
+  in a sandbox with only browser globals, syncing with a Node client. The
+  example chat app is also tested end to end in Chromium with Playwright
+  (IndexedDB, native WebSocket, two users), which is only a development
+  dependency.
 
 ## Open questions
 

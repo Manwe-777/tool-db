@@ -168,7 +168,14 @@ dependencies are pure JS (`@noble`, `@scure/base` and `events`).
 npm install
 npm run build          # Build every package
 npm test               # Run all tests
+
+# End to end tests of the example app in Chromium (dev only, Playwright)
+cd example && npm install && cd ..
+npx playwright install chromium
+npm run test:e2e
 ```
+
+The example chat app is in [`example/`](example/README.md).
 
 ---
 

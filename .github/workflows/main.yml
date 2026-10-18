@@ -137,3 +137,31 @@ jobs:
           key: build-${{ github.sha }}
       - name: "Build example"
         run: cd example && npm install && npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    name: "End to end tests (Chromium)"
+    steps:
+      - name: "Setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: "Checkout source code"
+        uses: "actions/checkout@v4"
+      - name: "Restore build cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+          key: build-${{ github.sha }}
+      - name: "Install the example"
+        run: cd example && npm install
+      - name: "Install Chromium"
+        run: npx playwright install --with-deps chromium
+      - name: "Run end to end tests"
+        run: npm run test:e2e
+        env:
+          CI: "true"
