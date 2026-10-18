@@ -46,27 +46,30 @@ export default function handleCrdtPut(
 
               // Merge old document with new data incoming and save it
               // Add handles for all kinds of CRDT we add
+              // We use the incoming type, since counters used to be stored
+              // with the list type by mistake.
+              const crdtType = finalMessage.data.c;
               let oldDoc:
                 | MapCrdt<any>
                 | ListCrdt<any>
                 | CounterCrdt<any>
                 | undefined;
 
-              if (parsedOldData.c === CRDT_MAP) {
+              if (crdtType === CRDT_MAP) {
                 oldDoc = new MapCrdt(
                   this.userAccount.getAddress() || "",
                   parsedOldData.v
                 );
               }
 
-              if (parsedOldData.c === CRDT_LIST) {
+              if (crdtType === CRDT_LIST) {
                 oldDoc = new ListCrdt(
                   this.userAccount.getAddress() || "",
                   parsedOldData.v
                 );
               }
 
-              if (parsedOldData.c === CRDT_COUNTER) {
+              if (crdtType === CRDT_COUNTER) {
                 oldDoc = new CounterCrdt(
                   this.userAccount.getAddress() || "",
                   parsedOldData.v

@@ -1,4 +1,4 @@
-import { BaseCrdt, CRDT_LIST } from "..";
+import { BaseCrdt, CRDT_COUNTER } from "..";
 
 export type CounterOperations = "ADD" | "SUB";
 
@@ -20,7 +20,7 @@ export interface SubCounterChange extends ChangeCounterBase {
 export type CounterChanges = AddCounterChange | SubCounterChange;
 
 export class CounterCrdt<T> extends BaseCrdt<number, CounterChanges, number> {
-  public type = CRDT_LIST;
+  public type = CRDT_COUNTER;
 
   public _changes: CounterChanges[] = [];
 
