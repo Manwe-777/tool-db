@@ -6,6 +6,8 @@ import {
   VerifyResult,
   getPeerSignature,
   verifyPeer,
+  getMessageHash,
+  textRandom,
 } from "../packages/tool-db";
 
 import ToolDbLeveldb from "../packages/leveldb-store";
@@ -266,6 +268,45 @@ describe("Custom verification", () => {
 
     const result = await ClientA.verify(putOk);
     expect(result).toEqual(VerifyResult.Verified);
+  });
+});
+
+describe("Frozen namespace", () => {
+  // Signs a signup for `username` with a new account at the given timestamp
+  const signup = async (username: string, t: number) => {
+    const account = new ToolDbWeb3(ClientA);
+    await account.anonUser();
+    const a = account.getAddress() || "";
+    const h = getMessageHash(JSON.stringify("value"), a, t);
+    const data: VerificationData<string> = {
+      k: `==${username}`,
+      a,
+      n: 0,
+      t,
+      h,
+      s: await account.signData(h),
+      v: "value",
+      c: null,
+    };
+    return data;
+  };
+
+  it("Breaks timestamp ties by address, like handlePut", async () => {
+    const username = "tie-" + textRandom(12);
+    const t = Date.now();
+    const [first, second] = [
+      await signup(username, t),
+      await signup(username, t),
+    ].sort((x, y) => (x.a < y.a ? -1 : 1));
+
+    // The alphabetically first address wins, even if it arrives later
+    await ClientA.store.put(first.k, JSON.stringify(second));
+    expect(await ClientA.verifyMessage(first)).toEqual(VerifyResult.Verified);
+
+    await ClientA.store.put(first.k, JSON.stringify(first));
+    expect(await ClientA.verifyMessage(second)).toEqual(
+      VerifyResult.CantOverwrite
+    );
   });
 });
 

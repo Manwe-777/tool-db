@@ -63,13 +63,14 @@ export default async function verifyMessage<T>(
       });
 
     // If data exists with a different author, compare timestamps
-    // The OLDER timestamp wins (first writer owns forever)
+    // The OLDER timestamp wins (first writer owns forever), and ties are
+    // broken by address (alphabetically first wins), same as handlePut.
     if (data && data.a !== msg.a) {
-      if (data.t <= msg.t) {
-        // Local data is older or same age - reject incoming
+      if (data.t < msg.t || (data.t === msg.t && data.a < msg.a)) {
+        // Local data wins - reject incoming
         return VerifyResult.CantOverwrite;
       }
-      // Incoming data is older - let it through to handlePut
+      // Incoming data wins - let it through to handlePut
       // where it will replace our local data
     }
   }

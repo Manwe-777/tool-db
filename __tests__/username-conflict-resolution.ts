@@ -345,9 +345,13 @@ describe("Username Conflict Resolution in handlePut", () => {
       expect(conflictData.remoteTimestamp).toBe(sharedTimestamp);
     }
 
-    // Check which one won
-    const storedData = await server.store.get(userRoot);
-    const parsedData = JSON.parse(storedData);
+    // Check which one won. The conflict event is emitted before the winner
+    // is written, so give the store a moment to settle.
+    let parsedData = JSON.parse(await server.store.get(userRoot));
+    for (let i = 0; i < 10 && parsedData.a !== expectedWinnerAddress; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      parsedData = JSON.parse(await server.store.get(userRoot));
+    }
     expect(parsedData.a).toBe(expectedWinnerAddress);
   });
 
