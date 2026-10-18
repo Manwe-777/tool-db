@@ -3,7 +3,7 @@
 Redis storage adapter for ToolDB, for Node.
 
 ```js
-import ToolDbRedis, { redisStore } from "@tool-db/redis-store";
+import { ToolDbRedis, redisStore } from "@tool-db/redis-store";
 
 // The default local server (redis://localhost:6379)
 new ToolDb({ storageAdapter: ToolDbRedis, storageName: "my-app" });

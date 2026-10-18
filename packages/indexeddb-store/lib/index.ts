@@ -139,3 +139,6 @@ export default class ToolDbIndexedb extends ToolDbStorageAdapter {
     });
   }
 }
+
+// Named export, for Node ESM (a default import there gets module.exports)
+export { ToolDbIndexedb as ToolDbIndexedDb };

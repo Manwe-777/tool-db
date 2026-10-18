@@ -87,3 +87,6 @@ export function redisStore(url: string): typeof ToolDbRedis {
     protected static url = url;
   };
 }
+
+// Named export, for Node ESM (a default import there gets module.exports)
+export { ToolDbRedis };

@@ -178,3 +178,6 @@ export default class ToolDbLeveldb extends ToolDbStorageAdapter {
     });
   }
 }
+
+// Named export, for Node ESM (a default import there gets module.exports)
+export { ToolDbLeveldb };

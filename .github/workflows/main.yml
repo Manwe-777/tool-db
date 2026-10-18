@@ -43,6 +43,7 @@ jobs:
           - browser-interop
           - counterCrdt
           - counterCrdt.additional
+          - esm-imports
           - groups
           - lifecycle-api
           - listCrdt

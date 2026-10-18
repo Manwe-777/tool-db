@@ -11,7 +11,7 @@ Nostr relays for Node:
 
 ```js
 import { ToolDbRelay } from "@tool-db/nostr-relay";
-import ToolDbLeveldb from "@tool-db/leveldb-store";
+import { ToolDbLeveldb } from "@tool-db/leveldb-store";
 
 const relay = new ToolDbRelay({
   topic: "my-app",

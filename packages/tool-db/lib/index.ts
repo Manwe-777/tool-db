@@ -1,7 +1,14 @@
-export { default as sha256 } from "./utils/sha256";
-export { default as randomAnimal } from "./utils/randomAnimal";
-export { default as textRandom } from "./utils/textRandom";
-export { default as BoundedSet } from "./utils/BoundedSet";
+// Default exports are imported and exported by name (instead of
+// `export { default as X } from`), so the compiled CommonJS assigns them
+// directly and Node ESM can import them by name.
+import sha256 from "./utils/sha256";
+export { sha256 };
+import randomAnimal from "./utils/randomAnimal";
+export { randomAnimal };
+import textRandom from "./utils/textRandom";
+export { textRandom };
+import BoundedSet from "./utils/BoundedSet";
+export { BoundedSet };
 
 export * from "./types/tooldb";
 export * from "./types/records";
@@ -12,16 +19,22 @@ export * from "./nostr/nip19";
 export * from "./nostr/nip49";
 export * from "./nostr/nip44";
 export * from "./nostr/nip05";
-export { default as RelayPool } from "./nostr/pool";
+import RelayPool from "./nostr/pool";
+export { RelayPool };
 export * from "./nostr/pool";
 
-export { default as ToolDbStorageAdapter } from "./adapters-base/storageAdapter";
+import ToolDbStorageAdapter from "./adapters-base/storageAdapter";
+export { ToolDbStorageAdapter };
 export * from "./adapters-base/storageAdapter";
-export { default as ToolDbUserAdapter } from "./adapters-base/userAdapter";
-export { default as ToolDbMemoryStore } from "./adapters/memoryStore";
-export { default as ToolDbNostrUser } from "./adapters/nostrUser";
+import ToolDbUserAdapter from "./adapters-base/userAdapter";
+export { ToolDbUserAdapter };
+import ToolDbMemoryStore from "./adapters/memoryStore";
+export { ToolDbMemoryStore };
+import ToolDbNostrUser from "./adapters/nostrUser";
+export { ToolDbNostrUser };
 export * from "./adapters/nostrUser";
-export { default as ToolDbNip07User } from "./adapters/nip07User";
+import ToolDbNip07User from "./adapters/nip07User";
+export { ToolDbNip07User };
 export * from "./adapters/nip07User";
 
 export * from "./crdt/baseCrdt";
@@ -37,4 +50,5 @@ export * from "./data/functions";
 export * from "./data/groups";
 export * from "./data/profiles";
 
-export { default as ToolDb } from "./tooldb";
+import ToolDb from "./tooldb";
+export { ToolDb };

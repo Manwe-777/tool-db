@@ -24,7 +24,7 @@ or as a script, which exposes every export in `tooldb`:
 
 ```js
 import { ToolDb } from "tool-db";
-import ToolDbIndexedDb from "@tool-db/indexeddb-store";
+import { ToolDbIndexedDb } from "@tool-db/indexeddb-store";
 
 const db = new ToolDb({
   relays: ["wss://your-relay.example"],

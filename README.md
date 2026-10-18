@@ -101,7 +101,7 @@ data, and to run server functions:
 
 ```javascript
 import { ToolDbRelay } from "@tool-db/nostr-relay";
-import ToolDbLeveldb from "@tool-db/leveldb-store";
+import { ToolDbLeveldb } from "@tool-db/leveldb-store";
 
 const relay = new ToolDbRelay({
   topic: "my-app",
