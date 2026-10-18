@@ -42,42 +42,45 @@ export default function toolDbPut<T = any>(
     this.userAccount
       .signData(hash)
       .then((signature) => {
-        if (signature && this.userAccount.getAddress()) {
-          const finalKey = userNamespaced
-            ? `:${this.userAccount.getAddress()}.${key}`
-            : key;
-
-          // Compose the message
-          const data: VerificationData = {
-            k: finalKey,
-            a: this.userAccount.getAddress() || "",
-            n: 0,
-            t: timestamp,
-            h: hash,
-            s: signature,
-            v: value,
-            c: null,
-          };
-
-          this.logger("PUT", key, data);
-
-          const finalMessage: PutMessage = {
-            type: "put",
-            id: textRandom(10),
-            to: to || [],
-            data,
-          };
-
-          this.network.sendToAll(finalMessage);
-          this.store
-            .put(finalKey, JSON.stringify(data))
-            .catch((e) => {
-              // do nothing
-            })
-            .finally(() => {
-              resolve(finalMessage);
-            });
+        if (!signature || !this.userAccount.getAddress()) {
+          reject(new Error("Could not sign the data."));
+          return;
         }
+
+        const finalKey = userNamespaced
+          ? `:${this.userAccount.getAddress()}.${key}`
+          : key;
+
+        // Compose the message
+        const data: VerificationData = {
+          k: finalKey,
+          a: this.userAccount.getAddress() || "",
+          n: 0,
+          t: timestamp,
+          h: hash,
+          s: signature,
+          v: value,
+          c: null,
+        };
+
+        this.logger("PUT", key, data);
+
+        const finalMessage: PutMessage = {
+          type: "put",
+          id: textRandom(10),
+          to: to || [],
+          data,
+        };
+
+        this.network.sendToAll(finalMessage);
+        this.store
+          .put(finalKey, JSON.stringify(data))
+          .catch((e) => {
+            // do nothing
+          })
+          .finally(() => {
+            resolve(finalMessage);
+          });
       })
       .catch(reject);
   });

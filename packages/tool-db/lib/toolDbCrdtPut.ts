@@ -48,32 +48,33 @@ export default function toolDbCrdtPut<T = any>(
     this.userAccount
       .signData(hash)
       .then((signature) => {
-        if (signature && this.userAccount.getAddress()) {
-          // Compose the message
-          const data: VerificationData<any> = {
-            k: userNamespaced
-              ? `:${this.userAccount.getAddress()}.${key}`
-              : key,
-            a: this.userAccount.getAddress() || "",
-            n: 0,
-            t: timestamp,
-            h: hash,
-            s: signature,
-            v: crdtChanges,
-            c: crdt.type,
-          };
-
-          this.logger("PUT CRDT", key, data);
-
-          const finalMessage: CrdtPutMessage<any> = {
-            type: "crdtPut",
-            id: textRandom(10),
-            to: to || [],
-            data,
-          };
-          this.network.sendToAll(finalMessage);
-          resolve(finalMessage);
+        if (!signature || !this.userAccount.getAddress()) {
+          reject(new Error("Could not sign the data."));
+          return;
         }
+
+        // Compose the message
+        const data: VerificationData<any> = {
+          k: userNamespaced ? `:${this.userAccount.getAddress()}.${key}` : key,
+          a: this.userAccount.getAddress() || "",
+          n: 0,
+          t: timestamp,
+          h: hash,
+          s: signature,
+          v: crdtChanges,
+          c: crdt.type,
+        };
+
+        this.logger("PUT CRDT", key, data);
+
+        const finalMessage: CrdtPutMessage<any> = {
+          type: "crdtPut",
+          id: textRandom(10),
+          to: to || [],
+          data,
+        };
+        this.network.sendToAll(finalMessage);
+        resolve(finalMessage);
       })
       .catch(reject);
   });
