@@ -115,3 +115,25 @@ jobs:
         run: npx jest __tests__/redis-store.ts
         env:
           REDIS_URL: redis://localhost:6379
+
+  example:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    name: "Build example"
+    steps:
+      - name: "Setup node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: "Checkout source code"
+        uses: "actions/checkout@v4"
+      - name: "Restore build cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/dist
+          key: build-${{ github.sha }}
+      - name: "Build example"
+        run: cd example && npm install && npm run build

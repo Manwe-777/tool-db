@@ -1,0 +1,28 @@
+{
+  "name": "tool-db-chat-example",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Encrypted group chat built on ToolDB and Nostr",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "relay": "node relay.mjs"
+  },
+  "dependencies": {
+    "@tool-db/indexeddb-store": "file:../packages/indexeddb-store",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tool-db": "file:../packages/tool-db"
+  },
+  "devDependencies": {
+    "@tool-db/leveldb-store": "file:../packages/leveldb-store",
+    "@tool-db/nostr-relay": "file:../packages/nostr-relay",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "5.6.3",
+    "vite": "5.4.11"
+  }
+}
