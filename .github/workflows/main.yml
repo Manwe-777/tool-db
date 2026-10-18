@@ -53,6 +53,7 @@ jobs:
           - network-base
           - network.additional
           - network
+          - network-security
           - put-signing
           - sha1
           - sha256

@@ -1,4 +1,4 @@
-import { ToolDb, textRandom } from ".";
+import { ToolDb, textRandom, VerifyResult } from ".";
 
 /**
  * Triggers a GET request to other peers. If the data is available locally it will return that instead.
@@ -46,9 +46,15 @@ export default function toolDbGet<T = any>(
     this.addIdListener(msgId, (msg) => {
       this.logger("GET RECV", finalKey);
 
-      clearTimeout(cancelTimeout);
-      if (msg.type === "put") {
-        resolve(msg.data.v);
+      if (msg.type === "put" && msg.data.k === finalKey) {
+        // Replies are not trusted until verified, if verification fails
+        // we let the timeout fall back to our local data.
+        this.verify(msg.data).then((result) => {
+          if (result === VerifyResult.Verified) {
+            clearTimeout(cancelTimeout);
+            resolve(msg.data.v);
+          }
+        });
       }
     });
 
