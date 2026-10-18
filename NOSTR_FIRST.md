@@ -53,9 +53,9 @@ that other Nostr tools can read.
   just another relay to clients, so apps can mix public relays (reach,
   redundancy) with their own nodes (durability, functions, policies).
 
-The network adapter shape is kept at first, with a single `nostr-network`
-adapter (a relay pool). Once the core speaks Nostr natively, the adapter
-abstraction is no longer useful and is folded into the core.
+The relay pool is part of the core (`RelayPool`, used by `ToolDb` through
+the `relays` option); there are no network adapters anymore. The ToolDB relay
+node is `ToolDbRelay` in `@tool-db/nostr-relay`.
 
 ## Identity
 
@@ -93,7 +93,10 @@ kind and `d` tag, which is exactly ToolDB's "latest value per key" model.
 ```json
 {
   "kind": 30078,
-  "tags": [["d", "<topic>:<key>"], ["t", "<topic>"]],
+  "tags": [
+    ["d", "<topic>:<key>"],
+    ["t", "<topic>"]
+  ],
   "content": "<JSON encoded value>"
 }
 ```
@@ -116,7 +119,11 @@ set signature becomes the event signature, and its author the event pubkey.
 ```json
 {
   "kind": "<TOOLDB_CRDT_KIND>",
-  "tags": [["k", "<topic>:<key>"], ["c", "MAP:2"], ["t", "<topic>"]],
+  "tags": [
+    ["k", "<topic>:<key>"],
+    ["c", "MAP:2"],
+    ["t", "<topic>"]
+  ],
   "content": "<JSON encoded changes>"
 }
 ```
@@ -141,9 +148,20 @@ set signature becomes the event signature, and its author the event pubkey.
 
 ### Server functions
 
-Requests and responses as ephemeral events (20000-29999, never stored):
-the request is tagged with the server pubkey (`p`), the response references
-the request (`e`). Payloads can be encrypted with NIP-44.
+Requests and responses are ephemeral events (kinds 21078 and 21079 for now,
+never stored). The request is signed by the caller and tagged with the
+server pubkey (`p`) and the function name (`f`); the content is the JSON
+arguments. The relay node runs the function and answers with an event signed
+by its own key, referencing the request (`e`) and the caller (`p`), with
+`{ code, return }` as content.
+
+- Clients only accept responses signed by the servers in their
+  `functionServers` option (or the `server` given to `doFunction`).
+- Functions get the arguments and the caller's public key, so they can
+  check permissions.
+- A node only runs requests that reach it directly (clients connected to
+  it); it does not listen for requests on other relays.
+- Payloads are not encrypted yet; NIP-44 can be added.
 
 ### Encryption
 
@@ -163,15 +181,20 @@ best effort, as on any public network.
   accepts it (`OK`), and is always stored locally.
 - Read from every relay and merge, so one slow or malicious relay can not
   hide or forge data (it can only omit it).
-- Reconnect with backoff, reusing the logic of the WebRTC adapter.
+- Reconnect with backoff, restoring open subscriptions.
 - Respect relay limits (NIP-11: max message size, rate limits).
 
 ## Storage
 
-The storage adapter interface (`put`, `get`, `query`) stays. Clients store
-verified events by key as a local cache; relay nodes use it as their event
-store. Storage adapters are already split by environment (LevelDB and Redis
-on Node, IndexedDB in browsers), so they keep working.
+The storage adapter interface is `put`, `get`, `query` (keys by prefix) and
+`delete`. Adapters only need a storage name and a logger, so both clients and
+relay nodes use them:
+
+- Clients store verified events by key as a local cache. The default is an
+  in memory store (`ToolDbMemoryStore`); LevelDB (Node) and IndexedDB
+  (browsers) keep data across restarts.
+- Relay nodes store events with `StorageEventStore`, which keeps indexes by
+  kind, author and single letter tag on top of any adapter.
 
 ## Breaking changes
 
@@ -179,17 +202,23 @@ on Node, IndexedDB in browsers), so they keep working.
 - Existing data is not migrated automatically; a migration script can read
   old data and republish it with a Nostr identity.
 - Removed: `websocket-network`, `webrtc-network`, `hybrid-network`,
-  `web3-user`, `ecdsa-user`, peer ping/pong, the `==` namespace, published
-  encrypted keystores, `signUp`/`signIn` with username and password across
-  devices, the message nonce (`n`).
-- Addresses are Nostr public keys.
+  `web3-user`, `ecdsa-user`, the network adapter option, peer ping/pong and
+  the peer account, the `==` namespace, published encrypted keystores,
+  `signUp`/`signIn` with username and password across devices, the message
+  nonce (`n`), and the P-256 ECDH and group key utilities (NIP-44 should
+  replace them).
+- Removed the example chat app, which was built on the old API, and the CI
+  job deploying it.
+- Addresses are Nostr public keys; `ToolDbNostrUser` is the default signer.
+- Server functions are registered on `ToolDbRelay`, not on `ToolDb`.
+- Requires Node 22+ (global `WebSocket`).
 
 ## Phases
 
 1. **Foundations**: Nostr event primitives in the core (serialize, id, sign,
-   verify), universal hashing, a `nostr-user` signer with local keys, and an
-   in-memory relay for tests.
-2. **Network**: `nostr-network` relay pool; `put`, `get` and `subscribe` on
+   verify), universal hashing, a signer with local keys, and an in-memory
+   relay for tests.
+2. **Network**: a relay pool; `put`, `get` and `subscribe` on
    kind 30078, tested against the test relay from Node clients.
 3. **CRDTs**: change sets as events.
 4. **ToolDB relay node**: a Node relay with ToolDB validation and storage
@@ -201,41 +230,43 @@ on Node, IndexedDB in browsers), so they keep working.
 
 ## Status
 
-| Phase | State |
-| ----- | ----- |
-| 1. Foundations | Done: event primitives, `nostr-user`, `nostr-relay` |
-| 2. Network | Done: `nostr-network`, `putData`, `getData`, `subscribeData` |
-| 3. CRDTs | Done: change sets as events |
-| 4. ToolDB relay node | Not started (`nostr-relay` exists, without storage adapters or ToolDB validation) |
-| 5. Identity | Partly: NIP-49 and NIP-19 in `nostr-user`; NIP-07, NIP-46 and NIP-05 not started |
-| 6. Functions, encryption, queries | Not started |
-| 7. Cleanup | Not started |
+| Phase                             | State                                                                        |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| 1. Foundations                    | Done: event primitives, local key signer, relay                              |
+| 2. Network                        | Done: relay pool, `putData`, `getData`, `subscribeData`                      |
+| 3. CRDTs                          | Done: change sets as events                                                  |
+| 4. ToolDB relay node              | Done: validation, storage, server functions, NIP-11                          |
+| 5. Identity                       | Partly: NIP-49 and NIP-19; NIP-07, NIP-46 and NIP-05 not started             |
+| 6. Functions, encryption, queries | Partly: server functions and `queryKeys` done; NIP-44 encryption not started |
+| 7. Cleanup                        | Done: old packages, protocol and example removed                             |
 
 Decisions taken while implementing:
 
-- **Transition**: `ToolDb` uses the Nostr implementations of `putData`,
-  `getData`, `subscribeData`, `putCrdt` and `getCrdt` only when the network
-  adapter is `nostr-network`, so the old adapters and their tests keep
-  working until phase 7 removes them.
 - **Same second writes**: `putData` bumps `created_at` past our previous
   event for the key, so our latest write always wins even within the same
   second (otherwise the lowest id would win the tie).
-- **Records**: listeners and custom verificators keep getting records shaped
-  like before (`k`, `a`, `t` in milliseconds, `v`), built from the event.
+- **Records**: listeners and custom verificators get records shaped like
+  before (`k`, `a`, `t` in milliseconds, `v`), built from the event.
 - **CRDT subscriptions**: `subscribeData` listens for both values and CRDT
   change sets of a key, since apps subscribe to CRDT keys with it.
-- **CRDT kind**: 1078 is a placeholder until a kind is chosen (see below).
+- **Event kinds**: 1078 (CRDT change sets), 21078 and 21079 (function
+  requests and responses) are placeholders until kinds are chosen.
+- **Verification context**: verification only needs the topic, the custom
+  verificators and a way to load the previous value, so relay nodes run the
+  exact same checks as clients.
+- **Ordering**: relays handle the messages of a connection in order, so a
+  request sees the events sent before it; clients also keep their own writes
+  locally, so reading them back does not depend on relays.
 - **Interop**: event ids and signatures, NIP-19, NIP-49 and the relay are
-  checked against `nostr-tools`.
-- **Runtimes**: the network adapter uses the global `WebSocket` (browsers,
-  Node 22+) or `ws`. CI runs Node 18, which has no global `WebSocket`, so it
-  covers the `ws` fallback; Node 18 is end of life and CI should move to a
-  supported version.
+  checked against `nostr-tools`. The core is bundled with browserify and run
+  in a sandbox with only browser globals, syncing with a Node client (a real
+  browser test would still be better).
 
 ## Open questions
 
-- **CRDT event kind**: needs a regular kind (1000-9999) not used by other
-  NIPs; check the NIPs registry before release, and keep it configurable.
+- **Event kinds**: CRDT change sets need a regular kind (1000-9999), and
+  functions two ephemeral kinds, not used by other NIPs; check the NIPs
+  registry before release.
 - **Shared keys**: keep "anyone can overwrite" semantics, make them write
   once, or require a custom verificator?
 - **Durability**: which relays to use by default, and should apps be
@@ -244,3 +275,8 @@ Decisions taken while implementing:
   from the start?
 - **Millisecond ordering**: second resolution makes ties more common; is the
   lowest id tie break enough, or should a millisecond tag be added?
+- **Function reach**: should relay nodes also listen for function requests
+  on public relays, so clients do not need to connect to them directly?
+- **Redis**: the Redis adapter always connects to the default local server
+  and shares one keyspace between instances; it needs connection options and
+  key prefixes.

@@ -1,7 +1,7 @@
-# `tool-db-redis`
+# `@tool-db/redis-store`
 
-## Options:
+Redis storage adapter for ToolDB, for Node.
 
-`options.redis.url`
-
-Redis database url to connect to
+It connects to the default Redis server (`redis://localhost:6379`), and all
+instances share the same keyspace, so use separate Redis servers or
+databases for separate stores.

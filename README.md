@@ -2,25 +2,31 @@
 
 # 🛠️ Tool Db
 
-### A Peer-to-Peer Decentralized Database
+### A database on top of Nostr
 
 [![CI](https://github.com/Manwe-777/tool-db/actions/workflows/main.yml/badge.svg)](https://github.com/Manwe-777/tool-db/actions/workflows/main.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
 
-**[📖 Documentation](https://manwe-777.github.io/tool-db-docs/)** · **[🚀 Live Demo](https://manwe-777.github.io/tool-db-chat-example/)** · **[💬 Report Bug](https://github.com/Manwe-777/tool-db/issues)**
+**[💬 Report Bug](https://github.com/Manwe-777/tool-db/issues)**
 
 ---
 
 </div>
 
+> **Status:** this branch is a rewrite of ToolDB on top of Nostr, see
+> [NOSTR_FIRST.md](NOSTR_FIRST.md) for the design and progress. The
+> [documentation site](https://manwe-777.github.io/tool-db-docs/) and the
+> [chat demo](https://manwe-777.github.io/tool-db-chat-example/) still
+> describe the previous peer to peer protocol.
+
 ## 💡 Philosophy
 
 ToolDb is designed as **open, permissionless infrastructure**.
 
-It enables peer-to-peer data exchange without centralized custody, accounts, or trust anchors. Identity is cryptographic, data ownership is local-first, and connectivity emerges from the network itself.
+It enables data exchange without centralized custody, accounts, or trust anchors. Identity is cryptographic, data ownership is local-first, and connectivity comes from the network itself: Nostr relays, public or your own.
 
-This project is intentionally permissive. Commercial use, private deployments, and derivative systems are welcome. ontributions, attribution, and community participation are very appreciated but not required.
+This project is intentionally permissive. Commercial use, private deployments, and derivative systems are welcome. Contributions, attribution, and community participation are very appreciated but not required.
 
 **ToolDb favors adoption, interoperability, and resilience**
 
@@ -30,11 +36,11 @@ This project is intentionally permissive. Commercial use, private deployments, a
 <tr>
 <td width="50%">
 
-🔐 **Cryptographically Secure**
-<br/>Public/private key authentication
+🔐 **Signed data**
+<br/>Every value and change is signed by its author
 
-🌐 **Fully Decentralized**
-<br/>No central point of failure
+🌐 **Nostr native**
+<br/>Nostr identities, events and relays
 
 ⚡ **Real-time Updates**
 <br/>Subscribe to live data changes
@@ -43,27 +49,17 @@ This project is intentionally permissive. Commercial use, private deployments, a
 <td width="50%">
 
 📴 **Offline First**
-<br/>Works without connectivity
+<br/>Local storage, synced with relays
 
 📦 **Key-Value Storage**
-<br/>Document-based data model
+<br/>Shared keys and user namespaces
 
 🔄 **Built-in CRDTs**
-<br/>Conflict-free data types
+<br/>Maps, lists and counters, with provable authors
 
 </td>
 </tr>
 </table>
-
-<div align="center">
-
-### 🎮 Try it now!
-
-**[Launch the Live Chat Demo →](https://manwe-777.github.io/tool-db-chat-example/)**
-
-_Experience real-time P2P messaging in your browser_
-
-</div>
 
 ---
 
@@ -74,46 +70,81 @@ npm install tool-db
 ```
 
 ```javascript
-import { ToolDb, ToolDbWebrtc } from "tool-db";
+import { ToolDb, MapCrdt } from "tool-db";
 
 const db = new ToolDb({
-  networkAdapter: ToolDbWebrtc,
+  relays: ["wss://your-relay.example"],
+  topic: "my-app",
 });
 
-// Put and get data
+// Values, signed with our Nostr identity
 await db.putData("foo-key", "bar");
 const value = await db.getData("foo-key");
 
-// Subscribe to real-time updates
-db.subscribeData("foo-key", (data) => {
-  console.log("Data updated:", data);
-});
+// User namespaced values, only we can write them
+await db.putData("profile", { name: "Alice" }, true);
+
+// Real-time updates
+db.addKeyListener("foo-key", (data) => console.log("Updated:", data.v));
+db.subscribeData("foo-key");
+
+// CRDTs, every change is signed by its author
+const doc = new MapCrdt(db.userAccount.getAddress());
+doc.SET("hello", "world");
+await db.putCrdt("shared-doc", doc);
+await db.getCrdt("shared-doc", doc);
 ```
 
-📖 **[Read the full documentation →](https://manwe-777.github.io/tool-db-docs/)**
+Every client verifies everything it receives, so any Nostr relay can be
+used. Run a ToolDB relay node to also validate, persist and serve your app's
+data, and to run server functions:
+
+```javascript
+import { ToolDbRelay } from "@tool-db/nostr-relay";
+import ToolDbLeveldb from "@tool-db/leveldb-store";
+
+const relay = new ToolDbRelay({
+  topic: "my-app",
+  port: 8080,
+  storageAdapter: ToolDbLeveldb,
+  storageName: "./data",
+  secretKey: process.env.RELAY_SECRET_KEY,
+});
+
+relay.addServerFunction("add", async ({ a, b }, caller) => a + b);
+await relay.start();
+
+// Clients trust the node for functions with its public key
+const db = new ToolDb({
+  relays: [relay.url],
+  topic: "my-app",
+  functionServers: [relay.pubkey],
+});
+await db.doFunction("add", { a: 1, b: 2 }); // { code: "OK", return: 3 }
+```
 
 ---
 
 ## 📦 Packages
 
-| Package             | Description                                                  |
-| ------------------- | ------------------------------------------------------------ |
-| `tool-db`           | Core database functionality and API                          |
-| `ecdsa-user`        | ECDSA-based user authentication and cryptographic operations |
-| `web3-user`         | Web3/Ethereum wallet-based user authentication               |
-| `leveldb-store`     | LevelDB storage adapter for Node.js                          |
-| `indexeddb-store`   | IndexedDB storage adapter for browsers                       |
-| `redis-store`       | Redis storage adapter for server deployments                 |
-| `websocket-network` | WebSocket network adapter                                    |
-| `webrtc-network`    | WebRTC network adapter for browser-to-browser connections    |
-| `hybrid-network`    | Hybrid network adapter combining multiple transports         |
+| Package                    | Description                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| `tool-db`                  | The database: Nostr identity, relay pool, values and CRDTs                    |
+| `@tool-db/nostr-relay`     | Nostr relay and ToolDB relay node (validation, storage, functions), Node only |
+| `@tool-db/leveldb-store`   | LevelDB storage adapter for Node                                              |
+| `@tool-db/indexeddb-store` | IndexedDB storage adapter for browsers                                        |
+| `@tool-db/redis-store`     | Redis storage adapter for Node                                                |
+
+`tool-db` runs on Node 22+ and browsers with the same code; its only
+dependencies are pure JS (`@noble`, `@scure/base` and `events`).
 
 ---
 
 ## 🧪 Development
 
 ```bash
-npm run demo           # Run the demo
+npm install
+npm run build          # Build every package
 npm test               # Run all tests
 ```
 
@@ -122,13 +153,3 @@ npm test               # Run all tests
 ## 📄 License
 
 Apache-2.0 © [Manuel Etchegaray](mailto:manuel.etchegaray7@gmail.com)
-
----
-
-<div align="center">
-
-**[📖 Read the full documentation →](https://manwe-777.github.io/tool-db-docs/)**
-
-_CRDTs • User Authentication • Namespaces • Network Adapters • And much more!_
-
-</div>
