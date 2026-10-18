@@ -78,6 +78,7 @@
       "@tool-db/web3-user": ["../web3-user"],
       "@tool-db/nostr-user": ["../nostr-user"],
       "@tool-db/nostr-relay": ["../nostr-relay"],
+      "@tool-db/nostr-network": ["../nostr-network"],
       "tool-db": ["../tool-db"],
     }
   },

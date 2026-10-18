@@ -34,6 +34,10 @@ export interface ToolDbOptions {
    */
   peers: { host: string; port: number }[];
   /**
+   * Nostr relays to connect to (nostr-network adapter)
+   */
+  relays: string[];
+  /**
    * Max number of tries when a connection fails
    */
   maxRetries: number;

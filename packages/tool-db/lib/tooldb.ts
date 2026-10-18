@@ -292,6 +292,7 @@ export default class ToolDb extends EventEmitter {
 
   private _options: ToolDbOptions = {
     peers: [],
+    relays: [],
     maxRetries: 5,
     triggerDebouce: 100,
     wait: 2000,
@@ -428,6 +429,10 @@ export default class ToolDb extends EventEmitter {
    * Call this when you're done with the database instance.
    */
   public async close(): Promise<void> {
+    // Close the relay connections of the Nostr network
+    if ((this._network as any).isNostrNetwork) {
+      (this._network as any).close();
+    }
     // Close the main store
     if (this._store && typeof (this._store as any).close === "function") {
       await (this._store as any).close();
